@@ -59,7 +59,7 @@ namespace utils {
 		return out << off.pos;
 	}
 
-	inline std::ostream& operator<<(std::ostream& out, const grid_offset<0>& off) {
+	inline std::ostream& operator<<(std::ostream& out, const grid_offset<0>&) {
 		return out;
 	}
 
@@ -126,7 +126,7 @@ namespace utils {
 			assert(a==b && "Excess elements!");
 		}
 
-		bool operator==(const grid_address& other) const {
+		bool operator==(const grid_address&) const {
 			return true;
 		}
 
@@ -146,7 +146,7 @@ namespace utils {
 		return out << addr.pos;
 	}
 
-	inline std::ostream& operator<<(std::ostream& out, const grid_address<>& addr) {
+	inline std::ostream& operator<<(std::ostream& out, const grid_address<>&) {
 		return out;
 	}
 
@@ -251,7 +251,7 @@ namespace utils {
 
 	public:
 
-		Cell& operator[](const addr_type& addr) {
+		Cell& operator[](const addr_type&) {
 			return data;
 		}
 

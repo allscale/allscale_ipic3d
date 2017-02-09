@@ -387,7 +387,7 @@ namespace ipic3d {
  		 *
 		 * @param time step
 		 */
-		void initParticles(const Coord& pos, const double dt, const bool isDipole) {
+		void initParticles(const Coord&, const double dt, const bool isDipole) {
 
 			// quick-check
 			if (particles.empty())
@@ -486,7 +486,7 @@ namespace ipic3d {
 		 * @param dt a time step
 		 * @param isDipole to check with test case we deal with
 		 */
-		void BorisMover(const Coord& pos, const Field& field, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, const double dt, const bool isDipole) {
+		void BorisMover(const Coord& pos, const Field&, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, const double dt, const bool isDipole) {
 
 			// quick-check
 			if (particles.empty())
@@ -598,7 +598,7 @@ namespace ipic3d {
 		 * @param transfers a grid of buffers to send particles to
 		 * @param time step
 		 */
-		void InterF2PBorisMover(const Coord& pos, const Field& field, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, const double dt, const bool isDipole) {
+		void InterF2PBorisMover(const Coord& pos, const Field& field, allscale::api::user::data::Grid<std::vector<Particle>,3>&, const double dt, const bool isDipole) {
 
 			// quick-check
 			if (particles.empty())
