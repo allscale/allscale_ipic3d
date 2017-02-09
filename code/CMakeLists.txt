@@ -28,4 +28,4 @@ include(msvc_source_group)
 include(nproc)
 
 # -- Project Modules
-add_subdirectory(example)
+add_subdirectory(app)

@@ -1,5 +1,4 @@
-build/
-build_with_allscalecc/
+build*
 third_party/
 
 # Editor Specific
