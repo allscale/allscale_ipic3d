@@ -60,14 +60,18 @@ int main(int argc, char** argv) {
 
 	// TODO: those values for sure need to be extracted from the parameters
 	double dt = params.dt, tcur = 0.0, tend = 4.0;
-	std::cout << "   Start Time: " << tcur << "\n";
-	std::cout << "   End Time:   " << tend << "\n";
-	std::cout << "   Time Step:  " << dt << "\n";
 
 	// extract size of grid
 	const utils::Coordinate<3> zero = 0;						// a zero constant (coordinate [0,0,0])
 	auto size = cells.size();
 
+	// print some infos for the user
+	std::cout << "   Grid Size:  " << size[0] << " x " << size[1] << " x " << size[2] << "\n";
+	std::cout << "   Start Time: " << tcur << "\n";
+	std::cout << "   End Time:   " << tend << "\n";
+	std::cout << "   Time Step:  " << dt << "\n";
+
+	// create a buffer for particle transferes
 	Grid<std::vector<Particle>,3> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
 
 	// initialize all particles
