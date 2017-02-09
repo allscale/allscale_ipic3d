@@ -1,6 +1,9 @@
 # allscale_ipic3d
 
-Description goes here...
+This project is the AllScale implementation of the Particle-in-Cell (PIC) method; 
+the original pilot is called iPIC3D. This pilot is used for the simulation of space 
+and fusion plasmas during the interaction between the solar wind and the Earth magnetic 
+field. These physical processes may effect people and technology in space and on the Earth. 
 
 ## Installation
 
