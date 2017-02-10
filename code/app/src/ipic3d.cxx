@@ -8,10 +8,8 @@
 #include "ipic3d/utils/points.h"
 
 using namespace ipic3d;
-using namespace allscale::api::user::data;
 
-
-Grid<Cell,3> initCells(const Parameters&);
+Grid<Cell> initCells(const Parameters&);
 
 Field initFields(const Parameters&);
 
@@ -76,7 +74,7 @@ int main(int argc, char** argv) {
 
 
 
-Grid<Cell,3> initCells(const Parameters& params) {
+Grid<Cell> initCells(const Parameters& params) {
 
 	// ----- setup -----
 	utils::Size<3> size = {params.nxc, params.nyc, params.nzc};		// the size of the grid
@@ -88,7 +86,7 @@ Grid<Cell,3> initCells(const Parameters& params) {
 	// -- initialize the grid of cells --
 
 	// the 3-D grid of cells
-	Grid<Cell,3> cells(size);									// the grid of cells containing the particles
+	Grid<Cell> cells(size);									// the grid of cells containing the particles
 
 	// -- initialize the state of each individual cell --
 

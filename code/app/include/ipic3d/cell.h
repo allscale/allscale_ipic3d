@@ -140,108 +140,6 @@ namespace ipic3d {
 		}
 
 		/**
-		 * This method is updating the position of all particles within this cell for a single
-		 * time step, thereby considering the given field as a driving force. Particles
-		 * leaving the cell are submitted via channels to neighboring cells.
-		 *
-		 * @param pos the coordinates of this cell in the grid
-		 * @param field the most recently computed state of the surrounding force fields
-		 * @param transfers a grid of buffers to send particles to
-		 * @param dt the time step to move the particle forward for
-		 */
-		void moveParticles(const Coord& pos, const Field& field, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, double dt) {
-
-			// quick-check
-			if (particles.empty()) return;
-
-			// -- move the particles in space --
-
-			// extract forces
-			Vector<double> E[2][2][2];
-			for(int i=0; i<2; i++) {
-				for(int j=0; j<2; j++) {
-					for(int k=0; k<2; k++) {
-						Coord cur({pos[0]+i,pos[1]+j,pos[2]+k});
-						E[i][j][k] = field[cur].E;
-					}
-				}
-			}
-
-			// update particles
-			allscale::api::user::pfor(particles, [&](Particle& p){
-
-				// TODO: move the computation of forces in an extra function (for unit testing)
-
-				// compute forces
-				Vector3<double> f;
-				f.x = f.y = f.z = 0.0;
-				for(int i=0; i<2; i++) {
-					for(int j=0; j<2; j++) {
-						for(int k=0; k<2; k++) {
-							f.x += E[i][j][k].x * p.q;
-							f.y += E[i][j][k].y * p.q;
-							f.z += E[i][j][k].z * p.q;
-						}
-					}
-				}
-
-				// update position
-				p.updatePosition(dt);
-
-				// update speed
-				p.updateVelocity(f,dt);
-
-
-			});
-
-
-			// -- migrate particles to other cells if boundaries are crossed --
-
-			// get buffers for particles to be send to neighbors
-			Coord size = transfers.size();
-			Coord center = pos * 3 + Coord{1,1,1};
-			utils::grid<std::vector<Particle>*,3,3,3> neighbors;
-			for(int i = 0; i<3; i++) {
-				for(int j = 0; j<3; j++) {
-					for(int k = 0; k<3; k++) {
-						auto cur = center + Coord{i-1,j-1,k-1} * 2;
-						// TODO: deal with boundaries
-						if (cur[0] < 0 || cur[0] >= size[0]) { neighbors[{i,j,k}] = nullptr; continue; }
-						if (cur[1] < 0 || cur[1] >= size[1]) { neighbors[{i,j,k}] = nullptr; continue; }
-						if (cur[2] < 0 || cur[2] >= size[2]) { neighbors[{i,j,k}] = nullptr; continue; }
-						neighbors[{i,j,k}] = &transfers[cur];
-					}
-				}
-			}
-
-			// move particles
-			std::vector<Particle> remaining;
-			remaining.reserve(particles.size());
-			for(const auto& p : particles) {
-				// compute relative position
-				double rx = p.x - x;
-				double ry = p.y - y;
-				double rz = p.z - z;
-				if ((fabs(rx) > dx/2) || (fabs(ry) > dy/2) || (fabs(rz) > dz/2)) {
-					// compute corresponding neighbor cell
-					int i = (rx < -dx/2) ? 0 : ( (rx > dx/2) ? 2 : 1 );
-					int j = (ry < -dy/2) ? 0 : ( (ry > dy/2) ? 2 : 1 );
-					int k = (rz < -dz/2) ? 0 : ( (rz > dz/2) ? 2 : 1 );
-					// send to neighbor cell
-					auto target = neighbors[{i,j,k}];
-					if (target) target->push_back(p);
-				} else {
-					// keep particle
-					remaining.push_back(p);
-				}
-			}
-
-			// update content
-			particles.swap(remaining);
-
-		}
-
-		/**
  		 * Initial version of the Field Solver: compute fields E and B for the Boris mover
  		 *
  		 * Fields are computed with respect to the center of each cell
@@ -631,33 +529,224 @@ namespace ipic3d {
 			particles.swap(remaining);*/
 		}
 
-		/**
-		 * Imports the particles from directed towards this cell from the given transfere buffer.
-		 */
-		void importParticles(const Coord& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+	};
 
-			// import particles send to this cell
-			Coord size = transfers.size();
-			Coord center = pos * 3 + Coord{1,1,1};
-			for(int i = 0; i<3; i++) {
-				for(int j = 0; j<3; j++) {
-					for(int k = 0; k<3; k++) {
-						auto cur = center + Coord{i-1,j-1,k-1};
-						if (cur[0] < 0 || cur[0] >= size[0]) continue;
-						if (cur[1] < 0 || cur[1] >= size[1]) continue;
-						if (cur[2] < 0 || cur[2] >= size[2]) continue;
-						auto& in = transfers[cur];
-						particles.insert(particles.end(), in.begin(), in.end());
-						in.clear();
+	using Cells = allscale::api::user::data::Grid<Cell,3>;
+
+
+	/**
+	 * This method is updating the position of all particles within a cell for a single
+	 * time step, thereby considering the given field as a driving force.
+	 *
+	 * @param pos the coordinates of this cell in the grid
+	 * @param field the most recently computed state of the surrounding force fields
+	 * @param dt the time step to move the particle forward for
+	 */
+	void moveParticlesFirstOrder(Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
+
+		// quick-check
+		if (cell.particles.empty()) return;
+
+		// -- move the particles in space --
+
+		// extract forces
+		Vector<double> E[2][2][2];
+		for(int i=0; i<2; i++) {
+			for(int j=0; j<2; j++) {
+				for(int k=0; k<2; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+					E[i][j][k] = field[cur].E;
+				}
+			}
+		}
+
+		// update particles
+		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+
+			// TODO: move the computation of forces in an extra function (for unit testing)
+
+			// compute forces
+			Vector3<double> f;
+			f.x = f.y = f.z = 0.0;
+			for(int i=0; i<2; i++) {
+				for(int j=0; j<2; j++) {
+					for(int k=0; k<2; k++) {
+						f.x += E[i][j][k].x * p.q;
+						f.y += E[i][j][k].y * p.q;
+						f.z += E[i][j][k].z * p.q;
 					}
 				}
 			}
 
+			// update position
+			p.updatePosition(dt);
+
+			// update speed
+			p.updateVelocity(f,dt);
+
+
+		});
+
+	}
+
+	/**
+	 * This method is updating the position of all particles within a cell for a single
+	 * time step, thereby considering the given field as a driving force.
+	 *
+	 * @param pos the coordinates of this cell in the grid
+	 * @param field the most recently computed state of the surrounding force fields
+	 * @param dt the time step to move the particle forward for
+	 */
+	void moveParticlesBorisStyle(Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
+
+		// quick-check
+		if (cell.particles.empty()) return;
+
+		// -- move the particles in space --
+
+		// extract forces
+		Vector3<double> Es[2][2][2];
+		Vector3<double> Bs[2][2][2];
+		for(int i=0; i<2; i++) {
+			for(int j=0; j<2; j++) {
+				for(int k=0; k<2; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+					Es[i][j][k].x = field[cur].E.x;
+					Es[i][j][k].y = field[cur].E.y;
+					Es[i][j][k].z = field[cur].E.z;
+
+					Bs[i][j][k].x = field[cur].B.x;
+					Bs[i][j][k].y = field[cur].B.y;
+					Bs[i][j][k].z = field[cur].B.z;
+				}
+			}
 		}
 
-	};
+		// update particles
+		allscale::api::user::pfor(cell.particles, [&](Particle& p){
 
-	using Cells = allscale::api::user::data::Grid<Cell,3>;
+			// Docu: https://www.particleincell.com/2011/vxb-rotation/
+			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
+
+			// TODO: interpolate here!
+			auto& E = Es[0][0][0];
+			auto& B = Bs[0][0][0];
+
+			// convert position and velocity
+			Vector3<double> v { p.dx, p.dy, p.dz };
+
+
+			// do the magic computation
+
+			auto k = p.q/p.mass * 0.5 * dt;
+
+			auto t = k * B;
+
+			auto t_mag2 = t.x*t.x + t.y*t.y + t.z*t.z;
+
+			auto s = (2.0 * t) / (1+t_mag2);
+
+			auto v_minus = v + k * E;
+
+			auto v_prime = v_minus + cross(v_minus,t);
+
+			auto v_plus = v_minus + cross(v_prime,s);
+
+			v = v_plus + k * E;
+
+			// update velocity
+			p.dx = v.x;
+			p.dy = v.y;
+			p.dz = v.z;
+
+			// update position
+			p.updatePosition(dt);
+
+		});
+
+	}
+
+
+	/**
+	 * This method extracts all particles which are no longer in the domain of the
+	 * given cell and inserts them into the provided transfer buffers.
+	 *
+	 * @param pos the coordinates of this cell in the grid
+	 * @param transfers a grid of buffers to send particles to
+	 */
+	void exportParticles(Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+
+
+		// -- migrate particles to other cells if boundaries are crossed --
+
+		// get buffers for particles to be send to neighbors
+		utils::Coordinate<3> size = transfers.size();
+		utils::Coordinate<3> center = pos * 3 + utils::Coordinate<3>{1,1,1};
+		utils::grid<std::vector<Particle>*,3,3,3> neighbors;
+		for(int i = 0; i<3; i++) {
+			for(int j = 0; j<3; j++) {
+				for(int k = 0; k<3; k++) {
+					auto cur = center + utils::Coordinate<3>{i-1,j-1,k-1} * 2;
+					// TODO: deal with boundaries
+					if (cur[0] < 0 || cur[0] >= size[0]) { neighbors[{i,j,k}] = nullptr; continue; }
+					if (cur[1] < 0 || cur[1] >= size[1]) { neighbors[{i,j,k}] = nullptr; continue; }
+					if (cur[2] < 0 || cur[2] >= size[2]) { neighbors[{i,j,k}] = nullptr; continue; }
+					neighbors[{i,j,k}] = &transfers[cur];
+				}
+			}
+		}
+
+		// move particles
+		std::vector<Particle> remaining;
+		remaining.reserve(cell.particles.size());
+		for(const auto& p : cell.particles) {
+			// compute relative position
+			double rx = p.x - cell.x;
+			double ry = p.y - cell.y;
+			double rz = p.z - cell.z;
+			if ((fabs(rx) > cell.dx/2) || (fabs(ry) > cell.dy/2) || (fabs(rz) > cell.dz/2)) {
+				// compute corresponding neighbor cell
+				int i = (rx < -cell.dx/2) ? 0 : ( (rx > cell.dx/2) ? 2 : 1 );
+				int j = (ry < -cell.dy/2) ? 0 : ( (ry > cell.dy/2) ? 2 : 1 );
+				int k = (rz < -cell.dz/2) ? 0 : ( (rz > cell.dz/2) ? 2 : 1 );
+				// send to neighbor cell
+				auto target = neighbors[{i,j,k}];
+				if (target) target->push_back(p);
+			} else {
+				// keep particle
+				remaining.push_back(p);
+			}
+		}
+
+		// update content
+		cell.particles.swap(remaining);
+
+	}
+
+
+	/**
+	 * Imports the particles from directed towards this cell from the given transfer buffer.
+	 */
+	void importParticles(Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+
+		// import particles send to this cell
+		utils::Coordinate<3> size = transfers.size();
+		utils::Coordinate<3> center = pos * 3 + utils::Coordinate<3>{1,1,1};
+		for(int i = 0; i<3; i++) {
+			for(int j = 0; j<3; j++) {
+				for(int k = 0; k<3; k++) {
+					auto cur = center + utils::Coordinate<3>{i-1,j-1,k-1};
+					if (cur[0] < 0 || cur[0] >= size[0]) continue;
+					if (cur[1] < 0 || cur[1] >= size[1]) continue;
+					if (cur[2] < 0 || cur[2] >= size[2]) continue;
+					auto& in = transfers[cur];
+					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
+					in.clear();
+				}
+			}
+		}
+
+	}
 
 
 
