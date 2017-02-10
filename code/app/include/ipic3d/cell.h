@@ -69,7 +69,7 @@ namespace ipic3d {
 
 			// aggregate particles
 			// TODO data race on res, should be avoided
-			allscale::api::user::pfor(particles, [&](const Particle& p) {
+			for(const auto& p : particles) {
 				for(int i=0; i<2; i++) {
 					for(int j=0; j<2; j++) {
 						for(int k=0; k<2; k++) {
@@ -79,13 +79,13 @@ namespace ipic3d {
 						}
 					}
 				}
-			});
+			}
 
 			// write contributions to contributions grid
 			for(int i=0; i<2; i++) {
 				for(int j=0; j<2; j++) {
 					for(int k=0; k<2; k++) {
-						Coord cur = (pos * 2)  + Coord{i,j,k};
+						Coord cur = (pos * 2) + Coord{i,j,k};
 						contributions[cur] = res[i][j][k];
 					}
 				}
@@ -147,11 +147,14 @@ namespace ipic3d {
 		 * @param pos the coordinates of this cell in the grid
 		 * @param field the most recently computed state of the surrounding force fields
 		 * @param transfers a grid of buffers to send particles to
+		 * @param dt the time step to move the particle forward for
 		 */
-		void moveParticles(const Coord& pos, const Field& field, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+		void moveParticles(const Coord& pos, const Field& field, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, double dt) {
 
 			// quick-check
 			if (particles.empty()) return;
+
+			// -- move the particles in space --
 
 			// extract forces
 			Vector<double> E[2][2][2];
@@ -166,40 +169,43 @@ namespace ipic3d {
 
 			// update particles
 			allscale::api::user::pfor(particles, [&](Particle& p){
+
+				// TODO: move the computation of forces in an extra function (for unit testing)
+
 				// compute forces
-				double fx, fy, fz;
-				fx = fy = fz = 0.0;
+				Vector3<double> f;
+				f.x = f.y = f.z = 0.0;
 				for(int i=0; i<2; i++) {
 					for(int j=0; j<2; j++) {
 						for(int k=0; k<2; k++) {
-							fx += E[i][j][k].x * p.q;		// or whatever formula is required
-							fy += E[i][j][k].y * p.q;		// or whatever formula is required
-							fz += E[i][j][k].z * p.q;		// or whatever formula is required
+							f.x += E[i][j][k].x * p.q;
+							f.y += E[i][j][k].y * p.q;
+							f.z += E[i][j][k].z * p.q;
 						}
 					}
 				}
 
-				// update speed
-				p.dx += fx;		// assuming mass = 1 unit
-				p.dy += fy;
-				p.dz += fz;
+				// update position
+				p.updatePosition(dt);
 
-				// move particle
-				p.x += p.dx;
-				p.y += p.dy;
-				p.z += p.dz;
+				// update speed
+				p.updateVelocity(f,dt);
+
 
 			});
+
+
+			// -- migrate particles to other cells if boundaries are crossed --
 
 			// get buffers for particles to be send to neighbors
 			Coord size = transfers.size();
 			Coord center = pos * 3 + Coord{1,1,1};
-			// sequential variant to move particles
 			utils::grid<std::vector<Particle>*,3,3,3> neighbors;
 			for(int i = 0; i<3; i++) {
 				for(int j = 0; j<3; j++) {
 					for(int k = 0; k<3; k++) {
 						auto cur = center + Coord{i-1,j-1,k-1} * 2;
+						// TODO: deal with boundaries
 						if (cur[0] < 0 || cur[0] >= size[0]) { neighbors[{i,j,k}] = nullptr; continue; }
 						if (cur[1] < 0 || cur[1] >= size[1]) { neighbors[{i,j,k}] = nullptr; continue; }
 						if (cur[2] < 0 || cur[2] >= size[2]) { neighbors[{i,j,k}] = nullptr; continue; }
@@ -208,126 +214,30 @@ namespace ipic3d {
 				}
 			}
 
-			// parallel variant to move particles using map reduce and a SpinLock
-//			SpinLock lock;
-//			auto map = [&](auto& p, std::vector<Particle>& remaining) {
-//				// compute relative position
-//				double rx = p.x - x;
-//				double ry = p.y - y;
-//				double rz = p.z - z;
-//
-//				bool exitX = (fabs(rx) > dx/2);
-//				bool exitY = (fabs(ry) > dy/2);
-//				bool exitZ = (fabs(rz) > dz/2);
-//
-//				if (exitX || exitY || exitZ) {
-//					// compute corresponding neighbor cell
-//					int i = exitX ? ((rx < 0) ? 0 : 2) : 1;
-//					int j = exitY ? ((ry < 0) ? 0 : 2) : 1;
-//					int k = exitZ ? ((rz < 0) ? 0 : 2) : 1;
-//					// send to neighbor cell
-//
-//					auto target = neighbors[{i,j,k}];
-//
-//					lock.lock();
-//					if (target)target->push_back(p);
-//					lock.unlock();
-//
-//				} else {
-//					// keep particle
-//					remaining.push_back(p);
-//				}
-//			};
-//
-//
-//			// merging of results
-//			auto reduce = [](std::vector<Particle>&& a, std::vector<Particle>&& b) {
-//
-//				std::vector<Particle> merged;(std::move(a));
-//				merged.insert(merged.end(),b.begin(),b.end());
-//
-//				return merged;
-//			};
-//
-//			auto init = []() { return std::vector<Particle>(); };
-//			auto exit = [](std::vector<Particle>& r) { return r; };
-//
-//			std::vector<Particle> remaining = parec::map_reduce(particles, map, reduce, init, exit);
+			// move particles
+			std::vector<Particle> remaining;
+			remaining.reserve(particles.size());
+			for(const auto& p : particles) {
+				// compute relative position
+				double rx = p.x - x;
+				double ry = p.y - y;
+				double rz = p.z - z;
+				if ((fabs(rx) > dx/2) || (fabs(ry) > dy/2) || (fabs(rz) > dz/2)) {
+					// compute corresponding neighbor cell
+					int i = (rx < -dx/2) ? 0 : ( (rx > dx/2) ? 2 : 1 );
+					int j = (ry < -dy/2) ? 0 : ( (ry > dy/2) ? 2 : 1 );
+					int k = (rz < -dz/2) ? 0 : ( (rz > dz/2) ? 2 : 1 );
+					// send to neighbor cell
+					auto target = neighbors[{i,j,k}];
+					if (target) target->push_back(p);
+				} else {
+					// keep particle
+					remaining.push_back(p);
+				}
+			}
 
-
-			// TODO: integrate map_reduce into the API and finish this
-//			// parallel variant to move particles using map_reduce and a temporary grid
-//			struct Particles {
-//				std::vector<Particle> remaining;
-//				utils::grid<std::vector<Particle>,3,3,3> neighbors;
-//			};
-//
-//			auto map = [&](const Particle& p, Particles& moving) {
-//				// compute relative position
-//				double rx = p.x - x;
-//				double ry = p.y - y;
-//				double rz = p.z - z;
-//
-//				bool exitX = (fabs(rx) > dx/2);
-//				bool exitY = (fabs(ry) > dy/2);
-//				bool exitZ = (fabs(rz) > dz/2);
-//
-//				if (exitX || exitY || exitZ) {
-//					// compute corresponding neighbor cell
-//					int i = exitX ? ((rx < 0) ? 0 : 2) : 1;
-//					int j = exitY ? ((ry < 0) ? 0 : 2) : 1;
-//					int k = exitZ ? ((rz < 0) ? 0 : 2) : 1;
-//					// send to neighbor cell
-//					moving.neighbors[{i,j,k}].push_back(p);
-//				} else {
-//					// keep particle
-//					moving.remaining.push_back(p);
-//				}
-//			};
-//
-//
-//			// merging of results
-//			auto reduce = [](Particles&& a, Particles&& b) {
-//
-//				std::vector<Particle> mergedP(std::move(a.remaining));
-//				mergedP.insert(mergedP.end(),b.remaining.begin(),b.remaining.end());
-//
-//				utils::grid<std::vector<Particle>,3,3,3> mergedN(a.neighbors);
-//
-//				for(int i = 0; i<3; i++) {
-//					for(int j = 0; j<3; j++) {
-//						for(int k = 0; k<3; k++) {
-//							for(auto neighbor : b.neighbors[{i,j,k}]) {
-//								mergedN[{i,j,k}].push_back(neighbor);
-//							}
-//						}
-//					}
-//				}
-//
-//				return Particles({mergedP, mergedN});
-//			};
-//
-//			auto init = [&]() { return Particles({std::vector<Particle>(), utils::grid<std::vector<Particle>,3,3,3>()}); };
-//			auto exit = [](Particles& r) { return r; };
-//
-//			Particles moved = parec::map_reduce(particles, map, reduce, init, exit);
-//
-//			// copy particles that neighbors to transfer grid
-//			for(int i = 0; i<3; i++) {
-//				for(int j = 0; j<3; j++) {
-//					for(int k = 0; k<3; k++) {
-//						auto cur = center + Coord{i-1,j-1,k-1} * 2;
-//						if (cur[0] < 0 || cur[0] >= size[0]) { continue; }
-//						if (cur[1] < 0 || cur[1] >= size[1]) { continue; }
-//						if (cur[2] < 0 || cur[2] >= size[2]) { continue; }
-//						for(auto neighbor : moved.neighbors[{i,j,k}])
-//							transfers[cur].push_back(neighbor);
-//					}
-//				}
-//			}
-//
-//			// update content
-//			particles.swap(moved.remaining);
+			// update content
+			particles.swap(remaining);
 
 		}
 
@@ -722,23 +632,20 @@ namespace ipic3d {
 		}
 
 		/**
-		 * Requests this cell to import all the particles from the given source (receiving end of a channel).
+		 * Imports the particles from directed towards this cell from the given transfere buffer.
 		 */
 		void importParticles(const Coord& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
 
 			// import particles send to this cell
-//			Coord size = transfers.getSize();
+			Coord size = transfers.size();
 			Coord center = pos * 3 + Coord{1,1,1};
-
-			// sequential particle gathering
 			for(int i = 0; i<3; i++) {
 				for(int j = 0; j<3; j++) {
 					for(int k = 0; k<3; k++) {
-						Coord cur = center + Coord{i-1,j-1,k-1};
-//						if (cur[0] < 0 || cur[0] >= size[0]) continue;
-//						if (cur[1] < 0 || cur[1] >= size[1]) continue;
-//						if (cur[2] < 0 || cur[2] >= size[2]) continue;
-
+						auto cur = center + Coord{i-1,j-1,k-1};
+						if (cur[0] < 0 || cur[0] >= size[0]) continue;
+						if (cur[1] < 0 || cur[1] >= size[1]) continue;
+						if (cur[2] < 0 || cur[2] >= size[2]) continue;
 						auto& in = transfers[cur];
 						particles.insert(particles.end(), in.begin(), in.end());
 						in.clear();
@@ -746,35 +653,11 @@ namespace ipic3d {
 				}
 			}
 
-//			// parallel particle gathering using map reduce
-//			const Coord start = center - Coord{1,1,1};
-//			const Coord end = center + Coord{1,1,1};
-//
-//			auto map = [&](const Coord& cur, std::vector<Particle>& p) {
-//				auto& in = transfers[cur];
-//				p.insert(p.end(), in.begin(), in.end());
-//				in.clear();
-//			};
-//
-//
-//			// merging of results
-//			auto reduce = [](std::vector<Particle>&& a, std::vector<Particle>&& b) {
-//				std::vector<Particle> merged(std::move(a));
-//				merged.insert(merged.end(),b.begin(),b.end());
-//
-//				return merged;
-//			};
-//
-////			std::vector<Coord> container;
-//			auto init = []() { return std::vector<Particle>(); };
-//			auto exit = [](std::vector<Particle>& r) { return r; };
-//
-//			std::vector<Particle> incomming = map_reduce<std::vector<Particle>>(start, end, map, reduce, init, exit);
-//
-//			particles.insert(particles.end(), incomming.begin(), incomming.end());
 		}
 
 	};
+
+	using Cells = allscale::api::user::data::Grid<Cell,3>;
 
 
 

@@ -50,7 +50,15 @@ namespace ipic3d {
 
 		delta = config.read < double >("delta",0.5);
 
-		Case              = config.read<std::string>("Case");
+		// parse the simulation use case
+		auto caseString = config.read<std::string>("Case");
+		if (caseString == "Dipole") {
+			useCase = UseCase::Dipole;
+		} else {
+			useCase = UseCase::ParticleWave;
+		}
+
+
 		wmethod           = config.read<std::string>("WriteMethod");
 		SimName           = config.read<std::string>("SimulationName");
 		PoissonCorrection = config.read<std::string>("PoissonCorrection");

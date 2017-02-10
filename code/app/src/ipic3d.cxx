@@ -1,15 +1,14 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "allscale/api/user/data/grid.h"
-
 #include "ipic3d/cell.h"
 #include "ipic3d/parameters.h"
+#include "ipic3d/simulator.h"
+
 #include "ipic3d/utils/points.h"
 
 using namespace ipic3d;
 using namespace allscale::api::user::data;
-
 
 
 Grid<Cell,3> initCells(const Parameters&);
@@ -32,14 +31,20 @@ int main(int argc, char** argv) {
 	auto params = Parameters::read(argv[1]);
 
 
+	params.dx = 10;
+	params.dy = 10;
+	params.dz = 10;
 
 	// ----- initialize simulation environment ------
 
 	// setup simulation
 	std::cout << "Initializing simulation state ...\n";
-	auto cells = initCells(params);
-	auto field = initFields(params);
 
+	// initialize cells and contained particles
+	auto cells = initCells(params);
+
+	// initialize electric and magnetic force fields
+	auto field = initFields(params);
 
 
 	// ----- run the simulation ------
@@ -47,35 +52,20 @@ int main(int argc, char** argv) {
 	// run simulation
 	std::cout << "Running simulation ...\n";
 
-	// TODO: those values for sure need to be extracted from the parameters
-	double dt = params.dt, tcur = 0.0, tend = 4.0;
-
 	// extract size of grid
-	const utils::Coordinate<3> zero = 0;						// a zero constant (coordinate [0,0,0])
 	auto size = cells.size();
 
+	// get the time step
+	double dt = params.dt;
+
 	// print some infos for the user
-	std::cout << "   Grid Size:  " << size[0] << " x " << size[1] << " x " << size[2] << "\n";
-	std::cout << "   Start Time: " << tcur << "\n";
-	std::cout << "   End Time:   " << tend << "\n";
-	std::cout << "   Time Step:  " << dt << "\n";
+	std::cout << "   Grid Size:       " << size[0] << " x " << size[1] << " x " << size[2] << "\n";
+	std::cout << "   Time Step:       " << dt << "\n";
+	std::cout << "   Number of steps: " << params.ncycles << "\n";
 
-	// create a buffer for particle transfers
-	Grid<std::vector<Particle>,3> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
+	// -- run the simulation --
 
-	// run time loop for the simulation
-	while( tcur <= tend ) {
-
-		// move particles
-		allscale::api::user::pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-			cells[pos].BorisMover(pos, field, particleTransfers, dt, true);
-		});
-		// -- implicit global sync - TODO: can this be eliminated? --
-
-		// increment time step
-		tcur += dt;
-	}
-
+	simulateSteps(params.ncycles, dt, cells, field);
 
 	// ----- finish ------
 
@@ -122,26 +112,25 @@ Grid<Cell,3> initCells(const Parameters& params) {
 		// compute number of particles to be added
 		int npcel = params.npcel[0];
 
-		// TODO: it should probably be the following, but the example did not include this
-//		int npcel = params.npcelx[pos[0]] * params.npcely[pos[1]] * params.npcelz[pos[2]];
-
-
 		// add the requested number of parameters
 		unsigned random_state = pos[0] * 10000 + pos[1] * 100 + pos[2];
 		for (int i = 0; i < npcel; i++) {
-			double x, y, z;
-			x = cell.x + (rand_r(&random_state) / RAND_MAX) * cell.dx;
-			y = cell.y + (rand_r(&random_state) / RAND_MAX) * cell.dy;
-			z = cell.z + (rand_r(&random_state) / RAND_MAX) * cell.dz;
-			Particle p{x, y, z, 0.0, 0.0, 0.0, 0.0};
+			Particle p;
+
+			p.x = cell.x + (rand_r(&random_state) / RAND_MAX) * cell.dx - cell.dx/2;
+			p.y = cell.y + (rand_r(&random_state) / RAND_MAX) * cell.dy - cell.dy/2;
+			p.z = cell.z + (rand_r(&random_state) / RAND_MAX) * cell.dz - cell.dz/2;
+
+			// TODO: initialize the speed of particles
+			p.dx = 0.0;
+			p.dx = 0.0;
+			p.dx = 0.0;
+
+			p.q = 0.15;
+
 			cell.particles.push_back(p);
 		}
 
-		// initialize all the particles
-		cell.initParticles(pos, params.dt, true);
-
-		// initialize particles again (TODO: this seems quite strange => check)
-		cell.initParticles(pos, params.dt, false);
 	});
 
 	// return the initialized cells
@@ -153,66 +142,87 @@ Field initFields(const Parameters& params) {
 	using namespace allscale::api::user;
 
 	// determine the field size
+	utils::Size<3> zero = 0;
 	utils::Size<3> fieldSize = {params.nxc + 1, params.nyc + 1, params.nzc + 1};
 
 	// the 3-D force fields
 	Field fields(fieldSize);
 
-
+	// TODO: use one kind of vector everywhere
 	data::Vector<double,3> a{params.u0[0], params.v0[0], params.w0[0]};
 	data::Vector<double,3> b{params.B0x, params.B0y, params.B0z};
 	auto ebc = crossProduct(a,b) * -1;
 
 	// TODO: this is completely wrong => those values must not be shared!!
-	double x_displ, y_displ, z_displ, fac1;
-	pfor(fieldSize,[&](const utils::Coordinate<3>& cur) {
+	pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
+
+		double x_displ, y_displ, z_displ, fac1;
+
+		// init electrical field
 		fields[cur].E.x = ebc[0];
 		fields[cur].E.y = ebc[1];
 		fields[cur].E.z = ebc[2];
 
-		// radius of the planet
-		double a = params.L_square;
+		// init magnetic field
+		fields[cur].B.x = params.B0x;
+		fields[cur].B.y = params.B0y;
+		fields[cur].B.z = params.B0z;
 
-		double xc = params.x_center;
-		double yc = params.y_center;
-		double zc = params.z_center;
+		// -- add earth model --
 
-		double x = cur[0];
-		double y = cur[1];
-		double z = cur[2];
+		switch(params.useCase) {
 
-		double r2 = ((x-xc)*(x-xc)) + ((y-yc)*(y-yc)) + ((z-zc)*(z-zc));
+			case UseCase::Dipole: {
 
-		// Compute dipolar field B_ext
+				// radius of the planet
+				double a = params.L_square;
 
-		if (r2 > a*a) {
-			x_displ = x - xc;
-			y_displ = y - yc;
-			z_displ = z - zc;
-			fac1 =  -params.B1z * a * a * a / pow(r2, 2.5);
-			fields[cur].Bext.x = 3.0 * x_displ * z_displ * fac1;
-			fields[cur].Bext.y = 3.0 * y_displ * z_displ * fac1;
-			fields[cur].Bext.z = (2.0 * z_displ * z_displ - x_displ * x_displ - y_displ * y_displ) * fac1;
-		} else { // no field inside the planet
-			fields[cur].Bext.x = 0.0;
-			fields[cur].Bext.y = 0.0;
-			fields[cur].Bext.z = 0.0;
+				double xc = params.x_center;
+				double yc = params.y_center;
+				double zc = params.z_center;
+
+				double x = cur[0];
+				double y = cur[1];
+				double z = cur[2];
+
+				double r2 = ((x-xc)*(x-xc)) + ((y-yc)*(y-yc)) + ((z-zc)*(z-zc));
+
+				// Compute dipolar field B_ext
+
+				if (r2 > a*a) {
+					x_displ = x - xc;
+					y_displ = y - yc;
+					z_displ = z - zc;
+					fac1 =  -params.B1z * a * a * a / pow(r2, 2.5);
+					fields[cur].Bext.x = 3.0 * x_displ * z_displ * fac1;
+					fields[cur].Bext.y = 3.0 * y_displ * z_displ * fac1;
+					fields[cur].Bext.z = (2.0 * z_displ * z_displ - x_displ * x_displ - y_displ * y_displ) * fac1;
+				} else { // no field inside the planet
+					fields[cur].Bext.x = 0.0;
+					fields[cur].Bext.y = 0.0;
+					fields[cur].Bext.z = 0.0;
+				}
+
+				break;
+			}
+
+			case UseCase::ParticleWave: {
+
+				fields[cur].Bext.x = 0;
+				fields[cur].Bext.y = 0;
+				fields[cur].Bext.z = 0;
+
+				break;
+			}
+
+			default:
+					assert_not_implemented()
+						<< "The specified use case is not supported yet!";
 		}
-		fields[cur].B.x = params.B0x;// + Bx_ext[i][j][k]
-		fields[cur].B.y = params.B0y;// + By_ext[i][j][k]
-		fields[cur].B.z = params.B0z;// + Bz_ext[i][j][k]
+
 	});
-
-	// TODO: we need to compute Bc on centers of each node
-	// 		that means we need to aggregate all the eight values from the nodes of each cell
-
-	// TODO: communicateCenterBC_P
-
-	// TODO: compute rho also with interpN2C
-
-
-	// TODO: initFields();
 
 	// return the produced field
 	return std::move(fields);
 }
+

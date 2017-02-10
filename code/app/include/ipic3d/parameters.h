@@ -4,6 +4,14 @@
 
 namespace ipic3d {
 
+	/**
+	 * An enumeration of use cases.
+	 */
+	enum class UseCase {
+		ParticleWave,
+		Dipole
+	};
+
 
 	struct Parameters {
 
@@ -117,7 +125,7 @@ namespace ipic3d {
 
 
 		/*! Case type */
-		std::string Case;
+		UseCase useCase;
 		/*! Output writing method */
 		std::string wmethod;
 		/*! Simulation name */
