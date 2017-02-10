@@ -21,7 +21,7 @@ namespace ipic3d {
 
 		struct default_field_solver;
 
-		struct default_particle_mover;
+		struct boris_mover;
 	}
 
 
@@ -30,7 +30,7 @@ namespace ipic3d {
 		typename Field,
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::default_field_solver,
-		typename ParticleMover 				= detail::default_particle_mover
+		typename ParticleMover 				= detail::boris_mover
 	>
 	void simulateSteps(int numSteps, double dt, Grid<Cell>& cells, Grid<Field>& field);
 
@@ -40,7 +40,7 @@ namespace ipic3d {
 		typename Field,
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::default_field_solver,
-		typename ParticleMover 				= detail::default_particle_mover
+		typename ParticleMover 				= detail::boris_mover
 	>
 	void simulateStep(double dt, Grid<Cell>& cells, Grid<Field>& field) {
 		simulateSteps<Cell,Field,ParticleToFieldProjector,FieldSolver,ParticleMover>(1,dt,cells,field);
@@ -56,9 +56,9 @@ namespace ipic3d {
 	template<
 		typename Cell,
 		typename Field,
-		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::default_field_solver,
-		typename ParticleMover 				= detail::default_particle_mover
+		typename ParticleToFieldProjector,
+		typename FieldSolver,
+		typename ParticleMover
 	>
 	void simulateSteps(int numSteps, double dt, Grid<Cell>& cells, Grid<Field>& field) {
 
