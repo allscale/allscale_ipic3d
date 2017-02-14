@@ -110,7 +110,7 @@ namespace ipic3d {
 		Cell& cell = cells[{0,0,0}];
 
 		// configure the cell
-		cell.x = cell.y = cell.z = 0;
+		cell.x = cell.y = cell.z = 50;
 		cell.dx = cell.dy = cell.dz = 100;
 
 
@@ -147,6 +147,69 @@ namespace ipic3d {
 		EXPECT_NEAR( res.x, 0.590, 0.001);
 		EXPECT_NEAR( res.y, 0.589, 0.001);
 		EXPECT_NEAR( res.z, 0.894, 0.001);
+
+	}
+
+
+	TEST(SimulationTest, SingleParticleBorisMoverLarmorRadiusPseudo) {
+
+		int niter = 10;
+		double dt = 0.1;
+
+		// create one cell
+		Cells cells({1,1,1});
+		Cell& cell = cells[{0,0,0}];
+
+		// configure the cell
+		cell.x = cell.y = cell.z = 50;
+		cell.dx = cell.dy = cell.dz = 100;
+
+
+		// create a surrounding force field
+		Field fields({2,2,2});
+
+		decltype(fields.size()) zero = 0;
+		allscale::api::user::pfor(zero,fields.size(),[&](auto& pos){
+			fields[pos].E = { 0.0, 0.0, 0.0 };
+			fields[pos].B = { 0.0, 0.0, 0.1 };
+		});
+
+		// add one particle
+		Particle p;
+		p.x = p.y = p.z = 0.0;
+
+		p.dx = p.dz = 0.0;
+		p.dy = 1;
+
+		p.q = -1;
+		p.mass = 1;
+
+		// compute Larmor radius
+		double rL = p.mass * p.dy / (fabs(p.q) * fields[{0,0,0}].B.z);
+		EXPECT_NEAR( rL, 10, 0.1 );
+		p.x = rL;
+
+		// push velocity back in time by 1/2 dt
+		p.updateVelocityBorisStyle(fields[{0,0,0}].E, fields[{0,0,0}].B, -0.5*dt);
+		
+		cell.particles.push_back(p);
+
+		// run the simulation
+		simulateSteps<Cell,FieldNode,detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,dt,cells,fields);
+
+		// check where particle ended up
+		ASSERT_FALSE(cell.particles.empty());
+		Particle res = cell.particles.front();
+
+		// check that the position is close to what is expected
+		EXPECT_NEAR( res.x, 9.9500, 0.0001);
+		EXPECT_NEAR( res.y, 0.9983, 0.0001);
+		EXPECT_NEAR( res.z, 0.0,	0.00001);
+
+		// check that the velocity is close to what is expected
+		EXPECT_NEAR( res.dx, -0.0948, 0.0001);
+		EXPECT_NEAR( res.dy, 0.9954,  0.0001);
+		EXPECT_NEAR( res.dz, 0.0,     0.0001);
 
 	}
 

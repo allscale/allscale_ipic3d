@@ -31,6 +31,30 @@ namespace ipic3d {
 			dz += force.z * dt / mass;
 		}
 
+		void updateVelocityBorisStyle(const Force& E, const Force& B, double dt) {
+			Vector3<double> v { dx, dy, dz };
+
+			auto k = q / mass * 0.5 * dt;
+
+			auto t = k * B;
+
+			auto t_mag2 = t.x*t.x + t.y*t.y + t.z*t.z;
+
+			auto s = (2.0 * t) / (1+t_mag2);
+
+			auto v_minus = v + k * E;
+
+			auto v_prime = v_minus + cross(v_minus,t);
+
+			auto v_plus = v_minus + cross(v_prime,s);
+
+			v = v_plus + k * E;
+
+			dx = v.x;
+			dy = v.y;
+			dz = v.z;
+		}
+
 	};
 
 

@@ -37,7 +37,7 @@ namespace ipic3d {
 
 		using Coord = utils::Coordinate<3>;
 
-		// the cell position
+		// center of the cell
 		double x, y, z;
 
 		// the cell grid spacing
@@ -413,8 +413,8 @@ namespace ipic3d {
 				return;
 
 			// extract forces
-			Vector<double> E[2][2][2];
-			Vector<double> B[2][2][2];
+			Vector3<double> E[2][2][2];
+			Vector3<double> B[2][2][2];
 			for(int i=0; i<2; i++) {
 				for(int j=0; j<2; j++) {
 					for(int k=0; k<2; k++) {
@@ -550,7 +550,7 @@ namespace ipic3d {
 		// -- move the particles in space --
 
 		// extract forces
-		Vector<double> E[2][2][2];
+		Vector3<double> E[2][2][2];
 		for(int i=0; i<2; i++) {
 			for(int j=0; j<2; j++) {
 				for(int k=0; k<2; k++) {
@@ -632,36 +632,12 @@ namespace ipic3d {
 			auto& E = Es[0][0][0];
 			auto& B = Bs[0][0][0];
 
-			// convert position and velocity
-			Vector3<double> v { p.dx, p.dy, p.dz };
-
-
-			// do the magic computation
-
-			auto k = p.q/p.mass * 0.5 * dt;
-
-			auto t = k * B;
-
-			auto t_mag2 = t.x*t.x + t.y*t.y + t.z*t.z;
-
-			auto s = (2.0 * t) / (1+t_mag2);
-
-			auto v_minus = v + k * E;
-
-			auto v_prime = v_minus + cross(v_minus,t);
-
-			auto v_plus = v_minus + cross(v_prime,s);
-
-			v = v_plus + k * E;
 
 			// update velocity
-			p.dx = v.x;
-			p.dy = v.y;
-			p.dz = v.z;
+			p.updateVelocityBorisStyle(E, B, dt);
 
 			// update position
 			p.updatePosition(dt);
-
 		});
 
 	}

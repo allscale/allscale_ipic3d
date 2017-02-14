@@ -12,10 +12,10 @@ namespace ipic3d {
 	};
 
 	struct FieldNode {
-		Vector<double> E;				// electric field components defined on nodes
-		Vector<double> B;				// magnetic field components defined on nodes
-		Vector<double> Bc;				// magnetic field components defined on central points between nodes TODO: to clarify this
-		Vector<double> Bext;			// external magnetic field on nodes
+		Vector3<double> E;				// electric field components defined on nodes
+		Vector3<double> B;				// magnetic field components defined on nodes
+		Vector3<double> Bc;				// magnetic field components defined on central points between nodes TODO: to clarify this
+		Vector3<double> Bext;			// external magnetic field on nodes
 	};
 
 	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes
