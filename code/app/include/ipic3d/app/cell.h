@@ -5,10 +5,10 @@
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
 
-#include "ipic3d/particle.h"
-#include "ipic3d/field_node.h"
-#include "ipic3d/utils/points.h"
-#include "ipic3d/utils/static_grid.h"
+#include "ipic3d/app/particle.h"
+#include "ipic3d/app/field_node.h"
+#include "ipic3d/app/utils/points.h"
+#include "ipic3d/app/utils/static_grid.h"
 
 namespace ipic3d {
 

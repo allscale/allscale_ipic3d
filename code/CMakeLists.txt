@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(allscale_ipic3d VERSION 0.0.0 LANGUAGES C CXX)
+project(ipic3d VERSION 0.0.0 LANGUAGES C CXX)
 
 # -- Module Path
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../cmake)

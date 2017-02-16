@@ -1,9 +1,9 @@
-#include "ipic3d/parameters.h"
+#include "ipic3d/app/parameters.h"
 
 #include <array>
 #include <cmath>
 
-#include "ipic3d/ConfigFile.h"
+#include "ipic3d/app/ConfigFile.h"
 
 namespace ipic3d {
 

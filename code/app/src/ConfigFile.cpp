@@ -1,6 +1,6 @@
 // ConfigFile.cpp
 
-#include "ipic3d/ConfigFile.h"
+#include "ipic3d/app/ConfigFile.h"
 
 using std::string;
 

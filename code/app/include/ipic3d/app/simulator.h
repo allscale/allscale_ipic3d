@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ipic3d/cell.h"
-#include "ipic3d/field_node.h"
+#include "ipic3d/app/cell.h"
+#include "ipic3d/app/field_node.h"
 
 namespace ipic3d {
 

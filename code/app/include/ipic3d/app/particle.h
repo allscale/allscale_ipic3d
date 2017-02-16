@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ipic3d/vector.h"
+#include "ipic3d/app/vector.h"
 
 namespace ipic3d {
 

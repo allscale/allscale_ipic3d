@@ -1,11 +1,11 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "ipic3d/cell.h"
-#include "ipic3d/parameters.h"
-#include "ipic3d/simulator.h"
+#include "ipic3d/app/cell.h"
+#include "ipic3d/app/parameters.h"
+#include "ipic3d/app/simulator.h"
 
-#include "ipic3d/utils/points.h"
+#include "ipic3d/app/utils/points.h"
 
 using namespace ipic3d;
 

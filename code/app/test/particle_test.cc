@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "ipic3d/particle.h"
+#include "ipic3d/app/particle.h"
 
 namespace ipic3d {
 

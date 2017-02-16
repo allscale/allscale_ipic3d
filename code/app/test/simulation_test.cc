@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "ipic3d/simulator.h"
+#include "ipic3d/app/simulator.h"
 
 #include "allscale/api/user/operator/pfor.h"
 
@@ -191,7 +191,7 @@ namespace ipic3d {
 
 		// push velocity back in time by 1/2 dt
 		p.updateVelocityBorisStyle(fields[{0,0,0}].E, fields[{0,0,0}].B, -0.5*dt);
-		
+
 		cell.particles.push_back(p);
 
 		// run the simulation
