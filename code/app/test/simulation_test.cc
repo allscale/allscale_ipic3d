@@ -29,20 +29,20 @@ namespace ipic3d {
 			Cell& b = cells[{1,0,0}];
 
 			// fix cell positions
-			a.x = 0.5;
-			b.x = 1.5;
-			a.y = a.z = b.y = b.z = 0.5;
+			a.center.x = 0.5;
+			b.center.x = 1.5;
+			a.center.y = a.center.z = b.center.y = b.center.z = 0.5;
 
 			// fix cell widths
-			a.dx = b.dx = 1;
-			a.dy = b.dy = 1;
-			a.dz = b.dz = 1;
+			a.spacing.x = b.spacing.x = 1;
+			a.spacing.y = b.spacing.y = 1;
+			a.spacing.z = b.spacing.z = 1;
 
 			// insert one particle
 			Particle p;
-			p.x = p.y = p.z = 0.5;
-			p.dx = 1;
-			p.dy = p.dz = 0;
+			p.position.x = p.position.y = p.position.z = 0.5;
+			p.velocity.x = 1;
+			p.velocity.y = p.velocity.z = 0;
 			p.mass = 1;
 			p.q = 1;
 
@@ -60,29 +60,29 @@ namespace ipic3d {
 			EXPECT_FALSE(b.particles.empty());
 
 			// -- check the particle position
-			EXPECT_EQ(1.5,b.particles.front().x);
-			EXPECT_EQ(0.5,b.particles.front().y);
-			EXPECT_EQ(0.5,b.particles.front().z);
+			EXPECT_EQ(1.5,b.particles.front().position.x);
+			EXPECT_EQ(0.5,b.particles.front().position.y);
+			EXPECT_EQ(0.5,b.particles.front().position.z);
 
-			EXPECT_EQ(1.0,b.particles.front().dx);
-			EXPECT_EQ(0.0,b.particles.front().dy);
-			EXPECT_EQ(0.0,b.particles.front().dz);
+			EXPECT_EQ(1.0,b.particles.front().velocity.x);
+			EXPECT_EQ(0.0,b.particles.front().velocity.y);
+			EXPECT_EQ(0.0,b.particles.front().velocity.z);
 
 			// change velocity and send back
-			b.particles.front().dx = -1;
+			b.particles.front().velocity.x = -1;
 
 			simulateSteps<Cell,FieldNode,detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(4,0.25,cells,fields);
 
 			EXPECT_FALSE(a.particles.empty());
 			EXPECT_TRUE(b.particles.empty());
 
-			EXPECT_EQ(0.5,a.particles.front().x);
-			EXPECT_EQ(0.5,a.particles.front().y);
-			EXPECT_EQ(0.5,a.particles.front().z);
+			EXPECT_EQ(0.5,a.particles.front().position.x);
+			EXPECT_EQ(0.5,a.particles.front().position.y);
+			EXPECT_EQ(0.5,a.particles.front().position.z);
 
-			EXPECT_EQ(-1.0,a.particles.front().dx);
-			EXPECT_EQ( 0.0,a.particles.front().dy);
-			EXPECT_EQ( 0.0,a.particles.front().dz);
+			EXPECT_EQ(-1.0,a.particles.front().velocity.x);
+			EXPECT_EQ( 0.0,a.particles.front().velocity.y);
+			EXPECT_EQ( 0.0,a.particles.front().velocity.z);
 
 		}
 
@@ -110,8 +110,8 @@ namespace ipic3d {
 		Cell& cell = cells[{0,0,0}];
 
 		// configure the cell
-		cell.x = cell.y = cell.z = 50;
-		cell.dx = cell.dy = cell.dz = 100;
+		cell.center.x = cell.center.y = cell.center.z = 50;
+		cell.spacing.x = cell.spacing.y = cell.spacing.z = 100;
 
 
 		// create a surrounding force field
@@ -125,11 +125,11 @@ namespace ipic3d {
 
 		// add one particle
 		Particle p;
-		p.x = p.y = 0.5;
-		p.z = 0;
+		p.position.x = p.position.y = 0.5;
+		p.position.z = 0;
 
-		p.dx = p.dy = 0;
-		p.dz = 1;
+		p.velocity.x = p.velocity.y = 0;
+		p.velocity.z = 1;
 
 		p.q = 1;
 		p.mass = 1;
@@ -144,9 +144,9 @@ namespace ipic3d {
 		Particle res = cell.particles.front();
 
 		// check that the position is close to what is expected
-		EXPECT_NEAR( res.x, 0.590, 0.001);
-		EXPECT_NEAR( res.y, 0.589, 0.001);
-		EXPECT_NEAR( res.z, 0.894, 0.001);
+		EXPECT_NEAR( res.position.x, 0.590, 0.001);
+		EXPECT_NEAR( res.position.y, 0.589, 0.001);
+		EXPECT_NEAR( res.position.z, 0.894, 0.001);
 
 	}
 
@@ -161,8 +161,8 @@ namespace ipic3d {
 		Cell& cell = cells[{0,0,0}];
 
 		// configure the cell
-		cell.x = cell.y = cell.z = 50;
-		cell.dx = cell.dy = cell.dz = 100;
+		cell.center.x = cell.center.y = cell.center.z = 50;
+		cell.spacing.x = cell.spacing.y = cell.spacing.z = 100;
 
 
 		// create a surrounding force field
@@ -176,18 +176,18 @@ namespace ipic3d {
 
 		// add one particle
 		Particle p;
-		p.x = p.y = p.z = 0.0;
+		p.position.x = p.position.y = p.position.z = 0.0;
 
-		p.dx = p.dz = 0.0;
-		p.dy = 1;
+		p.velocity.x = p.velocity.z = 0.0;
+		p.velocity.y = 1;
 
 		p.q = -1;
 		p.mass = 1;
 
 		// compute Larmor radius
-		double rL = p.mass * p.dy / (fabs(p.q) * fields[{0,0,0}].B.z);
+		double rL = p.mass * p.velocity.y / (fabs(p.q) * fields[{0,0,0}].B.z);
 		EXPECT_NEAR( rL, 10, 0.1 );
-		p.x = rL;
+		p.position.x = rL;
 
 		// push velocity back in time by 1/2 dt
 		p.updateVelocityBorisStyle(fields[{0,0,0}].E, fields[{0,0,0}].B, -0.5*dt);
@@ -202,14 +202,14 @@ namespace ipic3d {
 		Particle res = cell.particles.front();
 
 		// check that the position is close to what is expected
-		EXPECT_NEAR( res.x, 9.9500, 0.0001);
-		EXPECT_NEAR( res.y, 0.9983, 0.0001);
-		EXPECT_NEAR( res.z, 0.0,	0.00001);
+		EXPECT_NEAR( res.position.x, 9.9500, 0.0001);
+		EXPECT_NEAR( res.position.y, 0.9983, 0.0001);
+		EXPECT_NEAR( res.position.z, 0.0,	0.00001);
 
 		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.dx, -0.0948, 0.0001);
-		EXPECT_NEAR( res.dy, 0.9954,  0.0001);
-		EXPECT_NEAR( res.dz, 0.0,     0.0001);
+		EXPECT_NEAR( res.velocity.x, -0.0948, 0.0001);
+		EXPECT_NEAR( res.velocity.y, 0.9954,  0.0001);
+		EXPECT_NEAR( res.velocity.z, 0.0,     0.0001);
 
 	}
 

@@ -5,12 +5,6 @@
 
 namespace ipic3d {
 
-	template<typename T> struct Vector {
-		T x;
-		T y;
-		T z;
-	};
-
 	struct FieldNode {
 		Vector3<double> E;				// electric field components defined on nodes
 		Vector3<double> B;				// magnetic field components defined on nodes

@@ -38,10 +38,10 @@ namespace ipic3d {
 		using Coord = utils::Coordinate<3>;
 
 		// center of the cell
-		double x, y, z;
+		Vector3<double> center;
 
 		// the cell grid spacing
-		double dx, dy, dz;
+		Vector3<double> spacing;
 
 		// the list of local particles
 		std::vector<Particle> particles;
@@ -144,46 +144,42 @@ namespace ipic3d {
  		 *
  		 * Fields are computed with respect to the center of each cell
  		 */
-		void computeFields(const Coord& pos, Vector<double> &E, Vector<double> &B, const bool isDipole){
-			if (isDipole) {
-				E.x = 0.0;
-				E.y = 0.0;
-				E.z = 0.0;
-				double fac1 = -B0 * pow(Re, 3.0) / pow(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2], 2.5);
-				B.x = 3.0 * pos[0] * pos[2] * fac1;
-				B.y = 3.0 * pos[1] * pos[2] * fac1;
-				B.z = (2.0 * pos[2] * pos[2] - pos[0] * pos[0] - pos[1] * pos[1]) * fac1;
-			} else {
-				E.x = sin(2.0 * M_PI * pos[0]) * cos(2.0 * M_PI * pos[1]);
-				E.y = pos[0] * (1.0 - pos[0]) * pos[1] * (1.0 - pos[1]);
-				E.z = pos[0] * pos[0] + pos[2] * pos[2];
-				B.x = 0.0;
-				B.y = cos(2.0 * M_PI * pos[2]);
-				B.z = sin(2.0 * M_PI * pos[0]);
-			}
-		}
+	    void computeFields(const Coord& pos, Vector3<double>& E, Vector3<double>& B, const bool isDipole) {
+		    if(isDipole) {
+			    E = {0, 0, 0};
+			    double fac1 = -B0 * pow(Re, 3.0) / pow(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2], 2.5);
+			    B.x = 3.0 * pos[0] * pos[2] * fac1;
+			    B.y = 3.0 * pos[1] * pos[2] * fac1;
+			    B.z = (2.0 * pos[2] * pos[2] - pos[0] * pos[0] - pos[1] * pos[1]) * fac1;
+		    } else {
+			    E.x = sin(2.0 * M_PI * pos[0]) * cos(2.0 * M_PI * pos[1]);
+			    E.y = pos[0] * (1.0 - pos[0]) * pos[1] * (1.0 - pos[1]);
+			    E.z = pos[0] * pos[0] + pos[2] * pos[2];
+			    B.x = 0.0;
+			    B.y = cos(2.0 * M_PI * pos[2]);
+			    B.z = sin(2.0 * M_PI * pos[0]);
+		    }
+	    }
 
-		/**
+	    /**
  		 * Initial version of the Field Solver: compute fields E and B for the Boris mover
  		 *
  		 * Fields are computed with respect to each particle position
  		 */
-		void computeFields(const Particle& p, Vector<double> &E, Vector<double> &B, const bool isDipole){
+		void computeFields(const Particle& p, Vector3<double> &E, Vector3<double> &B, const bool isDipole){
 			if (isDipole) {
-				E.x = 0.0;
-				E.y = 0.0;
-				E.z = 0.0;
-				double fac1 = -B0 * pow(Re, 3.0) / pow(p.x * p.x + p.y * p.y + p.z * p.z, 2.5);
-				B.x = 3.0 * p.x * p.z * fac1;
-				B.y = 3.0 * p.y * p.z * fac1;
-				B.z = (2.0 * p.z * p.z - p.x * p.x - p.y * p.y) * fac1;
+			    E = {0, 0, 0};
+			    double fac1 = -B0 * pow(Re, 3.0) / pow(sumOfSquares(p.position), 2.5);
+				B.x = 3.0 * p.position.x * p.position.z * fac1;
+				B.y = 3.0 * p.position.y * p.position.z * fac1;
+				B.z = (2.0 * p.position.z * p.position.z - p.position.x * p.position.x - p.position.y * p.position.y) * fac1;
 			} else {
-				E.x = sin(2.0 * M_PI * p.x) * cos(2.0 * M_PI * p.y);
- 				E.y = p.x * (1.0 - p.x) * p.y * (1.0 - p.y);
- 				E.z = p.x * p.x + p.z * p.z;
+				E.x = sin(2.0 * M_PI * p.position.x) * cos(2.0 * M_PI * p.position.y);
+ 				E.y = p.position.x * (1.0 - p.position.x) * p.position.y * (1.0 - p.position.y);
+ 				E.z = p.position.x * p.position.x + p.position.z * p.position.z;
  				B.x = 0.0;
-	 			B.y = cos(2.0 * M_PI * p.z);
- 				B.z = sin(2.0 * M_PI * p.x);
+	 			B.y = cos(2.0 * M_PI * p.position.z);
+ 				B.z = sin(2.0 * M_PI * p.position.x);
 			}
 		}
 
@@ -204,7 +200,7 @@ namespace ipic3d {
 			if (isDipole) {
 				// update particles
 				allscale::api::user::pfor(particles, [&](Particle& p){
-					Vector<double> v, vr;
+					Vector3<double> v, vr;
 					double B_sq, f1, f2;
 					double qdto4mc = p.q * dt * 0.25;
 
@@ -216,67 +212,50 @@ namespace ipic3d {
 					double v_mod = c / sqrt(1.0 + (m * c * c) / K);
 
 					// initial position: equatorial plane 4Re from Earth
-					p.x += 4 * Re; p.y += 0.0; p.z += 0.0;
+					p.position.x += 4 * Re; p.position.y += 0.0; p.position.z += 0.0;
 					//p.x = xx[p.id]; p.y = yy[p.id]; p.z = zz[p.id];
 
 					double pitch_angle = 30.0; // initial angle between velocity and mag.field (degrees)
-					p.dx = 0.0;
-					p.dy = v_mod * sin(pitch_angle * M_PI / 180.0);
-					p.dz = v_mod * cos(pitch_angle * M_PI / 180.0);
+					p.velocity.x = 0.0;
+					p.velocity.y = v_mod * sin(pitch_angle * M_PI / 180.0);
+					p.velocity.z = v_mod * cos(pitch_angle * M_PI / 180.0);
 
 				    // compute forces
-					Vector<double> E, B;
+					Vector3<double> E, B;
 					computeFields(p, E, B, true);
 					//computeFields(pos, E, B, true);
 
-					B_sq = B.x * B.x + B.y * B.y + B.z * B.z;
+					B_sq = sumOfSquares(B);
 					f1 = tan(qdto4mc * sqrt(B_sq)) / sqrt(B_sq);
 					f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
 
 					// update velocity
-					v.x = p.dx + E.x * qdto4mc;
-					v.y = p.dy + E.y * qdto4mc;
-					v.z = p.dz + E.z * qdto4mc;
+					v = p.velocity + E * qdto4mc;
+					vr = v + f1 * crossProduct(v, B);
+					v = v + f2 * crossProduct(vr, B);
 
-					vr.x = v.x + f1 * (v.y * B.z - B.y * v.z);
-					vr.y = v.y + f1 * (-v.x * B.z + v.z * B.x);
-					vr.z = v.z + f1 * (v.x * B.y - v.y * B.x);
-					v.x = v.x + f2 * (vr.y * B.z - vr.z * B.y);
-					v.y = v.y + f2 * (-vr.x * B.z + vr.z * B.x);
-					v.z = v.z + f2 * (vr.z * B.y - vr.y * B.x);
-
-					p.vxstar = v.x + E.x * qdto4mc;
-					p.vystar = v.y + E.y * qdto4mc;
-					p.vzstar = v.z + E.z * qdto4mc;
+					p.velocityStar = v + E * qdto4mc;
 				});
 			} else {
 				allscale::api::user::pfor(particles, [&](Particle& p){
-					Vector<double> v, vr;
+					Vector3<double> v, vr;
 					double B_sq, f1, f2;
 					double qdto4mc = p.q * dt * 0.25;
 
-					Vector<double> E, B;
+					Vector3<double> E, B;
 					computeFields(p, E, B, false);
 
-					B_sq = B.x * B.x + B.y * B.y + B.z * B.z;
+					B_sq = sumOfSquares(B);
 					f1 = tan(qdto4mc * sqrt(B_sq)) / sqrt(B_sq);
 					f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
 
 					// update velocity
-					v.x = p.dx + E.x * qdto4mc;
-					v.y = p.dy + E.y * qdto4mc;
-					v.z = p.dz + E.z * qdto4mc;
+					v = p.velocity + E * qdto4mc;
 
-					vr.x = v.x + f1 * (v.y * B.z - B.y * v.z);
-					vr.y = v.y + f1 * (-v.x * B.z + v.z * B.x);
-					vr.z = v.z + f1 * (v.x * B.y - v.y * B.x);
-					v.x = v.x + f2 * (vr.y * B.z - vr.z * B.y);
-					v.y = v.y + f2 * (-vr.x * B.z + vr.z * B.x);
-					v.z = v.z + f2 * (vr.z * B.y - vr.y * B.x);
+					vr = v + f1 * crossProduct(v, B);
+					v = v + f2 * crossProduct(vr, B);
 
-					p.vxstar = v.x + E.x * qdto4mc;
-					p.vystar = v.y + E.y * qdto4mc;
-					p.vzstar = v.z + E.z * qdto4mc;
+					p.velocityStar = v + E * qdto4mc;
 				});
 			}
 		}
@@ -302,47 +281,33 @@ namespace ipic3d {
 
 			// update particles
 			allscale::api::user::pfor(particles, [&](Particle& p){
-				Vector<double> v, vr;
+				Vector3<double> v, vr;
 				double B_sq, f1, f2;
 				double qdto2mc = p.q * dt * 0.5;
 
 				// move particle
-				p.x += p.vxstar * dt;
-				p.y += p.vystar * dt;
-				p.z += p.vzstar * dt;
+				p.position += p.velocityStar * dt;
 
 				// TODO: should not that be a field solver?
-				Vector<double> E, B;
+				Vector3<double> E, B;
 				computeFields(p, E, B, isDipole);
 				//computeFields(pos, E, B, isDipole);
 
-				B_sq = B.x * B.x + B.y * B.y + B.z * B.z;
+				B_sq = sumOfSquares(B);
 				f1 = tan(qdto2mc * sqrt(B_sq)) / sqrt(B_sq);
 				f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
 
 				// update velocity
-				v.x = p.vxstar + E.x * qdto2mc;
-				v.y = p.vystar + E.y * qdto2mc;
-				v.z = p.vzstar + E.z * qdto2mc;
+				v = p.velocityStar + E * qdto2mc;
 
-				vr.x = v.x + f1 * (v.y * B.z - B.y * v.z);
-				vr.y = v.y + f1 * (-v.x * B.z + v.z * B.x);
-				vr.z = v.z + f1 * (v.x * B.y - v.y * B.x);
-				v.x = v.x + f2 * (vr.y * B.z - vr.z * B.y);
-				v.y = v.y + f2 * (-vr.x * B.z + vr.z * B.x);
-				v.z = v.z + f2 * (vr.x * B.y - vr.y * B.x);
+				vr = v + f1 * crossProduct(v, B);
+				v = v + f2 * crossProduct(vr, B);
 
-				vr.x = v.x + E.x * qdto2mc;
-				vr.y = v.y + E.y * qdto2mc;
-				vr.z = v.z + E.z * qdto2mc;
+			    vr = v + E * qdto2mc;
 
-				p.dx = (p.vxstar + vr.x) * 0.5;
-				p.dy = (p.vystar + vr.y) * 0.5;
-				p.dz = (p.vzstar + vr.z) * 0.5;
+				p.velocity = (p.velocityStar + vr) * 0.5;
 
-				p.vxstar = vr.x;
-				p.vystar = vr.y;
-				p.vzstar = vr.z;
+				p.velocityStar = vr;
 			});
 
 			// TODO: test this particles exchanger
@@ -350,12 +315,12 @@ namespace ipic3d {
 			// get buffers for particles to be send to neighbors
 			Coord size = transfers.size();
 			utils::grid<std::vector<Particle>*,3,3,3> neighbors;
-			Coord center = pos * 3 + Coord{1,1,1};
+			Coord centerIndex = pos * 3 + Coord{1,1,1};
 			for(int i = 0; i<3; i++) {
 				for(int j = 0; j<3; j++) {
 					for(int k = 0; k<3; k++) {
 						neighbors[{i,j,k}] = nullptr;
-						auto cur = center + Coord{i-1,j-1,k-1} * 2;
+						auto cur = centerIndex + Coord{i-1,j-1,k-1} * 2;
 						if (cur[0] < 0 || cur[0] >= size[0]) continue;
 						if (cur[1] < 0 || cur[1] >= size[1]) continue;
 						if (cur[2] < 0 || cur[2] >= size[2]) continue;
@@ -369,15 +334,13 @@ namespace ipic3d {
 			remaining.reserve(particles.size());
 			for(const auto& p : particles) {
 				// compute relative position
-				double rx = p.x - x;
-				double ry = p.y - y;
-				double rz = p.z - z;
+				Vector3<double> relPos = p.position - center;
 
-				if ((fabs(rx) > dx/2) || (fabs(ry) > dy/2) || (fabs(rz) > dz/2)) {
+				if ((fabs(relPos.x) > spacing.x/2) || (fabs(relPos.y) > spacing.y/2) || (fabs(relPos.z) > spacing.z/2)) {
 					// compute corresponding neighbor cell
-					int i = (rx < 0) ? 0 : 2;
-					int j = (ry < 0) ? 0 : 2;
-					int k = (rz < 0) ? 0 : 2;
+					int i = (relPos.x < 0) ? 0 : 2;
+					int j = (relPos.y < 0) ? 0 : 2;
+					int k = (relPos.z < 0) ? 0 : 2;
 
 					// send to neighbor cell
 					auto target = neighbors[{i,j,k}];
@@ -427,58 +390,42 @@ namespace ipic3d {
 
 			// update particles
 			allscale::api::user::pfor(particles, [&](Particle& p){
-				Vector<double> v, vr;
+				Vector3<double> v, vr;
 				double B_sq, f1, f2;
 				const double qdto2mc = p.q * dt * 0.5;
 
 				// BEGIN of interpolation of fields to particles
-				Vector<double> corig, vorig, cavg, vavg;
-				corig.x = p.x;
-				corig.y = p.y;
-				corig.z = p.z;
-				vorig.x = p.dx;
-				vorig.y = p.dy;
-				vorig.z = p.dz;
+				Vector3<double> corig, vorig, cavg, vavg;
+
+				corig = p.position;
+				vorig = p.velocity;
+
 				cavg = corig;
 				vavg = vorig;
 
 				// END of interpolation of fields to particles
 
 				// move particle
-				p.x += p.vxstar * dt;
-				p.y += p.vystar * dt;
-				p.z += p.vzstar * dt;
+				p.position += p.velocityStar * dt;
 
-				Vector<double> E, B;
+				Vector3<double> E, B;
 				computeFields(p, E, B, isDipole);
 
-				B_sq = B.x * B.x + B.y * B.y + B.z * B.z;
+				B_sq = sumOfSquares(B);
 				f1 = tan(qdto2mc * sqrt(B_sq)) / sqrt(B_sq);
 				f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
 
 				// update velocity
-				v.x = p.vxstar + E.x * qdto2mc;
-				v.y = p.vystar + E.y * qdto2mc;
-				v.z = p.vzstar + E.z * qdto2mc;
+				v = p.velocityStar + E * qdto2mc;
 
-				vr.x = v.x + f1 * (v.y * B.z - B.y * v.z);
-				vr.y = v.y + f1 * (-v.x * B.z + v.z * B.x);
-				vr.z = v.z + f1 * (v.x * B.y - v.y * B.x);
-				v.x = v.x + f2 * (vr.y * B.z - vr.z * B.y);
-				v.y = v.y + f2 * (-vr.x * B.z + vr.z * B.x);
-				v.z = v.z + f2 * (vr.x * B.y - vr.y * B.x);
+				vr = v + f1 * crossProduct(v, B);
+				v = v + f2 * crossProduct(vr, B);
 
-				vr.x = v.x + E.x * qdto2mc;
-				vr.y = v.y + E.y * qdto2mc;
-				vr.z = v.z + E.z * qdto2mc;
+				vr = v + E * qdto2mc;
 
-				p.dx = (p.vxstar + vr.x) * 0.5;
-				p.dy = (p.vystar + vr.y) * 0.5;
-				p.dz = (p.vzstar + vr.z) * 0.5;
+				p.velocity = (p.velocityStar + vr) * 0.5;
 
-				p.vxstar = vr.x;
-				p.vystar = vr.y;
-				p.vzstar = vr.z;
+				p.velocityStar = vr;
 			});
 
 			// TODO: test this particles exchanger
@@ -571,9 +518,7 @@ namespace ipic3d {
 			for(int i=0; i<2; i++) {
 				for(int j=0; j<2; j++) {
 					for(int k=0; k<2; k++) {
-						f.x += E[i][j][k].x * p.q;
-						f.y += E[i][j][k].y * p.q;
-						f.z += E[i][j][k].z * p.q;
+						f += E[i][j][k] * p.q;
 					}
 				}
 			}
@@ -611,13 +556,8 @@ namespace ipic3d {
 			for(int j=0; j<2; j++) {
 				for(int k=0; k<2; k++) {
 					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-					Es[i][j][k].x = field[cur].E.x;
-					Es[i][j][k].y = field[cur].E.y;
-					Es[i][j][k].z = field[cur].E.z;
-
-					Bs[i][j][k].x = field[cur].B.x;
-					Bs[i][j][k].y = field[cur].B.y;
-					Bs[i][j][k].z = field[cur].B.z;
+					Es[i][j][k] = field[cur].E;
+					Bs[i][j][k] = field[cur].B;
 				}
 			}
 		}
@@ -657,12 +597,12 @@ namespace ipic3d {
 
 		// get buffers for particles to be send to neighbors
 		utils::Coordinate<3> size = transfers.size();
-		utils::Coordinate<3> center = pos * 3 + utils::Coordinate<3>{1,1,1};
+		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
 		utils::grid<std::vector<Particle>*,3,3,3> neighbors;
 		for(int i = 0; i<3; i++) {
 			for(int j = 0; j<3; j++) {
 				for(int k = 0; k<3; k++) {
-					auto cur = center + utils::Coordinate<3>{i-1,j-1,k-1} * 2;
+					auto cur = centerIndex + utils::Coordinate<3>{i-1,j-1,k-1} * 2;
 					// TODO: deal with boundaries
 					if (cur[0] < 0 || cur[0] >= size[0]) { neighbors[{i,j,k}] = nullptr; continue; }
 					if (cur[1] < 0 || cur[1] >= size[1]) { neighbors[{i,j,k}] = nullptr; continue; }
@@ -677,14 +617,12 @@ namespace ipic3d {
 		remaining.reserve(cell.particles.size());
 		for(const auto& p : cell.particles) {
 			// compute relative position
-			double rx = p.x - cell.x;
-			double ry = p.y - cell.y;
-			double rz = p.z - cell.z;
-			if ((fabs(rx) > cell.dx/2) || (fabs(ry) > cell.dy/2) || (fabs(rz) > cell.dz/2)) {
+			Vector3<double> relPos = p.position - cell.center;
+			if ((fabs(relPos.x) > cell.spacing.x/2) || (fabs(relPos.y) > cell.spacing.y/2) || (fabs(relPos.z) > cell.spacing.z/2)) {
 				// compute corresponding neighbor cell
-				int i = (rx < -cell.dx/2) ? 0 : ( (rx > cell.dx/2) ? 2 : 1 );
-				int j = (ry < -cell.dy/2) ? 0 : ( (ry > cell.dy/2) ? 2 : 1 );
-				int k = (rz < -cell.dz/2) ? 0 : ( (rz > cell.dz/2) ? 2 : 1 );
+				int i = (relPos.x < -cell.spacing.x/2) ? 0 : ( (relPos.x > cell.spacing.x/2) ? 2 : 1 );
+				int j = (relPos.y < -cell.spacing.y/2) ? 0 : ( (relPos.y > cell.spacing.y/2) ? 2 : 1 );
+				int k = (relPos.z < -cell.spacing.z/2) ? 0 : ( (relPos.z > cell.spacing.z/2) ? 2 : 1 );
 				// send to neighbor cell
 				auto target = neighbors[{i,j,k}];
 				if (target) target->push_back(p);
@@ -707,11 +645,11 @@ namespace ipic3d {
 
 		// import particles send to this cell
 		utils::Coordinate<3> size = transfers.size();
-		utils::Coordinate<3> center = pos * 3 + utils::Coordinate<3>{1,1,1};
+		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
 		for(int i = 0; i<3; i++) {
 			for(int j = 0; j<3; j++) {
 				for(int k = 0; k<3; k++) {
-					auto cur = center + utils::Coordinate<3>{i-1,j-1,k-1};
+					auto cur = centerIndex + utils::Coordinate<3>{i-1,j-1,k-1};
 					if (cur[0] < 0 || cur[0] >= size[0]) continue;
 					if (cur[1] < 0 || cur[1] >= size[1]) continue;
 					if (cur[2] < 0 || cur[2] >= size[2]) continue;

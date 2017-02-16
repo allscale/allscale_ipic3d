@@ -96,14 +96,9 @@ Grid<Cell> initCells(const Parameters& params) {
 		Cell& cell = cells[pos];
 
 		// physical properties
-		cell.x = pos[0] * params.dx;
-		cell.dx = params.dx;
-
-		cell.y = pos[1] * params.dy;
-		cell.dy = params.dy;
-
-		cell.z = pos[2] * params.dz;
-		cell.dz = params.dz;
+		cell.spacing = {params.dx, params.dy, params.dz};
+		Vector3<double> tempPos = { (double)pos[0], (double)pos[1], (double)pos[2] };
+		cell.center = entrywiseProduct(tempPos, cell.spacing);
 
 		// -- add particles --
 
@@ -115,14 +110,11 @@ Grid<Cell> initCells(const Parameters& params) {
 		for (int i = 0; i < npcel; i++) {
 			Particle p;
 
-			p.x = cell.x + (rand_r(&random_state) / RAND_MAX) * cell.dx - cell.dx/2;
-			p.y = cell.y + (rand_r(&random_state) / RAND_MAX) * cell.dy - cell.dy/2;
-			p.z = cell.z + (rand_r(&random_state) / RAND_MAX) * cell.dz - cell.dz/2;
+			Vector3<double> randVals = {(double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX};
+			p.position = cell.center + entrywiseProduct(randVals, cell.spacing) - cell.spacing / 2.0;
 
 			// TODO: initialize the speed of particles
-			p.dx = 0.0;
-			p.dx = 0.0;
-			p.dx = 0.0;
+			p.velocity = { 0, 0, 0 };
 
 			p.q = 0.15;
 
@@ -151,20 +143,15 @@ Field initFields(const Parameters& params) {
 	data::Vector<double,3> b{params.B0x, params.B0y, params.B0z};
 	auto ebc = crossProduct(a,b) * -1;
 
-	// TODO: this is completely wrong => those values must not be shared!!
 	pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
 
 		double x_displ, y_displ, z_displ, fac1;
 
 		// init electrical field
-		fields[cur].E.x = ebc[0];
-		fields[cur].E.y = ebc[1];
-		fields[cur].E.z = ebc[2];
+		fields[cur].E = { ebc[0], ebc[1], ebc[2] };
 
 		// init magnetic field
-		fields[cur].B.x = params.B0x;
-		fields[cur].B.y = params.B0y;
-		fields[cur].B.z = params.B0z;
+		fields[cur].B = { params.B0x, params.B0y, params.B0z };
 
 		// -- add earth model --
 
@@ -196,9 +183,7 @@ Field initFields(const Parameters& params) {
 					fields[cur].Bext.y = 3.0 * y_displ * z_displ * fac1;
 					fields[cur].Bext.z = (2.0 * z_displ * z_displ - x_displ * x_displ - y_displ * y_displ) * fac1;
 				} else { // no field inside the planet
-					fields[cur].Bext.x = 0.0;
-					fields[cur].Bext.y = 0.0;
-					fields[cur].Bext.z = 0.0;
+					fields[cur].Bext = { 0.0, 0.0, 0.0 };
 				}
 
 				break;
@@ -206,9 +191,7 @@ Field initFields(const Parameters& params) {
 
 			case UseCase::ParticleWave: {
 
-				fields[cur].Bext.x = 0;
-				fields[cur].Bext.y = 0;
-				fields[cur].Bext.z = 0;
+				fields[cur].Bext = { 0, 0, 0 };
 
 				break;
 			}
