@@ -1,4 +1,4 @@
-# allscale_ipic3d
+# ipic3d
 
 This project is the AllScale implementation of the Particle-in-Cell (PIC) method; 
 the original pilot is called iPIC3D. This pilot is used for the simulation of space 
