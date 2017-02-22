@@ -213,7 +213,6 @@ namespace ipic3d {
 
 					// initial position: equatorial plane 4Re from Earth
 					p.position.x += 4 * Re; p.position.y += 0.0; p.position.z += 0.0;
-					//p.x = xx[p.id]; p.y = yy[p.id]; p.z = zz[p.id];
 
 					double pitch_angle = 30.0; // initial angle between velocity and mag.field (degrees)
 					p.velocity.x = 0.0;
@@ -261,7 +260,7 @@ namespace ipic3d {
 		}
 
 		/**
- 		 * Boris mover in cartesian grid
+ 		 * Boris mover in Cartesian grid
  		 *
 		 * This method is updating the position of all particles within this cell for a single
 		 * time step, thereby considering the given field as a driving force. Particles
@@ -310,8 +309,6 @@ namespace ipic3d {
 				p.velocityStar = vr;
 			});
 
-			// TODO: test this particles exchanger
-			// 		161208: seems to work
 			// get buffers for particles to be send to neighbors
 			Coord size = transfers.size();
 			utils::grid<std::vector<Particle>*,3,3,3> neighbors;
@@ -353,7 +350,6 @@ namespace ipic3d {
 			}
 
 			// update content
-			// TODO: what does this swap do?
 			particles.swap(remaining);
 		}
 
@@ -428,52 +424,6 @@ namespace ipic3d {
 				p.velocityStar = vr;
 			});
 
-			// TODO: test this particles exchanger
-			/*// get buffers for particles to be send to neighbors
-			Coord size = transfers.getSize();
-			utils::grid<std::vector<Particle>*,3,3,3> neighbors;
-			Coord center = pos * 3 + Coord{1,1,1};
-			for(int i = 0; i<3; i++) {
-				for(int j = 0; j<3; j++) {
-					for(int k = 0; k<3; k++) {
-						auto cur = center + Coord{i-1,j-1,k-1} * 2;
-						if (cur[0] < 0 || cur[0] >= size[0]) continue;
-						if (cur[1] < 0 || cur[1] >= size[1]) continue;
-						if (cur[2] < 0 || cur[2] >= size[2]) continue;
-						neighbors[{i,j,k}] = &transfers[cur];
-					}
-				}
-			}
-
-			// move particles
-			std::vector<Particle> remaining;
-			remaining.reserve(particles.size());
-			for(const auto& p : particles) {
-
-				// compute relative position
-				double rx = p.x - x;
-				double ry = p.y - y;
-				double rz = p.z - z;
-
-				if ((fabs(rx) > dx/2) || (fabs(ry) > dy/2) || (fabs(rz) > dz/2)) {
-
-					// compute corresponding neighbor cell
-					int i = (rx < 0) ? 0 : 2;
-					int j = (ry < 0) ? 0 : 2;
-					int k = (rz < 0) ? 0 : 2;
-
-					// send to neighbor cell
-					auto target = neighbors[{i,j,k}];
-					if (target) target->push_back(p);
-
-				} else {
-					// keep particle
-					remaining.push_back(p);
-				}
-			}
-
-			// update content
-			particles.swap(remaining);*/
 		}
 
 	};

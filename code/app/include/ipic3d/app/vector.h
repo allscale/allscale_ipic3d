@@ -4,42 +4,6 @@
 
 namespace ipic3d {
 
-	//template<typename T, int dims>
-	//using Vector = allscale::api::user::data::Vector<T, dims>;
-
-	//template<typename T>
-	//class Vector3 : public Vector<T,3> {
-	//public:
-	//	T& x = this->at(0);
-	//	T& y = this->at(1);
-	//	T& z = this->at(2);
-
-	//	Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
-
-	//	Vector3() : x(T()), y(T()), z(T()) {}
-
-	//	Vector3& operator=(const Vector3<T>& other) {
-	//		x = other.x;
-	//		y = other.y;
-	//		z = other.z;
-	//		return *this;
-	//	}
-
-	//	Vector3& operator+=(const Vector3<T>& other) {
-	//		x += other.x;
-	//		y += other.y;
-	//		z += other.z;
-	//		return *this;
-	//	}
-
-	//	Vector3& operator-=(const Vector3<T>& other) {
-	//		x -= other.x;
-	//		y -= other.y;
-	//		z -= other.z;
-	//		return *this;
-	//	}
-	//};
-
 	template<typename T>
 	struct Vector3 {
 		T x;
