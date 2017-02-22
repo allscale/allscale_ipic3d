@@ -22,12 +22,12 @@ int main(int argc, char** argv) {
 
 	// check the passed arguments
 	if (argc < 2) {
-		std::cout << "Usage: " << argv[0] << " <config-file>\n";
+		std::cout << "Usage: " << argv[0] << " <config-file>" << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// load input configuration
-	std::cout << "Loading configuration file \"" << argv[1] << "\" ...\n";
+	std::cout << "Loading configuration file \"" << argv[1] << "\" ..." << std::endl;
 	auto params = Parameters::read(argv[1]);
 
 
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 	// ----- initialize simulation environment ------
 
 	// setup simulation
-	std::cout << "Initializing simulation state ...\n";
+	std::cout << "Initializing simulation state ..." << std::endl;
 
 	// initialize universe
 	auto universe = initUniverse(params);
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	// ----- run the simulation ------
 
 	// run simulation
-	std::cout << "Running simulation ...\n";
+	std::cout << "Running simulation ..." << std::endl;
 
 	// extract size of grid
 	auto size = universe.size();
@@ -55,9 +55,9 @@ int main(int argc, char** argv) {
 	double dt = params.dt;
 
 	// print some infos for the user
-	std::cout << "   Grid Size:       " << size[0] << " x " << size[1] << " x " << size[2] << "\n";
-	std::cout << "   Time Step:       " << dt << "\n";
-	std::cout << "   Number of steps: " << params.ncycles << "\n";
+	std::cout << "   Grid Size:       " << size[0] << " x " << size[1] << " x " << size[2] << std::endl;
+	std::cout << "   Time Step:       " << dt << std::endl;
+	std::cout << "   Number of steps: " << params.ncycles << std::endl;
 
 	// -- run the simulation --
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 	// ----- finish ------
 
 	// be done
-	std::cout << "Simulation finished successfully!\n";
+	std::cout << "Simulation finished successfully!" << std::endl;
 	return EXIT_SUCCESS;
 }
 
