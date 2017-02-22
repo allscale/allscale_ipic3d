@@ -6,7 +6,7 @@
 #include "allscale/api/user/operator/pfor.h"
 
 #include "ipic3d/app/particle.h"
-#include "ipic3d/app/field_node.h"
+#include "ipic3d/app/field.h"
 #include "ipic3d/app/utils/points.h"
 #include "ipic3d/app/utils/static_grid.h"
 
@@ -358,7 +358,7 @@ namespace ipic3d {
 		}
 
 		/**
- 		 * Interpolation of fields to particles and the Boris mover in cartesian grid
+ 		 * Interpolation of fields to particles and the Boris mover in Cartesian grid
  		 *
 		 * This method is updating the position of all particles within this cell for a single
 		 * time step, thereby considering the given field as a driving force. Particles

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ipic3d/app/cell.h"
-#include "ipic3d/app/field_node.h"
+#include "ipic3d/app/field.h"
+#include "ipic3d/app/universe.h"
 
 namespace ipic3d {
 
@@ -26,24 +27,20 @@ namespace ipic3d {
 
 
 	template<
-		typename Cell,
-		typename Field,
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateSteps(int numSteps, double dt, Grid<Cell>& cells, Grid<Field>& field);
+	void simulateSteps(int numSteps, double dt, Universe& universe);
 
 
 	template<
-		typename Cell,
-		typename Field,
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateStep(double dt, Grid<Cell>& cells, Grid<Field>& field) {
-		simulateSteps<Cell,Field,ParticleToFieldProjector,FieldSolver,ParticleMover>(1,dt,cells,field);
+	void simulateStep(double dt, Universe& universe) {
+		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(1,dt,universe);
 	}
 
 
@@ -54,13 +51,11 @@ namespace ipic3d {
 	// -------------------------------------------------------------------------------------
 
 	template<
-		typename Cell,
-		typename Field,
 		typename ParticleToFieldProjector,
 		typename FieldSolver,
 		typename ParticleMover
 	>
-	void simulateSteps(int numSteps, double dt, Grid<Cell>& cells, Grid<Field>& field) {
+	void simulateSteps(int numSteps, double dt, Universe& universe) {
 
 		// instantiate operators
 		auto particletoFieldProjector = ParticleToFieldProjector();
@@ -71,14 +66,14 @@ namespace ipic3d {
 
 		// extract size of grid
 		auto zero = utils::Coordinate<3>(0);
-		auto size = cells.size();
-		auto fieldSize = field.size();
+		auto size = universe.cells.size();
+		auto fieldSize = universe.field.size();
 
 
 		// -- auxiliary structures for communication --
 
 		// the 3-D density field
-		Density density(field.size());
+		Density density(universe.field.size());
 
 		// a 3-D structure collecting contributions of cells to the density
 		Grid<DensityCell> densityContributions(fieldSize*2);
@@ -98,7 +93,7 @@ namespace ipic3d {
 
 			// project particles to density field
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				particletoFieldProjector(cells[pos],pos,densityContributions);
+				particletoFieldProjector(universe.cells[pos],pos,densityContributions);
 			});
 
 			// update density field
@@ -123,20 +118,20 @@ namespace ipic3d {
 
 
 			// STEP 2: solve field equations
-			fieldSolver(field,density);
+			fieldSolver(universe.field,density);
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 3: project forces to particles and move particles
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				particleMover(cells[pos],pos,field,particleTransfers,dt);
+				particleMover(universe.cells[pos],pos,universe.field,particleTransfers,dt);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 4: import particles into destination cells
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				importParticles(cells[pos],pos,particleTransfers);
+				importParticles(universe.cells[pos],pos,particleTransfers);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --

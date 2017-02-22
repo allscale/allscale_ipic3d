@@ -4,6 +4,7 @@
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/parameters.h"
 #include "ipic3d/app/simulator.h"
+#include "ipic3d/app/universe.h"
 
 #include "ipic3d/app/utils/points.h"
 
@@ -13,6 +14,7 @@ Grid<Cell> initCells(const Parameters&);
 
 Field initFields(const Parameters&);
 
+Universe initUniverse(const Parameters&);
 
 int main(int argc, char** argv) {
 
@@ -38,12 +40,8 @@ int main(int argc, char** argv) {
 	// setup simulation
 	std::cout << "Initializing simulation state ...\n";
 
-	// initialize cells and contained particles
-	auto cells = initCells(params);
-
-	// initialize electric and magnetic force fields
-	auto field = initFields(params);
-
+	// initialize universe
+	auto universe = initUniverse(params);
 
 	// ----- run the simulation ------
 
@@ -51,7 +49,7 @@ int main(int argc, char** argv) {
 	std::cout << "Running simulation ...\n";
 
 	// extract size of grid
-	auto size = cells.size();
+	auto size = universe.size();
 
 	// get the time step
 	double dt = params.dt;
@@ -63,7 +61,7 @@ int main(int argc, char** argv) {
 
 	// -- run the simulation --
 
-	simulateSteps(params.ncycles, dt, cells, field);
+	simulateSteps(params.ncycles, dt, universe);
 
 	// ----- finish ------
 
@@ -72,7 +70,9 @@ int main(int argc, char** argv) {
 	return EXIT_SUCCESS;
 }
 
-
+Universe initUniverse(const Parameters& params) {
+	return Universe(initCells(params), initFields(params));
+}
 
 Grid<Cell> initCells(const Parameters& params) {
 
