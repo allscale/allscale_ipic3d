@@ -390,17 +390,6 @@ namespace ipic3d {
 				double B_sq, f1, f2;
 				const double qdto2mc = p.q * dt * 0.5;
 
-				// BEGIN of interpolation of fields to particles
-				Vector3<double> corig, vorig, cavg, vavg;
-
-				corig = p.position;
-				vorig = p.velocity;
-
-				cavg = corig;
-				vavg = vorig;
-
-				// END of interpolation of fields to particles
-
 				// move particle
 				p.position += p.velocityStar * dt;
 
@@ -485,6 +474,30 @@ namespace ipic3d {
 	}
 
 	/**
+	* This method computes a trilinear interpolation for a given target position within a rectangular box spanned by 8 corner points
+	* Math: http://paulbourke.net/miscellaneous/interpolation/
+	* TODO: Move this to some math utilities header?
+	*
+	* @param corners the 8 surrounding points to interpolate from
+	* @param pos the target position for which to interpolate
+	*/
+	template<typename T>
+	T trilinearInterpolation(const T corners[2][2][2], const Vector3<double> pos) {
+		T res = T();
+
+	    for(int i = 0; i < 2; ++i) {
+		    for(int j = 0; j < 2; ++j) {
+			    for(int k = 0; k < 2; ++k) {
+				    auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z);
+				    res += corners[i][j][k] * fac;
+			    }
+		    }
+	    }
+
+	    return res;
+	}
+
+	/**
 	 * This method is updating the position of all particles within a cell for a single
 	 * time step, thereby considering the given field as a driving force.
 	 *
@@ -518,16 +531,19 @@ namespace ipic3d {
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
-			// TODO: interpolate here!
-			auto& E = Es[0][0][0];
-			auto& B = Bs[0][0][0];
+			// get relative position of particle within cell
+			auto relPos = entrywiseDivision((p.position - (cell.center - cell.spacing*0.5)), (cell.spacing));
 
+			// interpolate
+			auto E = trilinearInterpolation(Es, relPos);
+			auto B = trilinearInterpolation(Bs, relPos);
 
 			// update velocity
 			p.updateVelocityBorisStyle(E, B, dt);
 
 			// update position
 			p.updatePosition(dt);
+
 		});
 
 	}

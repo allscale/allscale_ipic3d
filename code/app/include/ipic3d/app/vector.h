@@ -83,6 +83,11 @@ namespace ipic3d {
 	    return Vector3<T>{a.x * b.x, a.y * b.y, a.z * b.z};
     }
 
+	template <typename T>
+	Vector3<T> entrywiseDivision(const Vector3<T>& a, const Vector3<T>& b) {
+		return Vector3<T>{a.x / b.x, a.y / b.y, a.z / b.z};
+	}
+
     template <typename T>
     T sumOfSquares(const Vector3<T>& a) {
 	    return a.x * a.x + a.y * a.y + a.z * a.z;
