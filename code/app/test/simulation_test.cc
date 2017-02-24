@@ -66,7 +66,8 @@ namespace ipic3d {
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// run one simulation step
-			simulateStep<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(1,universe);
+			UseCase test = UseCase::Test;
+			simulateStep<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test, 1,universe);
 
 			ASSERT_TRUE(a.particles.empty());
 			ASSERT_FALSE(b.particles.empty());
@@ -83,7 +84,7 @@ namespace ipic3d {
 			// change velocity and send back
 			b.particles.front().velocity.x = -1;
 
-			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(4,0.25,universe);
+			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test, 4,0.25,universe);
 
 			ASSERT_FALSE(a.particles.empty());
 			ASSERT_TRUE(b.particles.empty());
@@ -147,7 +148,8 @@ namespace ipic3d {
 		cell.particles.push_back(p);
 
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(9,0.1,universe);
+		UseCase test = UseCase::Test;
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,9,0.1,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
@@ -214,7 +216,8 @@ namespace ipic3d {
 		EXPECT_TRUE(b.particles.empty());
 
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,dt,universe);
+		UseCase test = UseCase::Test;
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,dt,universe);
 
 		// check where particle ended up
 		EXPECT_TRUE(a.particles.empty());
@@ -280,7 +283,8 @@ namespace ipic3d {
 		EXPECT_FALSE(cell.particles.empty());
 
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,dt,universe);
+		UseCase test = UseCase::Test;
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,dt,universe);
 
 		// check where particle ended up
 		EXPECT_FALSE(cell.particles.empty());

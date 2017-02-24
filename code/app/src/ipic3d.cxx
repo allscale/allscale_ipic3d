@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
 	// -- run the simulation --
 
-	simulateSteps(params.ncycles, dt, universe);
+	simulateSteps(params.useCase, params.ncycles, dt, universe);
 
 	// ----- finish ------
 
