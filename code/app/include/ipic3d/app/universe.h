@@ -26,7 +26,7 @@ namespace ipic3d {
 		*
 		* @param dims the size of the Universe (equal to the size of the grid of cells)
 		*/
-		Universe(const coordinate_type& dims) : cells(Cells(dims)), field(Field(dims+1)) {}
+		Universe(const coordinate_type& dims) : cells(Cells(dims)), field(Field(dims+coordinate_type(1))) {}
 
 		Universe(Cells&& cells, Field&& field) : cells(std::move(cells)), field(std::move(field)) {}
 

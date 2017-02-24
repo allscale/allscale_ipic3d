@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "allscale/api/user/data/grid.h"
+#include "allscale/api/user/data/vector.h"
 #include "allscale/api/user/operator/pfor.h"
 
 #include "ipic3d/app/particle.h"
@@ -482,7 +483,7 @@ namespace ipic3d {
 	* @param pos the target position for which to interpolate
 	*/
 	template<typename T>
-	T trilinearInterpolation(const T corners[2][2][2], const Vector3<double> pos) {
+	T trilinearInterpolation(const T corners[2][2][2], const Vector3<double>& pos) {
 		T res = T();
 
 	    for(int i = 0; i < 2; ++i) {
@@ -532,7 +533,7 @@ namespace ipic3d {
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
 			// get relative position of particle within cell
-			auto relPos = entrywiseDivision((p.position - (cell.center - cell.spacing*0.5)), (cell.spacing));
+			const auto relPos = allscale::api::user::data::elementwiseDivision((p.position - (cell.center - cell.spacing*0.5)), (cell.spacing));
 
 			// interpolate
 			auto E = trilinearInterpolation(Es, relPos);

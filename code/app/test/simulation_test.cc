@@ -51,14 +51,25 @@ namespace ipic3d {
 			a.particles.push_back(p);
 
 			// check particle position
-			EXPECT_FALSE(a.particles.empty());
-			EXPECT_TRUE(b.particles.empty());
+			ASSERT_FALSE(a.particles.empty());
+			ASSERT_TRUE(b.particles.empty());
+
+			EXPECT_EQ(0.5, a.particles.front().position.x);
+			EXPECT_EQ(0.5, a.particles.front().position.y);
+			EXPECT_EQ(0.5, a.particles.front().position.z);
+
+			EXPECT_EQ(1.0, a.particles.front().velocity.x);
+			EXPECT_EQ(0.0, a.particles.front().velocity.y);
+			EXPECT_EQ(0.0, a.particles.front().velocity.z);
+
+			EXPECT_EQ(1.0, a.particles.front().mass);
+			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// run one simulation step
 			simulateStep<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(1,universe);
 
-			EXPECT_TRUE(a.particles.empty());
-			EXPECT_FALSE(b.particles.empty());
+			ASSERT_TRUE(a.particles.empty());
+			ASSERT_FALSE(b.particles.empty());
 
 			// -- check the particle position
 			EXPECT_EQ(1.5,b.particles.front().position.x);
@@ -74,8 +85,8 @@ namespace ipic3d {
 
 			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(4,0.25,universe);
 
-			EXPECT_FALSE(a.particles.empty());
-			EXPECT_TRUE(b.particles.empty());
+			ASSERT_FALSE(a.particles.empty());
+			ASSERT_TRUE(b.particles.empty());
 
 			EXPECT_EQ(0.5,a.particles.front().position.x);
 			EXPECT_EQ(0.5,a.particles.front().position.y);

@@ -98,7 +98,7 @@ Grid<Cell> initCells(const Parameters& params) {
 		// physical properties
 		cell.spacing = {params.dx, params.dy, params.dz};
 		Vector3<double> tempPos = { (double)pos[0], (double)pos[1], (double)pos[2] };
-		cell.center = entrywiseProduct(tempPos, cell.spacing);
+		cell.center = elementwiseProduct(tempPos, cell.spacing);
 
 		// -- add particles --
 
@@ -111,7 +111,7 @@ Grid<Cell> initCells(const Parameters& params) {
 			Particle p;
 
 			Vector3<double> randVals = {(double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX};
-			p.position = cell.center + entrywiseProduct(randVals, cell.spacing) - cell.spacing / 2.0;
+			p.position = cell.center + elementwiseProduct(randVals, cell.spacing) - cell.spacing / 2.0;
 
 			// TODO: initialize the speed of particles
 			p.velocity = { 0, 0, 0 };
