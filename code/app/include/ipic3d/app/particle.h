@@ -18,6 +18,9 @@ namespace ipic3d {
 
 		Vector3<double> velocityStar;  	// auxiliary parameters for the Boris mover
 
+		// user-specified default constructor to ensure proper initialization
+		Particle() : position(), velocity(), q(), mass(), velocityStar() {};
+
 		void updatePosition(double dt) {
 			position += velocity * dt;
 		}
@@ -44,6 +47,16 @@ namespace ipic3d {
 
 			velocity = v_plus + k * E;
 
+		}
+		
+		friend std::ostream& operator<<(std::ostream& out, const Particle& p) {
+			out << "Particle: " << std::endl;
+			out << "\tPosition: " << p.position << std::endl;
+			out << "\tVelocity: " << p.velocity << std::endl;
+			out << "\tVelocityStar: " << p.velocityStar << std::endl;
+			out << "\tCharge: " << p.q << std::endl;
+			out << "\tMass: " << p.mass << std::endl;
+			return out;
 		}
 
 	};

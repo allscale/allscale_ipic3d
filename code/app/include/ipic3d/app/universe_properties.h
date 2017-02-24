@@ -25,6 +25,13 @@ namespace ipic3d {
 			assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
 		}
 
+		friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
+			out << "Universe properties:" << std::endl;
+			out << "\tSize: " << props.size << std::endl;
+			out << "\tCell width: " << props.cellWidth << std::endl;
+			return out;
+		}
+
 	};
 
 	Vector3<double> getCenterOfCell(const coordinate_type& pos, const UniverseProperties& properties) {

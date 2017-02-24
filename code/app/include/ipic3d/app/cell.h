@@ -427,6 +427,7 @@ namespace ipic3d {
 		// -- move the particles in space --
 
 		// extract forces
+		// TODO: move this to some C++ structure
 		Vector3<double> Es[2][2][2];
 		Vector3<double> Bs[2][2][2];
 		for(int i=0; i<2; i++) {
