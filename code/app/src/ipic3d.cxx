@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
 
 	// -- run the simulation --
 
-	simulateSteps(params.ncycles, dt, universe);
+	simulateSteps(params.useCase, params.ncycles, dt, universe);
 
 	// ----- finish ------
 
@@ -118,7 +118,7 @@ Grid<Cell> initCells(const Parameters& params, const UniverseProperties& propert
 
 			Vector3<double> randVals = {(double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX};
 			// initialize particle position
-			p.position = getCenterOfCell(pos, properties);
+			p.position = getCenterOfCell(pos, properties) + elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
 
 			// TODO: initialize the speed of particles
 			p.velocity = { 0, 0, 0 };

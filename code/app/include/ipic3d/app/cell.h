@@ -11,6 +11,7 @@
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
 #include "ipic3d/app/utils/static_grid.h"
+#include "ipic3d/app/parameters.h"
 
 namespace ipic3d {
 
@@ -134,28 +135,6 @@ namespace ipic3d {
 				}
 			}
 		}
-
-		/**
- 		 * Initial version of the Field Solver: compute fields E and B for the Boris mover
- 		 *
- 		 * Fields are computed with respect to the center of each cell
- 		 */
-	    void computeFields(const Coord& pos, Vector3<double>& E, Vector3<double>& B, const bool isDipole) {
-		    if(isDipole) {
-			    E = {0, 0, 0};
-			    double fac1 = -B0 * pow(Re, 3.0) / pow(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2], 2.5);
-			    B.x = 3.0 * pos[0] * pos[2] * fac1;
-			    B.y = 3.0 * pos[1] * pos[2] * fac1;
-			    B.z = (2.0 * pos[2] * pos[2] - pos[0] * pos[0] - pos[1] * pos[1]) * fac1;
-		    } else {
-			    E.x = sin(2.0 * M_PI * pos[0]) * cos(2.0 * M_PI * pos[1]);
-			    E.y = pos[0] * (1.0 - pos[0]) * pos[1] * (1.0 - pos[1]);
-			    E.z = pos[0] * pos[0] + pos[2] * pos[2];
-			    B.x = 0.0;
-			    B.y = cos(2.0 * M_PI * pos[2]);
-			    B.z = sin(2.0 * M_PI * pos[0]);
-		    }
-	    }
 
 	    /**
  		 * Initial version of the Field Solver: compute fields E and B for the Boris mover
@@ -411,6 +390,7 @@ namespace ipic3d {
 	* This method computes a trilinear interpolation for a given target position within a rectangular box spanned by 8 corner points
 	* Math: http://paulbourke.net/miscellaneous/interpolation/
 	* TODO: Move this to some math utilities header?
+	* 	    Looks like interpolation of fields to particles - RI
 	*
 	* @param corners the 8 surrounding points to interpolate from
 	* @param pos the target position for which to interpolate
@@ -564,6 +544,41 @@ namespace ipic3d {
 
 	}
 
+
+	/**
+	 * Static Field Solver: Fields are computed with respect to the center of each cell
+	 */
+	void FieldSolver(const UseCase& useCase, const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+		switch(useCase) {
+
+			case UseCase::Dipole: {
+				field[pos].E = {0.0, 0.0, 0.0};
+				auto B = field[pos].B;
+				auto cellCenter = getCenterOfCell(pos, universeProperties);
+
+				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::api::user::data::sumOfSquares(cellCenter), 2.5);
+				B.x = 3.0 * cellCenter.x * cellCenter.z * fac1;
+				B.y = 3.0 * cellCenter.y * cellCenter.z * fac1;
+				B.z = (2.0 * cellCenter.z * cellCenter.z - cellCenter.x * cellCenter.x - cellCenter.y * cellCenter.y) * fac1;
+				
+				field[pos].B = B;
+			}
+
+			case UseCase::ParticleWave: {
+				// TODO: to provide
+				break;
+			}
+
+			case UseCase::Test: {
+				// TODO: to provide
+				break;
+			}
+
+			default:
+					assert_not_implemented()
+						<< "The specified use case is not supported yet!";
+		}
+	}
 
 
 } // end namespace ipic3d

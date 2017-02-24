@@ -31,7 +31,7 @@ namespace ipic3d {
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateSteps(int numSteps, double dt, Universe& universe);
+	void simulateSteps(const UseCase& useCase, int numSteps, double dt, Universe& universe);
 
 
 	template<
@@ -39,8 +39,8 @@ namespace ipic3d {
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateStep(double dt, Universe& universe) {
-		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(1,dt,universe);
+	void simulateStep(const UseCase& useCase, double dt, Universe& universe) {
+		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(useCase, 1, dt, universe);
 	}
 
 
@@ -55,7 +55,7 @@ namespace ipic3d {
 		typename FieldSolver,
 		typename ParticleMover
 	>
-	void simulateSteps(int numSteps, double dt, Universe& universe) {
+	void simulateSteps(const UseCase& useCase, int numSteps, double dt, Universe& universe) {
 
 		// instantiate operators
 		auto particletoFieldProjector = ParticleToFieldProjector();
@@ -118,7 +118,10 @@ namespace ipic3d {
 
 
 			// STEP 2: solve field equations
-			fieldSolver(universe.properties,universe.field,density);
+			// TODO: fieldSolver(universe.field,density,universe.cells);
+			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
+				fieldSolver(useCase, universe.properties, pos, universe.field);
+			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
@@ -150,8 +153,10 @@ namespace ipic3d {
 		};
 
 		struct default_field_solver {
-			void operator()(const UniverseProperties&, Field&, const Grid<DensityCell>&) const {
+			// TOOD: void operator()(Field& field, const Grid<DensityCell>& grid, const Cells& cells) const {
+			void operator()(const UseCase& useCase, const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
 				// the default does not do anything here
+				FieldSolver(useCase, universeProperties, pos, field);
 			}
 
 		};

@@ -9,7 +9,8 @@ namespace ipic3d {
 	 */
 	enum class UseCase {
 		ParticleWave,
-		Dipole
+		Dipole,
+		Test
 	};
 
 
