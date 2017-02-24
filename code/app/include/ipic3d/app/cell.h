@@ -354,68 +354,6 @@ namespace ipic3d {
 			particles.swap(remaining);
 		}
 
-		/**
- 		 * Interpolation of fields to particles and the Boris mover in Cartesian grid
- 		 *
-		 * This method is updating the position of all particles within this cell for a single
-		 * time step, thereby considering the given field as a driving force. Particles
-		 * leaving the cell are submitted via channels to neighboring cells.
-		 *
-		 * @param pos the coordinates of this cell in the grid
-		 * @param field the most recently computed state of the surrounding force fields
-		 * @param transfers a grid of buffers to send particles to
-		 * @param time step
-		 */
-		void InterF2PBorisMover(const Coord& pos, const Field& field, allscale::api::user::data::Grid<std::vector<Particle>,3>&, const double dt, const bool isDipole) {
-
-			// quick-check
-			if (particles.empty())
-				return;
-
-			// extract forces
-			Vector3<double> E[2][2][2];
-			Vector3<double> B[2][2][2];
-			for(int i=0; i<2; i++) {
-				for(int j=0; j<2; j++) {
-					for(int k=0; k<2; k++) {
-						Coord cur({pos[0]+i,pos[1]+j,pos[2]+k});
-						E[i][j][k] = field[cur].E;
-						B[i][j][k] = field[cur].B;
-					}
-				}
-			}
-
-			// update particles
-			allscale::api::user::pfor(particles, [&](Particle& p){
-				Vector3<double> v, vr;
-				double B_sq, f1, f2;
-				const double qdto2mc = p.q * dt * 0.5;
-
-				// move particle
-				p.position += p.velocityStar * dt;
-
-				Vector3<double> E, B;
-				computeFields(p, E, B, isDipole);
-
-				B_sq = sumOfSquares(B);
-				f1 = tan(qdto2mc * sqrt(B_sq)) / sqrt(B_sq);
-				f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
-
-				// update velocity
-				v = p.velocityStar + E * qdto2mc;
-
-				vr = v + f1 * crossProduct(v, B);
-				v = v + f2 * crossProduct(vr, B);
-
-				vr = v + E * qdto2mc;
-
-				p.velocity = (p.velocityStar + vr) * 0.5;
-
-				p.velocityStar = vr;
-			});
-
-		}
-
 	};
 
 	using Cells = allscale::api::user::data::Grid<Cell,3>;

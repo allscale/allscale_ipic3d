@@ -116,6 +116,7 @@ Grid<Cell> initCells(const Parameters& params) {
 			// TODO: initialize the speed of particles
 			p.velocity = { 0, 0, 0 };
 
+			// TODO: initialize charge 
 			p.q = 0.15;
 
 			cell.particles.push_back(p);

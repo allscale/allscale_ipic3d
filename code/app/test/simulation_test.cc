@@ -162,16 +162,25 @@ namespace ipic3d {
 
 
 	TEST(SimulationTest, SingleParticleBorisMoverLarmorRadiusPseudo) {
-		int niter = 10;
+		int niter = 100;
 		double dt = 0.1;
 
 		// Create Universe with one Cell and corresponding Field
-		Universe universe = Universe({1,1,1});
+		Universe universe = Universe({1,2,1});
 		Cell& cell = universe.cells[{0,0,0}];
 
-		// configure the cell
-		cell.center.x = cell.center.y = cell.center.z = 5;
-		cell.spacing.x = cell.spacing.y = cell.spacing.z = 10;
+		Cell& a = universe.cells[{0,0,0}];
+		Cell& b = universe.cells[{0,1,0}];
+
+		// configure cells
+		a.center.y = 2.5;
+		b.center.y = 7.5;
+		a.center.x = a.center.z = b.center.x = b.center.z = 5.0;
+
+		// fix cell widths
+		a.spacing.y = b.spacing.y =  5.0;
+		a.spacing.x = b.spacing.x = 10.0;
+		a.spacing.z = b.spacing.z = 10.0;
 
 		// initialize field
 		Field& field = universe.field;
@@ -186,10 +195,10 @@ namespace ipic3d {
 		p.position.x = p.position.y = p.position.z = 0.0;
 
 		p.velocity.x = p.velocity.z = 0.0;
-		p.velocity.y = 1;
+		p.velocity.y = 1.0;
 
-		p.q = -1;
-		p.mass = 1;
+		p.q = -1.0;
+		p.mass = 1.0;
 
 		// compute Larmor radius
 		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[{0,0,0}].B.z);
@@ -199,25 +208,31 @@ namespace ipic3d {
 		// push velocity back in time by 1/2 dt
 		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*dt);
 
-		cell.particles.push_back(p);
+		a.particles.push_back(p);
+
+		// check particle position
+		EXPECT_FALSE(a.particles.empty());
+		EXPECT_TRUE(b.particles.empty());
 
 		// run the simulation
 		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,dt,universe);
 
 		// check where particle ended up
-		ASSERT_FALSE(cell.particles.empty());
-		Particle res = cell.particles.front();
+		EXPECT_TRUE(a.particles.empty());
+		EXPECT_FALSE(b.particles.empty());
+
+		Particle res = b.particles.front();
 
 		// check that the position is close to what is expected
 		// comparing against the matlab code after 10 iterations
-		EXPECT_NEAR( res.position.x, 9.9500, 1e-04);
-		EXPECT_NEAR( res.position.y, 0.9983, 1e-04);
+		EXPECT_NEAR( res.position.x, 5.4030, 1e-04);
+		EXPECT_NEAR( res.position.y, 8.4147, 1e-04);
 		EXPECT_NEAR( res.position.z, 0.0,	 1e-05);
 
 		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.velocity.x, -0.0948, 1e-04);
-		EXPECT_NEAR( res.velocity.y, 0.9954,  1e-04);
-		EXPECT_NEAR( res.velocity.z, 0.0,     1e-04);
+		EXPECT_NEAR( res.velocity.x, -0.8388, 1e-04);
+		EXPECT_NEAR( res.velocity.y,  0.5445, 1e-04);
+		EXPECT_NEAR( res.velocity.z,  0.0,    1e-04);
 	}
 
 
@@ -262,11 +277,14 @@ namespace ipic3d {
 
 		cell.particles.push_back(p);
 
+		// check particle position
+		EXPECT_FALSE(cell.particles.empty());
+
 		// run the simulation
 		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,dt,universe);
 
 		// check where particle ended up
-		ASSERT_FALSE(cell.particles.empty());
+		EXPECT_FALSE(cell.particles.empty());
 		Particle res = cell.particles.front();
 
 		// check that the position is close to what is expected
