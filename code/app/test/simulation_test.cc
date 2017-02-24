@@ -16,8 +16,13 @@ namespace ipic3d {
 
 			// this test checks whether particles are properly migrated between cells
 
-			// Create Universe with two cells and corresponding Field
-			Universe universe = Universe({ 2,1,1 });
+			// Set universe properties
+			UniverseProperties properties;
+			properties.size = { 2,1,1 };
+			properties.cellWidth = { 1,1,1 };
+
+			// Create a universe with these properties
+			Universe universe = Universe(properties);
 
 			Field& field = universe.field;
 			decltype(field.size()) zero = 0;
@@ -28,16 +33,6 @@ namespace ipic3d {
 
 			Cell& a = universe.cells[{0,0,0}];
 			Cell& b = universe.cells[{1,0,0}];
-
-			// fix cell positions
-			a.center.x = 0.5;
-			b.center.x = 1.5;
-			a.center.y = a.center.z = b.center.y = b.center.z = 0.5;
-
-			// fix cell widths
-			a.spacing.x = b.spacing.x = 1;
-			a.spacing.y = b.spacing.y = 1;
-			a.spacing.z = b.spacing.z = 1;
 
 			// insert one particle
 			Particle p;
@@ -117,13 +112,16 @@ namespace ipic3d {
 
 	TEST(SimulationTest, SingleParticleBorisMover) {
 
-		// Create Universe with one Cell and corresponding Field
-		Universe universe = Universe({ 1,1,1 });
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = {1,1,1};
+		properties.cellWidth = { 100,100,100 };
+
+		// Create a universe with these properties
+		Universe universe = Universe(properties);
 
 		// configure the cell
 		Cell& cell = universe.cells[{0,0,0}];
-		cell.center.x = cell.center.y = cell.center.z = 50;
-		cell.spacing.x = cell.spacing.y = cell.spacing.z = 100;
 
 		// initialize the field
 		Field& field = universe.field;
@@ -165,21 +163,16 @@ namespace ipic3d {
 		int niter = 100;
 		double dt = 0.1;
 
-		// Create Universe with one Cell and corresponding Field
-		Universe universe = Universe({1,2,1});
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1,2,1 };
+		properties.cellWidth = { 10,5,10 };
+
+		// Create Universe with these properties
+		Universe universe = Universe(properties);
 
 		Cell& a = universe.cells[{0,0,0}];
 		Cell& b = universe.cells[{0,1,0}];
-
-		// configure cells
-		a.center.y = 2.5;
-		b.center.y = 7.5;
-		a.center.x = a.center.z = b.center.x = b.center.z = 5.0;
-
-		// fix cell widths
-		a.spacing.y = b.spacing.y =  5.0;
-		a.spacing.x = b.spacing.x = 10.0;
-		a.spacing.z = b.spacing.z = 10.0;
 
 		// initialize field
 		Field& field = universe.field;
@@ -239,14 +232,15 @@ namespace ipic3d {
 		int niter = 10;
 		double dt = 3e-11;
 
-		// Create Universe with one Cell and corresponding Field
-		Universe universe = Universe({ 1,1,1 });
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1,1,1 };
+		properties.cellWidth = { 1e4,1e4,1e4 };
+
+		// Create Universe with these properties
+		Universe universe = Universe(properties);
+
 		Cell& cell = universe.cells[{0, 0, 0}];
-
-		// configure the cell
-		cell.center.x = cell.center.y = cell.center.z = 0;
-		cell.spacing.x = cell.spacing.y = cell.spacing.z = 1e4;
-
 
 		// initialize field
 		Field& field = universe.field;

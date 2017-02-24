@@ -93,7 +93,7 @@ namespace ipic3d {
 
 			// project particles to density field
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				particletoFieldProjector(universe.cells[pos],pos,densityContributions);
+				particletoFieldProjector(universe.properties,universe.cells[pos],pos,densityContributions);
 			});
 
 			// update density field
@@ -118,20 +118,20 @@ namespace ipic3d {
 
 
 			// STEP 2: solve field equations
-			fieldSolver(universe.field,density);
+			fieldSolver(universe.properties,universe.field,density);
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 3: project forces to particles and move particles
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				particleMover(universe.cells[pos],pos,universe.field,particleTransfers,dt);
+				particleMover(universe.properties,universe.cells[pos],pos,universe.field,particleTransfers,dt);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 4: import particles into destination cells
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				importParticles(universe.cells[pos],pos,particleTransfers);
+				importParticles(universe.properties,universe.cells[pos],pos,particleTransfers);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
@@ -143,30 +143,30 @@ namespace ipic3d {
 	namespace detail {
 
 		struct default_particle_to_field_projector {
-			void operator()(Cell& cell, const utils::Coordinate<3>& pos, Grid<DensityCell>& densityContributions) const {
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, Grid<DensityCell>& densityContributions) const {
 				// TODO: make this a free function:
-				cell.projectToDensityField(pos,densityContributions);
+				cell.projectToDensityField(universeProperties,pos,densityContributions);
 			}
 		};
 
 		struct default_field_solver {
-			void operator()(Field&, const Grid<DensityCell>&) const {
+			void operator()(const UniverseProperties&, Field&, const Grid<DensityCell>&) const {
 				// the default does not do anything here
 			}
 
 		};
 
 		struct default_particle_mover {
-			void operator()(Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers, double dt) const {
-				moveParticlesFirstOrder(cell,pos,field,dt);
-				exportParticles(cell,pos,particleTransfers);
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers, double dt) const {
+				moveParticlesFirstOrder(universeProperties,cell,pos,field,dt);
+				exportParticles(universeProperties,cell,pos,particleTransfers);
 			}
 		};
 
 		struct boris_mover {
-			void operator()(Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers, double dt) const {
-				moveParticlesBorisStyle(cell,pos,field,dt);
-				exportParticles(cell,pos,particleTransfers);
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers, double dt) const {
+				moveParticlesBorisStyle(universeProperties,cell,pos,field,dt);
+				exportParticles(universeProperties,cell,pos,particleTransfers);
 			}
 		};
 	}

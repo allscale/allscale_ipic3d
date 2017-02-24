@@ -10,11 +10,13 @@
 
 using namespace ipic3d;
 
-Grid<Cell> initCells(const Parameters&);
+Grid<Cell> initCells(const Parameters&, const UniverseProperties&);
 
 Field initFields(const Parameters&);
 
 Universe initUniverse(const Parameters&);
+
+UniverseProperties initUniverseProperties(const Parameters&);
 
 int main(int argc, char** argv) {
 
@@ -49,7 +51,7 @@ int main(int argc, char** argv) {
 	std::cout << "Running simulation ..." << std::endl;
 
 	// extract size of grid
-	auto size = universe.size();
+	auto size = universe.properties.size;
 
 	// get the time step
 	double dt = params.dt;
@@ -71,13 +73,22 @@ int main(int argc, char** argv) {
 }
 
 Universe initUniverse(const Parameters& params) {
-	return Universe(initCells(params), initFields(params));
+	UniverseProperties properties = initUniverseProperties(params);
+	Universe universe(initCells(params, properties), initFields(params), properties);
+	return universe;
 }
 
-Grid<Cell> initCells(const Parameters& params) {
+UniverseProperties initUniverseProperties(const Parameters& params) {
+	UniverseProperties properties;
+	properties.cellWidth = { params.dx, params.dy, params.dz };
+	properties.size = { params.nxc, params.nyc, params.nzc };
+	return properties;
+}
+
+Grid<Cell> initCells(const Parameters& params, const UniverseProperties& properties) {
 
 	// ----- setup -----
-	utils::Size<3> size = {params.nxc, params.nyc, params.nzc};		// the size of the grid
+	utils::Size<3> size = { params.nxc, params.nyc, params.nzc };		// the size of the grid
 
 	const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
 	const utils::Coordinate<3> full = size;							// a constant covering the full range
@@ -95,11 +106,6 @@ Grid<Cell> initCells(const Parameters& params) {
 
 		Cell& cell = cells[pos];
 
-		// physical properties
-		cell.spacing = {params.dx, params.dy, params.dz};
-		Vector3<double> tempPos = { (double)pos[0], (double)pos[1], (double)pos[2] };
-		cell.center = elementwiseProduct(tempPos, cell.spacing);
-
 		// -- add particles --
 
 		// compute number of particles to be added
@@ -111,12 +117,13 @@ Grid<Cell> initCells(const Parameters& params) {
 			Particle p;
 
 			Vector3<double> randVals = {(double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX};
-			p.position = cell.center + elementwiseProduct(randVals, cell.spacing) - cell.spacing / 2.0;
+			// initialize particle position
+			p.position = getCenterOfCell(pos, properties);
 
 			// TODO: initialize the speed of particles
 			p.velocity = { 0, 0, 0 };
 
-			// TODO: initialize charge 
+			// TODO: initialize charge
 			p.q = 0.15;
 
 			cell.particles.push_back(p);
@@ -134,7 +141,7 @@ Field initFields(const Parameters& params) {
 
 	// determine the field size
 	utils::Size<3> zero = 0;
-	utils::Size<3> fieldSize = {params.nxc + 1, params.nyc + 1, params.nzc + 1};
+	utils::Size<3> fieldSize = {params.nxc, params.nyc, params.nzc};
 
 	// the 3-D force fields
 	Field fields(fieldSize);

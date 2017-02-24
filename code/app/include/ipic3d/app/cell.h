@@ -8,6 +8,7 @@
 
 #include "ipic3d/app/particle.h"
 #include "ipic3d/app/field.h"
+#include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
 #include "ipic3d/app/utils/static_grid.h"
 
@@ -38,12 +39,6 @@ namespace ipic3d {
 
 		using Coord = utils::Coordinate<3>;
 
-		// center of the cell
-		Vector3<double> center;
-
-		// the cell grid spacing
-		Vector3<double> spacing;
-
 		// the list of local particles
 		std::vector<Particle> particles;
 
@@ -52,7 +47,7 @@ namespace ipic3d {
 		 * of its contained particles to the density grid. Contributions are stored
 		 * within the given contributions grid
 		 */
-		void projectToDensityField(const Coord& pos, allscale::api::user::data::Grid<DensityCell,3>& contributions) const {
+		void projectToDensityField(const UniverseProperties& /*universeProperties*/, const Coord& pos, allscale::api::user::data::Grid<DensityCell,3>& contributions) const {
 
 			// quick-check
 			if (particles.empty()) return;		// nothing to contribute
@@ -192,7 +187,7 @@ namespace ipic3d {
  		 *
 		 * @param time step
 		 */
-		void initParticles(const Coord&, const double dt, const bool isDipole) {
+		void initParticles(const UniverseProperties& /*universeProperties*/, const Coord&, const double dt, const bool isDipole) {
 
 			// quick-check
 			if (particles.empty())
@@ -273,7 +268,7 @@ namespace ipic3d {
 		 * @param dt a time step
 		 * @param isDipole to check with test case we deal with
 		 */
-		void BorisMover(const Coord& pos, const Field&, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, const double dt, const bool isDipole) {
+		void BorisMover(const UniverseProperties& universeProperties, const Coord& pos, const Field&, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, const double dt, const bool isDipole) {
 
 			// quick-check
 			if (particles.empty())
@@ -332,9 +327,9 @@ namespace ipic3d {
 			remaining.reserve(particles.size());
 			for(const auto& p : particles) {
 				// compute relative position
-				Vector3<double> relPos = p.position - center;
-
-				if ((fabs(relPos.x) > spacing.x/2) || (fabs(relPos.y) > spacing.y/2) || (fabs(relPos.z) > spacing.z/2)) {
+				Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
+				auto halfWidth = universeProperties.cellWidth/2;
+				if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 					// compute corresponding neighbor cell
 					int i = (relPos.x < 0) ? 0 : 2;
 					int j = (relPos.y < 0) ? 0 : 2;
@@ -367,7 +362,7 @@ namespace ipic3d {
 	 * @param field the most recently computed state of the surrounding force fields
 	 * @param dt the time step to move the particle forward for
 	 */
-	void moveParticlesFirstOrder(Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
+	void moveParticlesFirstOrder(const UniverseProperties& /*universeProperties*/, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
 
 		// quick-check
 		if (cell.particles.empty()) return;
@@ -444,7 +439,7 @@ namespace ipic3d {
 	 * @param field the most recently computed state of the surrounding force fields
 	 * @param dt the time step to move the particle forward for
 	 */
-	void moveParticlesBorisStyle(Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
+	void moveParticlesBorisStyle(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
 
 		// quick-check
 		if (cell.particles.empty()) return;
@@ -464,6 +459,8 @@ namespace ipic3d {
 			}
 		}
 
+		const auto cellCenter = getCenterOfCell(pos, universeProperties);
+
 		// update particles
 		allscale::api::user::pfor(cell.particles, [&](Particle& p){
 
@@ -471,7 +468,7 @@ namespace ipic3d {
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
 			// get relative position of particle within cell
-			const auto relPos = allscale::api::user::data::elementwiseDivision((p.position - (cell.center - cell.spacing*0.5)), (cell.spacing));
+			const auto relPos = allscale::api::user::data::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
 
 			// interpolate
 			auto E = trilinearInterpolation(Es, relPos);
@@ -495,8 +492,7 @@ namespace ipic3d {
 	 * @param pos the coordinates of this cell in the grid
 	 * @param transfers a grid of buffers to send particles to
 	 */
-	void exportParticles(Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
-
+	void exportParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
 
 		// -- migrate particles to other cells if boundaries are crossed --
 
@@ -522,12 +518,13 @@ namespace ipic3d {
 		remaining.reserve(cell.particles.size());
 		for(const auto& p : cell.particles) {
 			// compute relative position
-			Vector3<double> relPos = p.position - cell.center;
-			if ((fabs(relPos.x) > cell.spacing.x/2) || (fabs(relPos.y) > cell.spacing.y/2) || (fabs(relPos.z) > cell.spacing.z/2)) {
+			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
+			auto halfWidth = universeProperties.cellWidth / 2;
+			if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 				// compute corresponding neighbor cell
-				int i = (relPos.x < -cell.spacing.x/2) ? 0 : ( (relPos.x > cell.spacing.x/2) ? 2 : 1 );
-				int j = (relPos.y < -cell.spacing.y/2) ? 0 : ( (relPos.y > cell.spacing.y/2) ? 2 : 1 );
-				int k = (relPos.z < -cell.spacing.z/2) ? 0 : ( (relPos.z > cell.spacing.z/2) ? 2 : 1 );
+				int i = (relPos.x < -halfWidth.x) ? 0 : ( (relPos.x > halfWidth.x) ? 2 : 1 );
+				int j = (relPos.y < -halfWidth.y) ? 0 : ( (relPos.y > halfWidth.y) ? 2 : 1 );
+				int k = (relPos.z < -halfWidth.z) ? 0 : ( (relPos.z > halfWidth.z) ? 2 : 1 );
 				// send to neighbor cell
 				auto target = neighbors[{i,j,k}];
 				if (target) target->push_back(p);
@@ -546,7 +543,7 @@ namespace ipic3d {
 	/**
 	 * Imports the particles from directed towards this cell from the given transfer buffer.
 	 */
-	void importParticles(Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+	void importParticles(const UniverseProperties& /*universeProperties*/, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
 
 		// import particles send to this cell
 		utils::Coordinate<3> size = transfers.size();
