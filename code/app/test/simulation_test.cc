@@ -167,7 +167,6 @@ namespace ipic3d {
 
 		// Create Universe with one Cell and corresponding Field
 		Universe universe = Universe({1,2,1});
-		Cell& cell = universe.cells[{0,0,0}];
 
 		Cell& a = universe.cells[{0,0,0}];
 		Cell& b = universe.cells[{0,1,0}];
