@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "ipic3d/app/cell.h"
+#include "ipic3d/app/universe.h"
 
 namespace ipic3d {
 
@@ -42,6 +43,52 @@ namespace ipic3d {
 	    pos = {1.0, 1.0, 1.0};
 	    fieldAtPos = trilinearInterpolation(fieldCorners, pos);
 	    EXPECT_EQ(fieldAtPos, 6.0);
+    }
+
+	TEST(FieldTest, StaticFieldSolver) {
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1,1,1 };
+		properties.cellWidth = { 1,1,1 };
+
+		// Create Universe with these properties
+		Universe universe = Universe(properties);
+
+		utils::Coordinate<3> pos{0, 0, 0};
+
+		// initialize field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.0, 0.0, 0.0 };
+			field[pos].B = { 0.0, 0.0, 0.0 };
+		});
+
+	    // apply static field solver and check results
+		FieldSolver(UseCase::Dipole, properties, pos, field);
+		auto E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.0, 1e-06 );
+		EXPECT_NEAR( E.y, 0.0, 1e-06 );
+		EXPECT_NEAR( E.z, 0.0, 1e-06 );
+
+		auto B = field[pos].B;
+		EXPECT_NEAR( B.x, -1.226388334605022e+16, 1e+02 );
+		EXPECT_NEAR( B.y, -1.226388334605022e+16, 1e+02 );
+		EXPECT_NEAR( B.z, 0.0, 1e-06 );
+
+
+	    // change target position and re-evaluate
+	    pos = {10, 5, 1};
+		FieldSolver(UseCase::Dipole, properties, pos, field);
+		E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.0, 1e-06 );
+		EXPECT_NEAR( E.y, 0.0, 1e-06 );
+		EXPECT_NEAR( E.z, 0.0, 1e-06 );
+
+		B = field[pos].B;
+		EXPECT_NEAR( B.x, -1545900104359.654, 1e-02 );
+		EXPECT_NEAR( B.y, -809757197521.7235, 1e-02 );
+		EXPECT_NEAR( B.z,  4449574903553.713, 1e-02 );
     }
 
 } // end namespace ipic3d
