@@ -47,23 +47,14 @@ int main(int argc, char** argv) {
 
 	// ----- run the simulation ------
 
-	// run simulation
-	std::cout << "Running simulation ..." << std::endl;
-
-	// extract size of grid
-	auto size = universe.properties.size;
-
-	// get the time step
-	double dt = params.dt;
+	std::cout << "Running simulation for " << params.ncycles << " steps..." << std::endl;
 
 	// print some infos for the user
-	std::cout << "   Grid Size:       " << size[0] << " x " << size[1] << " x " << size[2] << std::endl;
-	std::cout << "   Time Step:       " << dt << std::endl;
-	std::cout << "   Number of steps: " << params.ncycles << std::endl;
+	std::cout << universe.properties;
 
 	// -- run the simulation --
 
-	simulateSteps(params.useCase, params.ncycles, dt, universe);
+	simulateSteps(params.useCase, params.ncycles, universe);
 
 	// ----- finish ------
 
@@ -82,22 +73,20 @@ UniverseProperties initUniverseProperties(const Parameters& params) {
 	UniverseProperties properties;
 	properties.cellWidth = { params.dx, params.dy, params.dz };
 	properties.size = { params.nxc, params.nyc, params.nzc };
+	properties.dt = params.dt;
 	return properties;
 }
 
 Grid<Cell> initCells(const Parameters& params, const UniverseProperties& properties) {
 
-	// ----- setup -----
-	utils::Size<3> size = { params.nxc, params.nyc, params.nzc };		// the size of the grid
-
 	const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
-	const utils::Coordinate<3> full = size;							// a constant covering the full range
+	const utils::Coordinate<3> full = properties.size;				// a constant covering the full range
 
 
 	// -- initialize the grid of cells --
 
 	// the 3-D grid of cells
-	Grid<Cell> cells(size);									// the grid of cells containing the particles
+	Grid<Cell> cells(properties.size);								// the grid of cells containing the particles
 
 	// -- initialize the state of each individual cell --
 

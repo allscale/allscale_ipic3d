@@ -7,7 +7,8 @@ namespace ipic3d {
 	TEST(UniverseTest, Size) {
 
 		// Set some universe properties
-		UniverseProperties properties({1,2,3});
+		UniverseProperties properties;
+		properties.size = { 1,2,3 };
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
@@ -20,6 +21,8 @@ namespace ipic3d {
 		EXPECT_EQ(1, universe.properties.cellWidth.x);
 		EXPECT_EQ(1, universe.properties.cellWidth.y);
 		EXPECT_EQ(1, universe.properties.cellWidth.z);
+
+		EXPECT_EQ(1, universe.properties.dt);
 
 		// Get cells and field
 		Cells& cells = universe.cells;

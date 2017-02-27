@@ -341,7 +341,7 @@ namespace ipic3d {
 	 * @param field the most recently computed state of the surrounding force fields
 	 * @param dt the time step to move the particle forward for
 	 */
-	void moveParticlesFirstOrder(const UniverseProperties& /*universeProperties*/, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
+	void moveParticlesFirstOrder(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
 
 		// quick-check
 		if (cell.particles.empty()) return;
@@ -376,10 +376,10 @@ namespace ipic3d {
 			}
 
 			// update position
-			p.updatePosition(dt);
+			p.updatePosition(universeProperties.dt);
 
 			// update speed
-			p.updateVelocity(f,dt);
+			p.updateVelocity(f,universeProperties.dt);
 
 
 		});
@@ -419,7 +419,7 @@ namespace ipic3d {
 	 * @param field the most recently computed state of the surrounding force fields
 	 * @param dt the time step to move the particle forward for
 	 */
-	void moveParticlesBorisStyle(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, double dt) {
+	void moveParticlesBorisStyle(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
 
 		// quick-check
 		if (cell.particles.empty()) return;
@@ -456,10 +456,10 @@ namespace ipic3d {
 			auto B = trilinearInterpolation(Bs, relPos);
 
 			// update velocity
-			p.updateVelocityBorisStyle(E, B, dt);
+			p.updateVelocityBorisStyle(E, B, universeProperties.dt);
 
 			// update position
-			p.updatePosition(dt);
+			p.updatePosition(universeProperties.dt);
 
 		});
 
@@ -561,7 +561,7 @@ namespace ipic3d {
 				B.x = 3.0 * cellCenter.x * cellCenter.z * fac1;
 				B.y = 3.0 * cellCenter.y * cellCenter.z * fac1;
 				B.z = (2.0 * cellCenter.z * cellCenter.z - cellCenter.x * cellCenter.x - cellCenter.y * cellCenter.y) * fac1;
-				
+
 				field[pos].B = B;
 			}
 

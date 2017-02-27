@@ -20,15 +20,21 @@ namespace ipic3d {
 		// The width of cells
 		Vector3<double> cellWidth;
 
-		UniverseProperties(const coordinate_type& size = { 1,1,1 }, const Vector3<double>& cellWidth = {1,1,1}) : size(size), cellWidth(cellWidth) {
-			assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
+		// The timestep
+		double dt;
+
+	    UniverseProperties(const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1, 1, 1}, const double dt = 1)
+	        : size(size), cellWidth(cellWidth), dt(dt) {
+		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 			assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
+			assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
 		}
 
 		friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
 			out << "Universe properties:" << std::endl;
 			out << "\tSize: " << props.size << std::endl;
 			out << "\tCell width: " << props.cellWidth << std::endl;
+			out << "\tTimestep: " << props.dt<< std::endl;
 			return out;
 		}
 

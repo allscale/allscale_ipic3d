@@ -31,7 +31,7 @@ namespace ipic3d {
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateSteps(const UseCase& useCase, int numSteps, double dt, Universe& universe);
+	void simulateSteps(const UseCase& useCase, int numSteps, Universe& universe);
 
 
 	template<
@@ -39,8 +39,8 @@ namespace ipic3d {
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateStep(const UseCase& useCase, double dt, Universe& universe) {
-		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(useCase, 1, dt, universe);
+	void simulateStep(const UseCase& useCase, Universe& universe) {
+		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(useCase, 1, universe);
 	}
 
 
@@ -55,7 +55,7 @@ namespace ipic3d {
 		typename FieldSolver,
 		typename ParticleMover
 	>
-	void simulateSteps(const UseCase& useCase, int numSteps, double dt, Universe& universe) {
+	void simulateSteps(const UseCase& useCase, int numSteps, Universe& universe) {
 
 		// instantiate operators
 		auto particletoFieldProjector = ParticleToFieldProjector();
@@ -127,7 +127,7 @@ namespace ipic3d {
 
 			// STEP 3: project forces to particles and move particles
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				particleMover(universe.properties,universe.cells[pos],pos,universe.field,particleTransfers,dt);
+				particleMover(universe.properties,universe.cells[pos],pos,universe.field,particleTransfers);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
@@ -153,24 +153,22 @@ namespace ipic3d {
 		};
 
 		struct default_field_solver {
-			// TOOD: void operator()(Field& field, const Grid<DensityCell>& grid, const Cells& cells) const {
 			void operator()(const UseCase& useCase, const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
-				// the default does not do anything here
 				FieldSolver(useCase, universeProperties, pos, field);
 			}
 
 		};
 
 		struct default_particle_mover {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers, double dt) const {
-				moveParticlesFirstOrder(universeProperties,cell,pos,field,dt);
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers) const {
+				moveParticlesFirstOrder(universeProperties,cell,pos,field);
 				exportParticles(universeProperties,cell,pos,particleTransfers);
 			}
 		};
 
 		struct boris_mover {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers, double dt) const {
-				moveParticlesBorisStyle(universeProperties,cell,pos,field,dt);
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers) const {
+				moveParticlesBorisStyle(universeProperties,cell,pos,field);
 				exportParticles(universeProperties,cell,pos,particleTransfers);
 			}
 		};

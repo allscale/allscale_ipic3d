@@ -20,6 +20,7 @@ namespace ipic3d {
 			UniverseProperties properties;
 			properties.size = { 2,1,1 };
 			properties.cellWidth = { 1,1,1 };
+			properties.dt = 1;
 
 			// Create a universe with these properties
 			Universe universe = Universe(properties);
@@ -62,7 +63,7 @@ namespace ipic3d {
 
 			// run one simulation step
 			UseCase test = UseCase::Test;
-			simulateStep<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test, 1,universe);
+			simulateStep<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test,universe);
 
 			ASSERT_TRUE(a.particles.empty());
 			ASSERT_FALSE(b.particles.empty());
@@ -79,7 +80,10 @@ namespace ipic3d {
 			// change velocity and send back
 			b.particles.front().velocity.x = -1;
 
-			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test, 4,0.25,universe);
+			universe.properties.dt = 0.25;
+			int niter = 4;
+
+			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test,niter,universe);
 
 			ASSERT_FALSE(a.particles.empty());
 			ASSERT_TRUE(b.particles.empty());
@@ -117,6 +121,10 @@ namespace ipic3d {
 		UniverseProperties properties;
 		properties.size = {1,1,1};
 		properties.cellWidth = { 100,100,100 };
+		properties.dt = 0.1;
+
+		// number of steps
+		int niter = 9;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
@@ -147,7 +155,7 @@ namespace ipic3d {
 
 		// run the simulation
 		UseCase test = UseCase::Test;
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,9,0.1,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
@@ -162,13 +170,15 @@ namespace ipic3d {
 
 
 	TEST(SimulationTest, SingleParticleBorisMoverLarmorRadiusPseudo) {
-		int niter = 100;
-		double dt = 0.1;
 
 		// Set universe properties
 		UniverseProperties properties;
 		properties.size = { 1,2,1 };
 		properties.cellWidth = { 10,5,10 };
+		properties.dt = 0.1;
+
+		// number of steps
+		int niter = 100;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -200,7 +210,7 @@ namespace ipic3d {
 		p.position.x = rL;
 
 		// push velocity back in time by 1/2 dt
-		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*dt);
+		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
 
 		a.particles.push_back(p);
 
@@ -210,7 +220,7 @@ namespace ipic3d {
 
 		// run the simulation
 		UseCase test = UseCase::Test;
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,dt,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,universe);
 
 		// check where particle ended up
 		EXPECT_TRUE(a.particles.empty());
@@ -232,13 +242,15 @@ namespace ipic3d {
 
 
 	TEST(SimulationTest, SingleParticleBorisMoverLarmorRadius) {
-		int niter = 10;
-		double dt = 3e-11;
 
 		// Set universe properties
 		UniverseProperties properties;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
+		properties.dt = 3e-11;
+
+		// number of steps
+		int niter = 10;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -269,7 +281,7 @@ namespace ipic3d {
 		p.position.x = rL;
 
 		// push velocity back in time by 1/2 dt
-		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*dt);
+		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
 
 		cell.particles.push_back(p);
 
@@ -278,7 +290,7 @@ namespace ipic3d {
 
 		// run the simulation
 		UseCase test = UseCase::Test;
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,dt,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,universe);
 
 		// check where particle ended up
 		EXPECT_FALSE(cell.particles.empty());
