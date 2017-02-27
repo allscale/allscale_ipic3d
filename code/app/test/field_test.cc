@@ -92,7 +92,6 @@ namespace ipic3d {
 
 
         // verify test case
-		decltype(field.size()) zero = 0;
 		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.0, 0.0, 0.0 };
 			field[pos].B = { 0.0, 0.0, 0.0 };
