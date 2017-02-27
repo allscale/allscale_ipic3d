@@ -1,18 +1,23 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "allscale/api/user/data/vector.h"
+
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/parameters.h"
 #include "ipic3d/app/simulator.h"
 #include "ipic3d/app/universe.h"
+#include "ipic3d/app/init_properties.h"
 
 #include "ipic3d/app/utils/points.h"
 
 using namespace ipic3d;
 
-Grid<Cell> initCells(const Parameters&, const UniverseProperties&);
+Grid<Cell> initCells(const InitProperties& initProperties, const UniverseProperties&);
 
-Field initFields(const Parameters&);
+Field initFields(const InitProperties& initProperties, const UniverseProperties&);
+
+InitProperties initInitProperties(const Parameters& params);
 
 Universe initUniverse(const Parameters&);
 
@@ -47,14 +52,11 @@ int main(int argc, char** argv) {
 
 	// ----- run the simulation ------
 
-	std::cout << "Running simulation for " << params.ncycles << " steps..." << std::endl;
-
-	// print some infos for the user
-	std::cout << universe.properties;
+	std::cout << "Running simulation..." << std::endl;
 
 	// -- run the simulation --
 
-	simulateSteps(params.useCase, params.ncycles, universe);
+	simulateSteps(params.ncycles, universe);
 
 	// ----- finish ------
 
@@ -64,9 +66,38 @@ int main(int argc, char** argv) {
 }
 
 Universe initUniverse(const Parameters& params) {
-	UniverseProperties properties = initUniverseProperties(params);
-	Universe universe(initCells(params, properties), initFields(params), properties);
+
+	// initialize initial properties
+	InitProperties initProperties = initInitProperties(params);
+
+	std::cout << initProperties;
+
+	// initialize universe properties
+	UniverseProperties universeProperties = initUniverseProperties(params);
+
+	std::cout << universeProperties;
+
+	// create a universe with the given properties
+	Universe universe(initCells(initProperties, universeProperties), initFields(initProperties, universeProperties), universeProperties);
 	return universe;
+}
+
+InitProperties initInitProperties(const Parameters& params) {
+	InitProperties properties;
+
+	properties.numSteps = params.ncycles;
+
+	for(int i = 0; i < params.ns; i++) {
+		properties.driftVelocity.push_back({ params.u0[i], params.v0[i], params.w0[i] });
+	}
+
+	for(int i = 0; i < (params.ns+params.nstestpart); i++) {
+		properties.particlesPerCell.push_back({ (unsigned)params.npcelx[i], (unsigned)params.npcely[i], (unsigned)params.npcelz[i] });
+	}
+
+	properties.magneticFieldAmplitude = {params.B0x, params.B0y, params.B0z};
+
+	return properties;
 }
 
 UniverseProperties initUniverseProperties(const Parameters& params) {
@@ -74,10 +105,11 @@ UniverseProperties initUniverseProperties(const Parameters& params) {
 	properties.cellWidth = { params.dx, params.dy, params.dz };
 	properties.size = { params.nxc, params.nyc, params.nzc };
 	properties.dt = params.dt;
+	properties.useCase = params.useCase;
 	return properties;
 }
 
-Grid<Cell> initCells(const Parameters& params, const UniverseProperties& properties) {
+Grid<Cell> initCells(const InitProperties& initProperties, const UniverseProperties& properties) {
 
 	const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
 	const utils::Coordinate<3> full = properties.size;				// a constant covering the full range
@@ -98,11 +130,11 @@ Grid<Cell> initCells(const Parameters& params, const UniverseProperties& propert
 		// -- add particles --
 
 		// compute number of particles to be added
-		int npcel = params.npcel[0];
+		unsigned particlesPerCell = initProperties.particlesPerCell[0].x + initProperties.particlesPerCell[0].y + initProperties.particlesPerCell[0].z;
 
 		// add the requested number of parameters
 		unsigned random_state = pos[0] * 10000 + pos[1] * 100 + pos[2];
-		for (int i = 0; i < npcel; i++) {
+		for (unsigned i = 0; i < particlesPerCell; i++) {
 			Particle p;
 
 			Vector3<double> randVals = {(double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX};
@@ -124,61 +156,54 @@ Grid<Cell> initCells(const Parameters& params, const UniverseProperties& propert
 	return std::move(cells);
 }
 
-Field initFields(const Parameters& params) {
+Field initFields(const InitProperties& initProperties, const UniverseProperties& universeProperties) {
 
 	using namespace allscale::api::user;
 
 	// determine the field size
 	utils::Size<3> zero = 0;
-	utils::Size<3> fieldSize = {params.nxc, params.nyc, params.nzc};
+	utils::Size<3> fieldSize = universeProperties.size + coordinate_type(1);
 
 	// the 3-D force fields
 	Field fields(fieldSize);
 
-	// TODO: use one kind of vector everywhere
-	data::Vector<double,3> a{params.u0[0], params.v0[0], params.w0[0]};
-	data::Vector<double,3> b{params.B0x, params.B0y, params.B0z};
-	auto ebc = crossProduct(a,b) * -1;
+	auto driftVel = initProperties.driftVelocity;
+	assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
+	auto ebc = crossProduct(driftVel[0], initProperties.magneticFieldAmplitude) * -1;
 
 	pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
 
-		double x_displ, y_displ, z_displ, fac1;
+		double fac1;
 
 		// init electrical field
-		fields[cur].E = { ebc[0], ebc[1], ebc[2] };
+		fields[cur].E = ebc;
 
 		// init magnetic field
-		fields[cur].B = { params.B0x, params.B0y, params.B0z };
+		fields[cur].B = initProperties.magneticFieldAmplitude;
 
 		// -- add earth model --
 
-		switch(params.useCase) {
+		switch(universeProperties.useCase) {
 
 			case UseCase::Dipole: {
 
 				// radius of the planet
-				double a = params.L_square;
+				double a = universeProperties.objectRadius;
 
-				double xc = params.x_center;
-				double yc = params.y_center;
-				double zc = params.z_center;
+				auto objectCenter = universeProperties.objectCenter;
+				auto location = getLocation(cur, universeProperties);
 
-				double x = cur[0];
-				double y = cur[1];
-				double z = cur[2];
+				auto diff = location - objectCenter;
 
-				double r2 = ((x-xc)*(x-xc)) + ((y-yc)*(y-yc)) + ((z-zc)*(z-zc));
+				double r2 = allscale::api::user::data::sumOfSquares(diff);
 
 				// Compute dipolar field B_ext
 
 				if (r2 > a*a) {
-					x_displ = x - xc;
-					y_displ = y - yc;
-					z_displ = z - zc;
-					fac1 =  -params.B1z * a * a * a / pow(r2, 2.5);
-					fields[cur].Bext.x = 3.0 * x_displ * z_displ * fac1;
-					fields[cur].Bext.y = 3.0 * y_displ * z_displ * fac1;
-					fields[cur].Bext.z = (2.0 * z_displ * z_displ - x_displ * x_displ - y_displ * y_displ) * fac1;
+					fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
+					fields[cur].Bext.x = 3.0 * diff.x * diff.z * fac1;
+					fields[cur].Bext.y = 3.0 * diff.y * diff.z * fac1;
+					fields[cur].Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
 				} else { // no field inside the planet
 					fields[cur].Bext = { 0.0, 0.0, 0.0 };
 				}

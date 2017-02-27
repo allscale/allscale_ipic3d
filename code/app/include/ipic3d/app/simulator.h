@@ -31,7 +31,7 @@ namespace ipic3d {
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateSteps(const UseCase& useCase, int numSteps, Universe& universe);
+	void simulateSteps(unsigned numSteps, Universe& universe);
 
 
 	template<
@@ -39,8 +39,8 @@ namespace ipic3d {
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
-	void simulateStep(const UseCase& useCase, Universe& universe) {
-		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(useCase, 1, universe);
+	void simulateStep(Universe& universe) {
+		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(1, universe);
 	}
 
 
@@ -55,7 +55,7 @@ namespace ipic3d {
 		typename FieldSolver,
 		typename ParticleMover
 	>
-	void simulateSteps(const UseCase& useCase, int numSteps, Universe& universe) {
+	void simulateSteps(unsigned numSteps, Universe& universe) {
 
 		// instantiate operators
 		auto particletoFieldProjector = ParticleToFieldProjector();
@@ -85,7 +85,7 @@ namespace ipic3d {
 		// -- run the simulation --
 
 		// run time loop for the simulation
-		for(int i = 0; i<numSteps; ++i) {
+		for(unsigned i = 0; i<numSteps; ++i) {
 
 			using namespace allscale::api::user;
 
@@ -120,7 +120,7 @@ namespace ipic3d {
 			// STEP 2: solve field equations
 			// TODO: fieldSolver(universe.field,density,universe.cells);
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				fieldSolver(useCase, universe.properties, pos, universe.field);
+				fieldSolver(universe.properties, pos, universe.field);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
@@ -153,8 +153,8 @@ namespace ipic3d {
 		};
 
 		struct default_field_solver {
-			void operator()(const UseCase& useCase, const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
-				FieldSolver(useCase, universeProperties, pos, field);
+			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
+				FieldSolver(universeProperties, pos, field);
 			}
 
 		};

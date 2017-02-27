@@ -15,15 +15,6 @@
 
 namespace ipic3d {
 
-	// Earth parameters
-	static const double Re = 6378137.0; 		// meter (Earth radius)
-	static const double B0 = 3.07e-5; 			// Tesla
-	// Other parameters
-	static const double e = 1.602176565e-19; 	// Elementary charge (Coulomb)
-	static const double m = 1.672621777e-27; 	// Proton mass (kg)
-	static const double c = 299792458.0; 		// speed of light (m/s)
-	static const double K = 1e7 * e;    		// kinetic energy in eV converted to Joules
-
 
 	struct DensityCell {
 		double rho;			// charge density
@@ -549,35 +540,38 @@ namespace ipic3d {
 	/**
 	 * Static Field Solver: Fields are computed with respect to the center of each cell
 	 */
-	void FieldSolver(const UseCase& useCase, const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
-		switch(useCase) {
+	void FieldSolver(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+		switch(universeProperties.useCase) {
 
-			case UseCase::Dipole: {
-				field[pos].E = {0.0, 0.0, 0.0};
-				auto B = field[pos].B;
-				auto cellCenter = getCenterOfCell(pos, universeProperties);
+			case UseCase::Dipole:
+				{
+					field[pos].E = {0.0, 0.0, 0.0};
+					auto B = field[pos].B;
+					auto cellCenter = getCenterOfCell(pos, universeProperties);
 
-				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::api::user::data::sumOfSquares(cellCenter), 2.5);
-				B.x = 3.0 * cellCenter.x * cellCenter.z * fac1;
-				B.y = 3.0 * cellCenter.y * cellCenter.z * fac1;
-				B.z = (2.0 * cellCenter.z * cellCenter.z - cellCenter.x * cellCenter.x - cellCenter.y * cellCenter.y) * fac1;
+					double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::api::user::data::sumOfSquares(cellCenter), 2.5);
+					B.x = 3.0 * cellCenter.x * cellCenter.z * fac1;
+					B.y = 3.0 * cellCenter.y * cellCenter.z * fac1;
+					B.z = (2.0 * cellCenter.z * cellCenter.z - cellCenter.x * cellCenter.x - cellCenter.y * cellCenter.y) * fac1;
 
-				field[pos].B = B;
-			}
+					field[pos].B = B;
+				}
+				 break;
 
-			case UseCase::ParticleWave: {
-				// TODO: to provide
-				break;
-			}
+			case UseCase::ParticleWave:
+				{
+					// TODO: to provide
+					break;
+				}
 
-			case UseCase::Test: {
-				// TODO: to provide
-				break;
-			}
+			case UseCase::Test:
+				{
+					// TODO: to provide
+					break;
+				}
 
 			default:
-					assert_not_implemented()
-						<< "The specified use case is not supported yet!";
+				assert_not_implemented() << "The specified use case is not supported yet!";
 		}
 	}
 

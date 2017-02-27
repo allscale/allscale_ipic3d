@@ -50,6 +50,9 @@ namespace ipic3d {
 		UniverseProperties properties;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1,1,1 };
+		properties.useCase = UseCase::Dipole;
+
+		std::cout << properties;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -65,7 +68,7 @@ namespace ipic3d {
 		});
 
 	    // apply static field solver and check results
-		FieldSolver(UseCase::Dipole, properties, pos, field);
+		FieldSolver(properties, pos, field);
 		auto E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
@@ -79,7 +82,7 @@ namespace ipic3d {
 
 	    // change target position and re-evaluate
 	    pos = {10, 5, 1};
-		FieldSolver(UseCase::Dipole, properties, pos, field);
+		FieldSolver(properties, pos, field);
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );

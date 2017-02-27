@@ -21,6 +21,7 @@ namespace ipic3d {
 			properties.size = { 2,1,1 };
 			properties.cellWidth = { 1,1,1 };
 			properties.dt = 1;
+			properties.useCase = UseCase::Test;
 
 			// Create a universe with these properties
 			Universe universe = Universe(properties);
@@ -62,8 +63,7 @@ namespace ipic3d {
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// run one simulation step
-			UseCase test = UseCase::Test;
-			simulateStep<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test,universe);
+			simulateStep<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(universe);
 
 			ASSERT_TRUE(a.particles.empty());
 			ASSERT_FALSE(b.particles.empty());
@@ -81,9 +81,9 @@ namespace ipic3d {
 			b.particles.front().velocity.x = -1;
 
 			universe.properties.dt = 0.25;
-			int niter = 4;
+			unsigned niter = 4;
 
-			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(test,niter,universe);
+			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(niter,universe);
 
 			ASSERT_FALSE(a.particles.empty());
 			ASSERT_TRUE(b.particles.empty());
@@ -122,9 +122,10 @@ namespace ipic3d {
 		properties.size = {1,1,1};
 		properties.cellWidth = { 100,100,100 };
 		properties.dt = 0.1;
+		properties.useCase = UseCase::Test;
 
 		// number of steps
-		int niter = 9;
+		unsigned niter = 9;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
@@ -154,8 +155,7 @@ namespace ipic3d {
 		cell.particles.push_back(p);
 
 		// run the simulation
-		UseCase test = UseCase::Test;
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
@@ -176,9 +176,10 @@ namespace ipic3d {
 		properties.size = { 1,2,1 };
 		properties.cellWidth = { 10,5,10 };
 		properties.dt = 0.1;
+		properties.useCase = UseCase::Test;
 
 		// number of steps
-		int niter = 100;
+		unsigned niter = 100;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -219,8 +220,7 @@ namespace ipic3d {
 		EXPECT_TRUE(b.particles.empty());
 
 		// run the simulation
-		UseCase test = UseCase::Test;
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
 
 		// check where particle ended up
 		EXPECT_TRUE(a.particles.empty());
@@ -248,9 +248,10 @@ namespace ipic3d {
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 3e-11;
+		properties.useCase = UseCase::Test;
 
 		// number of steps
-		int niter = 10;
+		unsigned niter = 10;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -289,8 +290,7 @@ namespace ipic3d {
 		EXPECT_FALSE(cell.particles.empty());
 
 		// run the simulation
-		UseCase test = UseCase::Test;
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(test,niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
 
 		// check where particle ended up
 		EXPECT_FALSE(cell.particles.empty());

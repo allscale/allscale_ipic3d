@@ -2,17 +2,9 @@
 
 #include <string>
 
+#include "ipic3d/app/universe_properties.h"
+
 namespace ipic3d {
-
-	/**
-	 * An enumeration of use cases.
-	 */
-	enum class UseCase {
-		ParticleWave,
-		Dipole,
-		Test
-	};
-
 
 	struct Parameters {
 
