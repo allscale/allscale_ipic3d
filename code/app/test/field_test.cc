@@ -52,8 +52,6 @@ namespace ipic3d {
 		properties.cellWidth = { 1,1,1 };
 		properties.useCase = UseCase::Dipole;
 
-		std::cout << properties;
-
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
 
@@ -93,6 +91,7 @@ namespace ipic3d {
 		EXPECT_NEAR( B.y, -809757197521.7235, 1e-02 );
 		EXPECT_NEAR( B.z,  4449574903553.713, 1e-02 );
 
+		properties.useCase = UseCase::Test;
 
         // verify test case
 		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
@@ -101,7 +100,7 @@ namespace ipic3d {
 		});
 
 	    pos = {10, 10, 20};
-		FieldSolver(UseCase::Test, properties, pos, field);
+		FieldSolver(properties, pos, field);
 
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );

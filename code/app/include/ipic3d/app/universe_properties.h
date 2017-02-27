@@ -29,8 +29,7 @@ namespace ipic3d {
 		}
 	}
 
-	// this defaults are listed here for convenience but actually stored in and to be used from a UniverseProperties object
-	// therefore, this list resides in an anonymous namespace, ensuring that it is not externally accessible
+	// TODO: these defaults should not be externally visible
 	namespace {
 
 		// TODO: check and rename all these fields
@@ -51,6 +50,8 @@ namespace ipic3d {
 	 *
 	*/
 	struct UniverseProperties {
+
+		// TODO: protect member fields that should be read-only during simulation?
 
 		// the use case
 		UseCase useCase;
