@@ -83,9 +83,9 @@ namespace ipic3d {
 			out << "\tSize: " << props.size << std::endl;
 			out << "\tCell width: " << props.cellWidth << std::endl;
 			out << "\tTimestep: " << props.dt<< std::endl;
-			out << "\tobject radius: " << props.objectRadius << std::endl;
-			out << "\tobject center: " << props.objectCenter << std::endl;
-			out << "\tmagnetic field: " << props.magneticField << std::endl;
+			out << "\tObject radius: " << props.objectRadius << std::endl;
+			out << "\tObject center: " << props.objectCenter << std::endl;
+			out << "\tMagnetic field: " << props.magneticField << std::endl;
 			return out;
 		}
 

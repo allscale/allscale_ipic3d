@@ -26,10 +26,10 @@ namespace ipic3d {
 
 	    friend std::ostream& operator<<(std::ostream& out, const InitProperties& props) {
 			out << "InitProperties:" << std::endl;
-			out << "\tnumber of time steps: " << props.numSteps << std::endl;
-			out << "\tnumber of particles per cell: " << props.particlesPerCell << std::endl;
-			out << "\tdrift velocity: " << props.driftVelocity << std::endl;
-			out << "\tmagnetic field amplitude: " << props.magneticFieldAmplitude << std::endl;
+			out << "\tNumber of time steps: " << props.numSteps << std::endl;
+			out << "\tNumber of particles per cell: " << props.particlesPerCell << std::endl;
+			out << "\tDrift velocity: " << props.driftVelocity << std::endl;
+			out << "\tMagnetic field amplitude: " << props.magneticFieldAmplitude << std::endl;
 			return out;
 		}
 
