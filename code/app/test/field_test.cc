@@ -92,6 +92,26 @@ namespace ipic3d {
 		EXPECT_NEAR( B.x, -1545900104359.654, 1e-02 );
 		EXPECT_NEAR( B.y, -809757197521.7235, 1e-02 );
 		EXPECT_NEAR( B.z,  4449574903553.713, 1e-02 );
+
+
+        // verify test case
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.0, 0.0, 0.0 };
+			field[pos].B = { 0.0, 0.0, 0.0 };
+		});
+
+	    pos = {10, 10, 20};
+		FieldSolver(UseCase::Test, properties, pos, field);
+
+		E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.0, 1e-06 );
+		EXPECT_NEAR( E.y, 0.0, 1e-06 );
+		EXPECT_NEAR( E.z, 0.0, 1e-06 );
+
+		B = field[pos].B;
+		EXPECT_NEAR( B.x, 0.0, 1e-06 );
+		EXPECT_NEAR( B.y, 0.0, 1e-06 );
+		EXPECT_NEAR( B.z, 0.0, 1e-06 );
     }
 
 } // end namespace ipic3d
