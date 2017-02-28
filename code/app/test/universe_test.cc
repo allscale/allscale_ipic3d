@@ -4,7 +4,41 @@
 
 namespace ipic3d {
 
-	TEST(UniverseTest, Size) {
+	TEST(UniverseProperties, Basic) {
+
+	    using V = Vector3<double>;
+
+	    // Set some universe properties
+		UniverseProperties properties;
+
+		EXPECT_EQ(UseCase::ParticleWave, properties.useCase);
+	    EXPECT_EQ((coordinate_type{1, 1, 1}), properties.size);
+	    EXPECT_EQ((V{1, 1, 1}), properties.cellWidth);
+	    EXPECT_EQ(1, properties.dt);
+	    EXPECT_EQ(0.0, properties.objectRadius);
+	    EXPECT_EQ((V{0, 0, 0}), properties.objectCenter);
+	    EXPECT_EQ((V{0, 0, 0}), properties.magneticField);
+
+		UniverseProperties properties2(UseCase::Test, { 2,3,4 }, { 0.2,0.3,0.4 }, 5, 42, { 0.7,0.8,0.9 }, {-0.1,-0.2,-0.3});
+
+		EXPECT_EQ(UseCase::Test, properties2.useCase);
+		EXPECT_EQ((coordinate_type{ 2,3,4 }), properties2.size);
+		EXPECT_EQ((V{ 0.2,0.3,0.4 }), properties2.cellWidth);
+		EXPECT_EQ(5, properties2.dt);
+		EXPECT_EQ(42, properties2.objectRadius);
+		EXPECT_EQ((V{ 0.7,0.8,0.9 }), properties2.objectCenter);
+		EXPECT_EQ((V{ -0.1,-0.2,-0.3 }), properties2.magneticField);
+    }
+
+	TEST(UniverseProperties, Printable) {
+		UniverseProperties properties;
+		// ensures that UniverseProperties can be printed
+		std::stringstream ss;
+		ss << properties;
+		EXPECT_FALSE(ss.str().empty());
+	}
+
+	TEST(Universe, Size) {
 
 		// Set some universe properties
 		UniverseProperties properties;

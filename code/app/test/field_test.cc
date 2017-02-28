@@ -5,7 +5,7 @@
 
 namespace ipic3d {
 
-	TEST(FieldTest, TrilinearInterpolation) {
+	TEST(Field, TrilinearInterpolation) {
 	    // use center position
 	    Vector3<double> pos{0.5, 0.5, 0.5};
 
@@ -45,7 +45,7 @@ namespace ipic3d {
 	    EXPECT_EQ(fieldAtPos, 6.0);
     }
 
-	TEST(FieldTest, StaticFieldSolver) {
+	TEST(Field, StaticFieldSolver) {
 		// Set universe properties
 		UniverseProperties properties;
 		properties.size = { 1,1,1 };

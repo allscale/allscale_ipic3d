@@ -69,12 +69,11 @@ namespace ipic3d {
 		Vector3<double> magneticField;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::ParticleWave, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1, 1, 1},
-			const double dt = 1, const double objectRadius = Re, const Vector3<double>& objectCenter = { 0, 0, 0 }, const Vector3<double>& magneticField = {0, 0, B0})
+			const double dt = 1, const double objectRadius = 0, const Vector3<double>& objectCenter = { 0, 0, 0 }, const Vector3<double>& magneticField = {0, 0, 0})
 	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), objectRadius(objectRadius), objectCenter(objectCenter), magneticField(magneticField) {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
 		    assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
-		    assert_lt(0, objectRadius) << "Expected positive non-zero object radius, but got " << objectRadius;
 	    }
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {

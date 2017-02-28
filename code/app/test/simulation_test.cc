@@ -100,14 +100,14 @@ namespace ipic3d {
 
 	}
 
-	TEST(SimulationTest, SingleParticleFirstOrder) {
+	TEST(Simulation, SingleParticleFirstOrder) {
 
 		// this test checks whether particles are properly migrated between cells
 		detail::testSingleParticle<detail::default_particle_mover>();
 
 	}
 
-	TEST(SimulationTest, SingleParticleSecondOrder) {
+	TEST(Simulation, SingleParticleSecondOrder) {
 
 		// this test checks whether particles are properly migrated between cells
 		detail::testSingleParticle<detail::boris_mover>();
@@ -115,7 +115,7 @@ namespace ipic3d {
 	}
 
 
-	TEST(SimulationTest, SingleParticleBorisMover) {
+	TEST(Simulation, SingleParticleBorisMover) {
 
 		// Set universe properties
 		UniverseProperties properties;
@@ -169,7 +169,7 @@ namespace ipic3d {
 	}
 
 
-	TEST(SimulationTest, SingleParticleBorisMoverLarmorRadiusPseudo) {
+	TEST(Simulation, SingleParticleBorisMoverLarmorRadiusPseudo) {
 
 		// Set universe properties
 		UniverseProperties properties;
@@ -241,7 +241,7 @@ namespace ipic3d {
 	}
 
 
-	TEST(SimulationTest, SingleParticleBorisMoverLarmorRadius) {
+	TEST(Simulation, SingleParticleBorisMoverLarmorRadius) {
 
 		// Set universe properties
 		UniverseProperties properties;

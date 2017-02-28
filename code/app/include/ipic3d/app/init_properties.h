@@ -1,5 +1,9 @@
 #pragma once
 
+#include "allscale/utils/printer/vectors.h"
+
+#include "ipic3d/app/vector.h"
+
 namespace ipic3d {
 
 	/**
