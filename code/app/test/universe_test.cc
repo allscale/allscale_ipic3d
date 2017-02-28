@@ -38,6 +38,14 @@ namespace ipic3d {
 		EXPECT_FALSE(ss.str().empty());
 	}
 
+	TEST(UseCase, Printable) {
+		// test for adherence to fallback policy in parameter parsing
+		UseCase useCase;
+		std::stringstream ss;
+		ss << useCase;
+		EXPECT_EQ("ParticleWave", ss.str());
+	}
+
 	TEST(Universe, Size) {
 
 		// Set some universe properties
@@ -73,6 +81,12 @@ namespace ipic3d {
 	    EXPECT_EQ(Point({1.5, 0.5, 1.5}), getCenterOfCell({1, 0, 1}, properties));
 	    EXPECT_EQ(Point({1.5, 2.5, 3.5}), getCenterOfCell({1, 2, 3}, properties));
     }
+
+	TEST(Universe, Move) {
+
+		EXPECT_TRUE(std::is_move_constructible<Universe>::value);
+
+	}
 
 
 } // end namespace ipic3d
