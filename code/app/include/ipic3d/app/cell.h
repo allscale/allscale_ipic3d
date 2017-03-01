@@ -18,7 +18,7 @@ namespace ipic3d {
 
 	struct DensityCell {
 		double rho;			// charge density
-		double J;			// current density
+		Vector3<double> J;	// current density
 	};
 
 	using Density = allscale::api::user::data::Grid<DensityCell,3>;	// a 3D grid of density cells
@@ -39,92 +39,30 @@ namespace ipic3d {
 		 * of its contained particles to the density grid. Contributions are stored
 		 * within the given contributions grid
 		 */
-		void projectToDensityField(const UniverseProperties& /*universeProperties*/, const Coord& pos, allscale::api::user::data::Grid<DensityCell,3>& contributions) const {
+		void projectToDensityField(const UniverseProperties& universeProperties, const Coord& pos, DensityCell& contributions) const {
 
 			// quick-check
 			if (particles.empty()) return;		// nothing to contribute
 
 			// init aggregated densities of neighboring cells
-			DensityCell res[2][2][2];
-			for(int i=0; i<2; i++) {
-				for(int j=0; j<2; j++) {
-					for(int k=0; k<2; k++) {
-						res[i][j][k].rho = 0.0;
-						res[i][j][k].J = 0.0;
-					}
-				}
-			}
+			contributions.rho = 0.0;
+			contributions.J = 0.0;
 
 			// aggregate particles
 			// TODO data race on res, should be avoided
 			for(const auto& p : particles) {
-				for(int i=0; i<2; i++) {
-					for(int j=0; j<2; j++) {
-						for(int k=0; k<2; k++) {
-							// TODO: add an actual interpolation
-							res[i][j][k].rho += p.q;
-							res[i][j][k].J += p.q;
-						}
-					}
-				}
+				contributions.rho += p.q;
+
+				contributions.J.x += p.q * p.velocity.x;
+				contributions.J.y += p.q * p.velocity.y;
+				contributions.J.z += p.q * p.velocity.z;
 			}
 
-			// write contributions to contributions grid
-			for(int i=0; i<2; i++) {
-				for(int j=0; j<2; j++) {
-					for(int k=0; k<2; k++) {
-						Coord cur = (pos * 2) + Coord{i,j,k};
-						contributions[cur] = res[i][j][k];
-					}
-				}
-			}
-		}
-
-		/**
-		 * Interpolation of particles to grid
-		 *
-		 * Requires this cell, being located at the position `pos`, to project the effect
-		 * of its contained particles to the density grid. Contributions are stored
-		 * within the given contributions grid
-		 */
-		void interP2G(const Coord& pos, allscale::api::user::data::Grid<DensityCell,3>& contributions) const {
-
-			// quick-check
-			if (particles.empty()) return;		// nothing to contribute
-
-			// init aggregated densities of neighboring cells
-			DensityCell res[2][2][2];
-			for(int i=0; i<2; i++) {
-				for(int j=0; j<2; j++) {
-					for(int k=0; k<2; k++) {
-						res[i][j][k].rho = 0.0;
-						res[i][j][k].J = 0.0;
-					}
-				}
-			}
-
-			// aggregate particles
-			allscale::api::user::pfor(particles, [&](const Particle& p) {
-				for(int i=0; i<2; i++) {
-					for(int j=0; j<2; j++) {
-						for(int k=0; k<2; k++) {
-							// TODO: add an actual interpolation
-							res[i][j][k].rho += p.q;
-							res[i][j][k].J += p.q;
-						}
-					}
-				}
-			});
-
-			// write contributions to contributions grid
-			for(int i=0; i<2; i++) {
-				for(int j=0; j<2; j++) {
-					for(int k=0; k<2; k++) {
-						Coord cur = (pos * 2)  + Coord{i,j,k};
-						contributions[cur] = res[i][j][k];
-					}
-				}
-			}
+        	double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+			contributions.rho = contributions.rho / vol;
+			contributions.J.x = contributions.J.x / vol;
+			contributions.J.y = contributions.J.y / vol;
+			contributions.J.z = contributions.J.z / vol;
 		}
 
 	    /**

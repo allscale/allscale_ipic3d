@@ -75,9 +75,6 @@ namespace ipic3d {
 		// the 3-D density field
 		Density density(universe.field.size());
 
-		// a 3-D structure collecting contributions of cells to the density
-		Grid<DensityCell> densityContributions(fieldSize*2);
-
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
 
@@ -92,28 +89,10 @@ namespace ipic3d {
 			// STEP 1: collect particle contributions
 
 			// project particles to density field
-			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				particletoFieldProjector(universe.properties,universe.cells[pos],pos,densityContributions);
-			});
-
-			// update density field
 			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos) {
 				DensityCell& entry = density[pos];
 
-				// reset density field
-				entry.rho = 0.0;
-				entry.J = 0.0;
-
-				// aggregate contributions of adjacent cell
-				for(int i=0; i<2; i++) {
-					for(int j=0; j<2; j++) {
-						for(int k=0; k<2; k++) {
-							auto& cur = densityContributions[(pos * 2) + utils::Coordinate<3>{i,j,k}];
-							entry.rho += cur.rho;
-							entry.J += cur.J;
-						}
-					}
-				}
+				particletoFieldProjector(universe.properties,universe.cells[pos],pos,entry);
 			});
 
 
@@ -146,7 +125,7 @@ namespace ipic3d {
 	namespace detail {
 
 		struct default_particle_to_field_projector {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, Grid<DensityCell>& densityContributions) const {
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, DensityCell& densityContributions) const {
 				// TODO: make this a free function:
 				cell.projectToDensityField(universeProperties,pos,densityContributions);
 			}
