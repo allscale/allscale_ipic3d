@@ -45,7 +45,7 @@ namespace ipic3d {
 	    EXPECT_EQ(fieldAtPos, 6.0);
     }
 
-	TEST(Field, StaticFieldSolver) {
+	TEST(Field, FieldSolverStatic) {
 		// Set universe properties
 		UniverseProperties properties;
 		properties.size = { 1,1,1 };
@@ -66,7 +66,7 @@ namespace ipic3d {
 		});
 
 	    // apply static field solver and check results
-		FieldSolver(properties, pos, field);
+		FieldSolverStatic(properties, pos, field);
 		auto E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
@@ -80,7 +80,7 @@ namespace ipic3d {
 
 	    // change target position and re-evaluate
 	    pos = {10, 5, 1};
-		FieldSolver(properties, pos, field);
+		FieldSolverStatic(properties, pos, field);
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
@@ -100,7 +100,7 @@ namespace ipic3d {
 		});
 
 	    pos = {10, 10, 20};
-		FieldSolver(properties, pos, field);
+		FieldSolverStatic(properties, pos, field);
 
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );

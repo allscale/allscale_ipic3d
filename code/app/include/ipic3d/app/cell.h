@@ -540,7 +540,7 @@ namespace ipic3d {
 	/**
 	 * Static Field Solver: Fields are computed with respect to the center of each cell
 	 */
-	void FieldSolver(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+	void FieldSolverStatic(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
 		switch(universeProperties.useCase) {
 
 			case UseCase::Dipole:
@@ -575,5 +575,16 @@ namespace ipic3d {
 		}
 	}
 
+    /**
+     * Explicit Field Solver: Fields are computed using leapfrog algorithm
+     */
+	void FieldSolverLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+        // 1. Compute current density J as sum of particles density times particles velocity
+        
+        // 2. Compute electic field E using leapfrog with the time step delta t 
+        
+        // 3. Compute magnetic field B using leapfrog with the time step delta t, but starts on detla t / 2
+        //    Compute also magnetic field B on the center of each cell as average of all nodes
+    }
 
 } // end namespace ipic3d

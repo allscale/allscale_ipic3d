@@ -154,7 +154,7 @@ namespace ipic3d {
 
 		struct default_field_solver {
 			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
-				FieldSolver(universeProperties, pos, field);
+				FieldSolverStatic(universeProperties, pos, field);
 			}
 
 		};
