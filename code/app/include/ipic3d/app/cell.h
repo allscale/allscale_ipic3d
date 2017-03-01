@@ -379,21 +379,21 @@ namespace ipic3d {
 
 	/**
 	* This method computes a trilinear interpolation for a given target position within a rectangular box spanned by 8 corner points
+	*   This is interpolation of fields to particles
 	* Math: http://paulbourke.net/miscellaneous/interpolation/
 	* TODO: Move this to some math utilities header?
-	* 	    Looks like interpolation of fields to particles - RI
 	*
 	* @param corners the 8 surrounding points to interpolate from
 	* @param pos the target position for which to interpolate
 	*/
 	template<typename T>
-	T trilinearInterpolation(const T corners[2][2][2], const Vector3<double>& pos) {
+	T trilinearInterpolationF2P(const T corners[2][2][2], const Vector3<double>& pos, const double vol) {
 		T res = T();
 
 	    for(int i = 0; i < 2; ++i) {
 		    for(int j = 0; j < 2; ++j) {
 			    for(int k = 0; k < 2; ++k) {
-				    auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z);
+				    auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z) / vol;
 				    res += corners[i][j][k] * fac;
 			    }
 		    }
@@ -433,6 +433,7 @@ namespace ipic3d {
 
 		const auto cellCenter = getCenterOfCell(pos, universeProperties);
 
+        double vol = 1.0; //universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 		// update particles
 		allscale::api::user::pfor(cell.particles, [&](Particle& p){
 
@@ -443,8 +444,8 @@ namespace ipic3d {
 			const auto relPos = allscale::api::user::data::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
 
 			// interpolate
-			auto E = trilinearInterpolation(Es, relPos);
-			auto B = trilinearInterpolation(Bs, relPos);
+			auto E = trilinearInterpolationF2P(Es, relPos, vol);
+			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
 			// update velocity
 			p.updateVelocityBorisStyle(E, B, universeProperties.dt);

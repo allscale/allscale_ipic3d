@@ -120,7 +120,7 @@ namespace ipic3d {
 		// Set universe properties
 		UniverseProperties properties;
 		properties.size = {1,1,1};
-		properties.cellWidth = { 100,100,100 };
+		properties.cellWidth = { 1,1,1 };
 		properties.dt = 0.1;
 		properties.useCase = UseCase::Test;
 

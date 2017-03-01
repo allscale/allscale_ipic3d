@@ -20,7 +20,8 @@ namespace ipic3d {
 	    }
 
 	    // perform trilinear interpolation and check result
-	    double fieldAtPos = trilinearInterpolation(fieldCorners, pos);
+        double vol = 1.0;
+	    double fieldAtPos = trilinearInterpolationF2P(fieldCorners, pos, vol);
 	    EXPECT_EQ(fieldAtPos, 1.0);
 
 	    // change values of points
@@ -33,15 +34,18 @@ namespace ipic3d {
 	    }
 
 	    // re-evaluate
-	    fieldAtPos = trilinearInterpolation(fieldCorners, pos);
-	    EXPECT_EQ(fieldAtPos, 3.0);
+        vol = 0.75;
+	    fieldAtPos = trilinearInterpolationF2P(fieldCorners, pos, vol);
+	    EXPECT_EQ(fieldAtPos, 4.0);
 
 	    // change target position and re-evaluate
 	    pos = {0.0, 0.0, 0.0};
-	    fieldAtPos = trilinearInterpolation(fieldCorners, pos);
+        vol = 3.0;
+	    fieldAtPos = trilinearInterpolationF2P(fieldCorners, pos, vol);
 	    EXPECT_EQ(fieldAtPos, 0.0);
 	    pos = {1.0, 1.0, 1.0};
-	    fieldAtPos = trilinearInterpolation(fieldCorners, pos);
+        vol = 1.0;
+	    fieldAtPos = trilinearInterpolationF2P(fieldCorners, pos, vol);
 	    EXPECT_EQ(fieldAtPos, 6.0);
     }
 
