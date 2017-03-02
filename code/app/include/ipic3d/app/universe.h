@@ -18,7 +18,7 @@ namespace ipic3d {
 		Field field;
 
 		// Uniform properties of this universe
-		UniverseProperties properties;
+		const UniverseProperties properties;
 
 		/**
 		* Creates a Universe of cells and a field of forces the given size.

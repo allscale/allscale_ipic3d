@@ -80,8 +80,7 @@ namespace ipic3d {
 			// change velocity and send back
 			b.particles.front().velocity.x = -1;
 
-			universe.properties.dt = 0.25;
-			unsigned niter = 4;
+			int niter = 1;
 
 			simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,Mover>(niter,universe);
 

@@ -39,11 +39,16 @@ namespace ipic3d {
 	}
 
 	TEST(UseCase, Printable) {
-		// test for adherence to fallback policy in parameter parsing
-		UseCase useCase;
+		UseCase useCase = UseCase::ParticleWave;
 		std::stringstream ss;
 		ss << useCase;
 		EXPECT_EQ("ParticleWave", ss.str());
+	}
+
+	TEST(UniverseProperties, TypeProperties) {
+		UniverseProperties properties;
+		Universe universe(properties);
+		EXPECT_TRUE(std::is_const<decltype(universe.properties)>::value);
 	}
 
 	TEST(Universe, Size) {

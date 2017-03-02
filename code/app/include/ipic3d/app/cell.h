@@ -41,6 +41,8 @@ namespace ipic3d {
 		 */
 		void projectToDensityField(const UniverseProperties& universeProperties, const Coord& pos, DensityCell& contributions) const {
 
+			assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+
 			// quick-check
 			if (particles.empty()) return;		// nothing to contribute
 
@@ -49,20 +51,14 @@ namespace ipic3d {
 			contributions.J = 0.0;
 
 			// aggregate particles
-			// TODO data race on res, should be avoided
 			for(const auto& p : particles) {
 				contributions.rho += p.q;
-
-				contributions.J.x += p.q * p.velocity.x;
-				contributions.J.y += p.q * p.velocity.y;
-				contributions.J.z += p.q * p.velocity.z;
+				contributions.J += p.q * p.velocity;
 			}
 
         	double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-			contributions.rho = contributions.rho / vol;
-			contributions.J.x = contributions.J.x / vol;
-			contributions.J.y = contributions.J.y / vol;
-			contributions.J.z = contributions.J.z / vol;
+			contributions.rho /= vol;
+			contributions.J /= vol;
 		}
 
 	    /**
@@ -70,20 +66,29 @@ namespace ipic3d {
  		 *
  		 * Fields are computed with respect to each particle position
  		 */
-		void computeFields(const Particle& p, Vector3<double> &E, Vector3<double> &B, const bool isDipole){
-			if (isDipole) {
-			    E = {0, 0, 0};
-			    double fac1 = -B0 * pow(Re, 3.0) / pow(sumOfSquares(p.position), 2.5);
-				B.x = 3.0 * p.position.x * p.position.z * fac1;
-				B.y = 3.0 * p.position.y * p.position.z * fac1;
-				B.z = (2.0 * p.position.z * p.position.z - p.position.x * p.position.x - p.position.y * p.position.y) * fac1;
-			} else {
-				E.x = sin(2.0 * M_PI * p.position.x) * cos(2.0 * M_PI * p.position.y);
- 				E.y = p.position.x * (1.0 - p.position.x) * p.position.y * (1.0 - p.position.y);
- 				E.z = p.position.x * p.position.x + p.position.z * p.position.z;
- 				B.x = 0.0;
-	 			B.y = cos(2.0 * M_PI * p.position.z);
- 				B.z = sin(2.0 * M_PI * p.position.x);
+		void computeFields(const Particle& p, Vector3<double> &E, Vector3<double> &B, const UseCase useCase){
+			switch(useCase) {
+			case UseCase::Dipole:
+				{
+					E = { 0, 0, 0 };
+					double fac1 = -B0 * pow(Re, 3.0) / pow(sumOfSquares(p.position), 2.5);
+					B.x = 3.0 * p.position.x * p.position.z * fac1;
+					B.y = 3.0 * p.position.y * p.position.z * fac1;
+					B.z = (2.0 * p.position.z * p.position.z - p.position.x * p.position.x - p.position.y * p.position.y) * fac1;
+					return;
+				}
+			case UseCase::ParticleWave:
+				{
+					E.x = sin(2.0 * M_PI * p.position.x) * cos(2.0 * M_PI * p.position.y);
+					E.y = p.position.x * (1.0 - p.position.x) * p.position.y * (1.0 - p.position.y);
+					E.z = p.position.x * p.position.x + p.position.z * p.position.z;
+					B.x = 0.0;
+					B.y = cos(2.0 * M_PI * p.position.z);
+					B.z = sin(2.0 * M_PI * p.position.x);
+					return;
+				}
+			default:
+				assert_not_implemented() << "Unknown use case " << useCase << " for computeFields";
 			}
 		}
 
@@ -95,71 +100,81 @@ namespace ipic3d {
  		 *
 		 * @param time step
 		 */
-		void initParticles(const UniverseProperties& /*universeProperties*/, const Coord&, const double dt, const bool isDipole) {
+		void initParticles(const UniverseProperties& universeProperties, const Coord& pos) {
+
+			assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 			// quick-check
 			if (particles.empty())
 				return;
 
-			if (isDipole) {
-				// update particles
-				allscale::api::user::pfor(particles, [&](Particle& p){
-					Vector3<double> v, vr;
-					double B_sq, f1, f2;
-					double qdto4mc = p.q * dt * 0.25;
+			switch(universeProperties.useCase) {
+			case UseCase::Dipole:
+				{
+					// update particles
+					allscale::api::user::pfor(particles, [&](Particle& p) {
+						Vector3<double> v, vr;
+						double B_sq, f1, f2;
+						double qdto4mc = p.q * universeProperties.dt * 0.25;
 
-					p.q = e; // positive charge, change to -e when simulating electron
-					p.q = p.q / m;
-					// Trajectory of a proton with 10MeV kinetic energy in dipole field
-					//K = K * e;   // convert to Joule
-					// Find corresponding speed
-					double v_mod = c / sqrt(1.0 + (m * c * c) / K);
+						p.q = e; // positive charge, change to -e when simulating electron
+						p.q = p.q / m;
+						// Trajectory of a proton with 10MeV kinetic energy in dipole field
+						//K = K * e;   // convert to Joule
+						// Find corresponding speed
+						double v_mod = c / sqrt(1.0 + (m * c * c) / K);
 
-					// initial position: equatorial plane 4Re from Earth
-					p.position.x += 4 * Re; p.position.y += 0.0; p.position.z += 0.0;
+						// initial position: equatorial plane 4Re from Earth
+						p.position.x += 4 * Re; p.position.y += 0.0; p.position.z += 0.0;
 
-					double pitch_angle = 30.0; // initial angle between velocity and mag.field (degrees)
-					p.velocity.x = 0.0;
-					p.velocity.y = v_mod * sin(pitch_angle * M_PI / 180.0);
-					p.velocity.z = v_mod * cos(pitch_angle * M_PI / 180.0);
+						double pitch_angle = 30.0; // initial angle between velocity and mag.field (degrees)
+						p.velocity.x = 0.0;
+						p.velocity.y = v_mod * sin(pitch_angle * M_PI / 180.0);
+						p.velocity.z = v_mod * cos(pitch_angle * M_PI / 180.0);
 
-				    // compute forces
-					Vector3<double> E, B;
-					computeFields(p, E, B, true);
-					//computeFields(pos, E, B, true);
+						// compute forces
+						Vector3<double> E, B;
+						computeFields(p, E, B, universeProperties.useCase);
 
-					B_sq = sumOfSquares(B);
-					f1 = tan(qdto4mc * sqrt(B_sq)) / sqrt(B_sq);
-					f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
+						B_sq = sumOfSquares(B);
+						f1 = tan(qdto4mc * sqrt(B_sq)) / sqrt(B_sq);
+						f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
 
-					// update velocity
-					v = p.velocity + E * qdto4mc;
-					vr = v + f1 * crossProduct(v, B);
-					v = v + f2 * crossProduct(vr, B);
+						// update velocity
+						v = p.velocity + E * qdto4mc;
+						vr = v + f1 * crossProduct(v, B);
+						v = v + f2 * crossProduct(vr, B);
 
-					p.velocityStar = v + E * qdto4mc;
-				});
-			} else {
-				allscale::api::user::pfor(particles, [&](Particle& p){
-					Vector3<double> v, vr;
-					double B_sq, f1, f2;
-					double qdto4mc = p.q * dt * 0.25;
+						p.velocityStar = v + E * qdto4mc;
+					});
+					return;
+				}
+			case UseCase::ParticleWave:
+				{
+					allscale::api::user::pfor(particles, [&](Particle& p) {
+						Vector3<double> v, vr;
+						double B_sq, f1, f2;
+						double qdto4mc = p.q * universeProperties.dt * 0.25;
 
-					Vector3<double> E, B;
-					computeFields(p, E, B, false);
+						Vector3<double> E, B;
+						computeFields(p, E, B, universeProperties.useCase);
 
-					B_sq = sumOfSquares(B);
-					f1 = tan(qdto4mc * sqrt(B_sq)) / sqrt(B_sq);
-					f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
+						B_sq = sumOfSquares(B);
+						f1 = tan(qdto4mc * sqrt(B_sq)) / sqrt(B_sq);
+						f2 = 2.0 * f1 / (1.0 + f1 * f1 * B_sq);
 
-					// update velocity
-					v = p.velocity + E * qdto4mc;
+						// update velocity
+						v = p.velocity + E * qdto4mc;
 
-					vr = v + f1 * crossProduct(v, B);
-					v = v + f2 * crossProduct(vr, B);
+						vr = v + f1 * crossProduct(v, B);
+						v = v + f2 * crossProduct(vr, B);
 
-					p.velocityStar = v + E * qdto4mc;
-				});
+						p.velocityStar = v + E * qdto4mc;
+					});
+					return;
+				}
+			default:
+				assert_not_implemented() << "Unknown useCase " << universeProperties.useCase << " for initParticles";
 			}
 		}
 
@@ -176,7 +191,9 @@ namespace ipic3d {
 		 * @param dt a time step
 		 * @param isDipole to check with test case we deal with
 		 */
-		void BorisMover(const UniverseProperties& universeProperties, const Coord& pos, const Field&, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers, const double dt, const bool isDipole) {
+		void BorisMover(const UniverseProperties& universeProperties, const Coord& pos, const Field&, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+
+			assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 			// quick-check
 			if (particles.empty())
@@ -186,15 +203,13 @@ namespace ipic3d {
 			allscale::api::user::pfor(particles, [&](Particle& p){
 				Vector3<double> v, vr;
 				double B_sq, f1, f2;
-				double qdto2mc = p.q * dt * 0.5;
+				double qdto2mc = p.q * universeProperties.dt * 0.5;
 
 				// move particle
-				p.position += p.velocityStar * dt;
+				p.position += p.velocityStar * universeProperties.dt;
 
-				// TODO: should not that be a field solver?
 				Vector3<double> E, B;
-				computeFields(p, E, B, isDipole);
-				//computeFields(pos, E, B, isDipole);
+				computeFields(p, E, B, universeProperties.useCase);
 
 				B_sq = sumOfSquares(B);
 				f1 = tan(qdto2mc * sqrt(B_sq)) / sqrt(B_sq);
@@ -271,6 +286,8 @@ namespace ipic3d {
 	 * @param dt the time step to move the particle forward for
 	 */
 	void moveParticlesFirstOrder(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
+
+		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 		// quick-check
 		if (cell.particles.empty()) return;
@@ -350,6 +367,8 @@ namespace ipic3d {
 	 */
 	void moveParticlesBorisStyle(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
 
+		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+
 		// quick-check
 		if (cell.particles.empty()) return;
 
@@ -405,6 +424,8 @@ namespace ipic3d {
 	 */
 	void exportParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
 
+		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+
 		// -- migrate particles to other cells if boundaries are crossed --
 
 		// get buffers for particles to be send to neighbors
@@ -454,7 +475,9 @@ namespace ipic3d {
 	/**
 	 * Imports the particles from directed towards this cell from the given transfer buffer.
 	 */
-	void importParticles(const UniverseProperties& /*universeProperties*/, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+	void importParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+
+		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 		// import particles send to this cell
 		utils::Coordinate<3> size = transfers.size();
@@ -480,6 +503,9 @@ namespace ipic3d {
 	 * Static Field Solver: Fields are computed with respect to the center of each cell
 	 */
 	void FieldSolverStatic(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+
+		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+
 		switch(universeProperties.useCase) {
 
 			case UseCase::Dipole:
@@ -517,12 +543,15 @@ namespace ipic3d {
     /**
      * Explicit Field Solver: Fields are computed using leapfrog algorithm
      */
-	void FieldSolverLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+	void FieldSolverLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& /*field*/) {
+
+		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+
         // 1. Compute current density J as sum of particles density times particles velocity
-        
-        // 2. Compute electic field E using leapfrog with the time step delta t 
-        
-        // 3. Compute magnetic field B using leapfrog with the time step delta t, but starts on detla t / 2
+
+        // 2. Compute electric field E using leapfrog with the time step delta t
+
+        // 3. Compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
         //    Compute also magnetic field B on the center of each cell as average of all nodes
     }
 
