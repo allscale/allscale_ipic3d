@@ -83,6 +83,7 @@ namespace ipic3d {
 
 
 	    // change target position and re-evaluate
+		properties.size = { 11,6,2 };
 	    pos = {10, 5, 1};
 		FieldSolverStatic(properties, pos, field);
 		E = field[pos].E;
@@ -103,6 +104,7 @@ namespace ipic3d {
 			field[pos].B = { 0.0, 0.0, 0.0 };
 		});
 
+		properties.size = { 11,11,21 };
 	    pos = {10, 10, 20};
 		FieldSolverStatic(properties, pos, field);
 
