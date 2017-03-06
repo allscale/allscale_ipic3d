@@ -27,35 +27,35 @@ namespace ipic3d {
 
 		switch(universeProperties.useCase) {
 
-		case UseCase::Dipole:
-		{
-			field[pos].E = { 0.0, 0.0, 0.0 };
-			auto B = field[pos].B;
-			auto location = getLocation(pos, universeProperties);
+			case UseCase::Dipole:
+			{
+				field[pos].E = { 0.0, 0.0, 0.0 };
+				auto B = field[pos].B;
+				auto location = getLocation(pos, universeProperties);
 
-			double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::api::user::data::sumOfSquares(location), 2.5);
-			B.x = 3.0 * location.x * location.z * fac1;
-			B.y = 3.0 * location.y * location.z * fac1;
-			B.z = (2.0 * location.z * location.z - location.x * location.x - location.y * location.y) * fac1;
+				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::api::user::data::sumOfSquares(location), 2.5);
+				B.x = 3.0 * location.x * location.z * fac1;
+				B.y = 3.0 * location.y * location.z * fac1;
+				B.z = (2.0 * location.z * location.z - location.x * location.x - location.y * location.y) * fac1;
 
-			field[pos].B = B;
-		}
-		break;
+				field[pos].B = B;
+				break;
+			}
 
-		case UseCase::ParticleWave:
-		{
-			// TODO: to provide
-			break;
-		}
+			case UseCase::ParticleWave:
+			{
+				// TODO: to provide
+				break;
+			}
 
-		case UseCase::Test:
-		{
-			// TODO: to provide
-			break;
-		}
+			case UseCase::Test:
+			{
+				// TODO: to provide
+				break;
+			}
 
-		default:
-			assert_not_implemented() << "The specified use case is not supported yet!";
+			default:
+				assert_not_implemented() << "The specified use case is not supported yet!";
 		}
 	}
 
@@ -66,6 +66,7 @@ namespace ipic3d {
 	*/
 	void computeFields(const Particle& p, Vector3<double> &E, Vector3<double> &B, const UseCase useCase) {
 		switch(useCase) {
+
 			case UseCase::Dipole:
 			{
 				E = { 0, 0, 0 };
@@ -75,6 +76,7 @@ namespace ipic3d {
 				B.z = (2.0 * p.position.z * p.position.z - p.position.x * p.position.x - p.position.y * p.position.y) * fac1;
 				return;
 			}
+
 			case UseCase::ParticleWave:
 			{
 				E.x = sin(2.0 * M_PI * p.position.x) * cos(2.0 * M_PI * p.position.y);
@@ -85,15 +87,16 @@ namespace ipic3d {
 				B.z = sin(2.0 * M_PI * p.position.x);
 				return;
 			}
+
 			default:
 				assert_not_implemented() << "Unknown use case " << useCase << " for computeFields";
 		}
 	}
 
 	/**
-	* Explicit Field Solver: Fields are computed using leapfrog algorithm
+	* Explicit Field Solver: Fields are computed using forward approximation
 	*/
-	void solveFieldLeapfrog(const UniverseProperties& /*universeProperties*/, const utils::Coordinate<3>& pos, Field& field) {
+	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
@@ -103,6 +106,82 @@ namespace ipic3d {
 
 		// 3. Compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
 		//    Compute also magnetic field B on the center of each cell as average of all nodes
+
+		switch(universeProperties.useCase) {
+
+			case UseCase::Dipole:
+			{
+				// 1. Compute E
+				// 		curlC2N()
+				// 		scale Jh by -4PI/c
+				// 		sum curl B and Jh
+				// 		scale the sum by dt
+				// 		update E_{n+1} with the computed value
+				// 		Boundary conditions: periodic?
+				
+				// 2. Compute B
+				// 		curlN2C()
+				//		scale curl by -cdt
+				//		update B_{n+1} on the center with the computed value
+				//		Boundary conditions: periodic?
+				//		interpC2N
+				break;
+			}
+
+			case UseCase::ParticleWave:
+			{
+				// TODO: to provide
+				break;
+			}
+
+			case UseCase::Test:
+			{
+				// TODO: to provide
+				break;
+			}
+
+			default:
+				assert_not_implemented() << "The specified use case is not supported yet!";
+		}
+	}
+
+	/**
+	* Explicit Field Solver: Fields are computed using leapfrog algorithm
+	*/
+	void solveFieldLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+
+		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
+
+		// 1. Compute current density J as sum of particles density times particles velocity
+
+		// 2. Compute electric field E using leapfrog with the time step delta t
+
+		// 3. Compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
+		//    Compute also magnetic field B on the center of each cell as average of all nodes
+
+		switch(universeProperties.useCase) {
+
+			case UseCase::Dipole:
+			{
+				// TODO
+				break;
+			}
+
+			case UseCase::ParticleWave:
+			{
+				// TODO: to provide
+				break;
+			}
+
+			case UseCase::Test:
+			{
+				// TODO: to provide
+				break;
+			}
+
+			default:
+				assert_not_implemented() << "The specified use case is not supported yet!";
+		}
 	}
 
 } // end namespace ipic3d
