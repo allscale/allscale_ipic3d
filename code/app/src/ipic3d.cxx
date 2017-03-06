@@ -79,6 +79,7 @@ Universe initUniverse(const Parameters& params) {
 
 	// create a universe with the given properties
 	Universe universe(initCells(initProperties, universeProperties), initFields(initProperties, universeProperties), universeProperties);
+
 	return universe;
 }
 
@@ -112,8 +113,6 @@ UniverseProperties initUniverseProperties(const Parameters& params) {
 Grid<Cell> initCells(const InitProperties& initProperties, const UniverseProperties& properties) {
 
 	const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
-	const utils::Coordinate<3> full = properties.size;				// a constant covering the full range
-
 
 	// -- initialize the grid of cells --
 
@@ -123,7 +122,7 @@ Grid<Cell> initCells(const InitProperties& initProperties, const UniversePropert
 	// -- initialize the state of each individual cell --
 
 	// TODO: return this as a treeture
-	allscale::api::user::pfor(zero, full, [&](const utils::Coordinate<3>& pos) {
+	allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 
 		Cell& cell = cells[pos];
 
@@ -160,8 +159,8 @@ Field initFields(const InitProperties& initProperties, const UniverseProperties&
 
 	using namespace allscale::api::user;
 
-	// determine the field size
 	utils::Size<3> zero = 0;
+	// determine the field size (grid size + 1 in each dimension)
 	utils::Size<3> fieldSize = universeProperties.size + coordinate_type(1);
 
 	// the 3-D force fields
@@ -172,8 +171,6 @@ Field initFields(const InitProperties& initProperties, const UniverseProperties&
 	auto ebc = crossProduct(driftVel[0], initProperties.magneticFieldAmplitude) * -1;
 
 	pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
-
-		double fac1;
 
 		// init electrical field
 		fields[cur].E = ebc;
@@ -200,7 +197,7 @@ Field initFields(const InitProperties& initProperties, const UniverseProperties&
 				// Compute dipolar field B_ext
 
 				if (r2 > a*a) {
-					fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
+					auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
 					fields[cur].Bext.x = 3.0 * diff.x * diff.z * fac1;
 					fields[cur].Bext.y = 3.0 * diff.y * diff.z * fac1;
 					fields[cur].Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;

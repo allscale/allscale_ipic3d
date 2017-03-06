@@ -48,7 +48,7 @@ namespace ipic3d {
 			velocity = v_plus + k * E;
 
 		}
-		
+
 		friend std::ostream& operator<<(std::ostream& out, const Particle& p) {
 			out << "Particle: " << std::endl;
 			out << "\tPosition: " << p.position << std::endl;
@@ -60,5 +60,24 @@ namespace ipic3d {
 		}
 
 	};
+
+	/**
+	* This function computes the force exerted on a particle within a given electric field
+	* TODO: add interpolation?
+	*
+	* @param E the electric field
+	* @param p the particle for which to compute the force
+	*/
+	Force computeElectricForce(const Vector3<double> E[2][2][2], const Particle& p) {
+		Force f(0);
+		for(int i = 0; i < 2; i++) {
+			for(int j = 0; j < 2; j++) {
+				for(int k = 0; k < 2; k++) {
+					f += E[i][j][k] * p.q;
+				}
+			}
+		}
+		return f;
+	}
 
 } // end namespace ipic3d

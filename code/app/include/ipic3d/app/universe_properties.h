@@ -51,8 +51,6 @@ namespace ipic3d {
 	*/
 	struct UniverseProperties {
 
-		// TODO: protect member fields that should be read-only during simulation?
-
 		// the use case
 		UseCase useCase;
 		// The size of this universe
@@ -74,6 +72,7 @@ namespace ipic3d {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
 		    assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
+		    assert_le(0, objectRadius) << "Expected positive or zero object radius, but got " << objectRadius;
 	    }
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
@@ -91,11 +90,14 @@ namespace ipic3d {
 	};
 
 	Vector3<double> getLocation(const coordinate_type& pos, const UniverseProperties& properties) {
+		// do not check for strict domination, as pos could also refer to a field position
+		assert_true(pos.dominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
 		Vector3<double> tempPos{ (double)pos.x, (double)pos.y, (double)pos.z };
 		return elementwiseProduct(tempPos, properties.cellWidth);
 	}
 
 	Vector3<double> getCenterOfCell(const coordinate_type& pos, const UniverseProperties& properties) {
+		assert_true(pos.strictlyDominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
 		return getLocation(pos, properties) + properties.cellWidth / 2;
 	}
 

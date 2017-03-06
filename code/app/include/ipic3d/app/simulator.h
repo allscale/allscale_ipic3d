@@ -73,7 +73,7 @@ namespace ipic3d {
 		// -- auxiliary structures for communication --
 
 		// the 3-D density field
-		Density density(universe.field.size());
+		Density density(size);
 
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
@@ -89,7 +89,7 @@ namespace ipic3d {
 			// STEP 1: collect particle contributions
 
 			// project particles to density field
-			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos) {
+			pfor(zero,size,[&](const utils::Coordinate<3>& pos) {
 				DensityCell& entry = density[pos];
 
 				particletoFieldProjector(universe.properties,universe.cells[pos],pos,entry);
@@ -98,7 +98,7 @@ namespace ipic3d {
 
 			// STEP 2: solve field equations
 			// TODO: fieldSolver(universe.field,density,universe.cells);
-			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
+			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos){
 				fieldSolver(universe.properties, pos, universe.field);
 			});
 
@@ -125,15 +125,21 @@ namespace ipic3d {
 	namespace detail {
 
 		struct default_particle_to_field_projector {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, DensityCell& densityContributions) const {
-				// TODO: make this a free function:
-				cell.projectToDensityField(universeProperties,pos,densityContributions);
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& /*pos*/, DensityCell& densityContributions) const {
+				projectToDensityField(universeProperties,cell,densityContributions);
 			}
 		};
 
 		struct default_field_solver {
 			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
-				FieldSolverStatic(universeProperties, pos, field);
+				solveFieldStatically(universeProperties, pos, field);
+			}
+
+		};
+
+		struct leapfrog_field_solver {
+			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
+				solveFieldLeapfrog(universeProperties, pos, field);
 			}
 
 		};

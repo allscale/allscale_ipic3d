@@ -4,7 +4,7 @@
 
 namespace ipic3d {
 
-	TEST(SimulationTest, PositionUpdate) {
+	TEST(Particle, PositionUpdate) {
 
 		// this test checks whether a particle is properly moved in space
 
@@ -42,7 +42,7 @@ namespace ipic3d {
 	}
 
 
-	TEST(SimulationTest, VelocityUpdate) {
+	TEST(Particle, VelocityUpdate) {
 
 		// this test checks whether a particle is properly accelerated
 
@@ -78,6 +78,55 @@ namespace ipic3d {
 		EXPECT_EQ(2.0 + (-1.0 * 1 / p.mass), p.velocity.y);
 		EXPECT_EQ(3.0 + ( 3.0 * 1 / p.mass), p.velocity.z);
 
+
+	}
+
+	TEST(Particle, Force) {
+
+		// this test checks proper force calculation of a particle in an electric field
+
+		// create a test-particle
+		Particle p;
+		p.position.x = 0.5;
+		p.position.y = 0.5;
+		p.position.z = 0.5;
+
+		p.q = 0.25;
+
+		p.velocity.x = 0.0;
+		p.velocity.y = 0.0;
+		p.velocity.z = 0.0;
+
+		// initialize an electric field
+		Vector3<double> E[2][2][2];
+		for(int i = 0; i < 2; i++) {
+			for(int j = 0; j < 2; j++) {
+				for(int k = 0; k < 2; k++) {
+					E[i][j][k] = 0;
+				}
+			}
+		}
+
+		Vector3<double> force = computeElectricForce(E, p);
+
+		EXPECT_EQ(0.0, force.x);
+		EXPECT_EQ(0.0, force.y);
+		EXPECT_EQ(0.0, force.z);
+
+		// modify electric field
+		for(int i = 0; i < 2; i++) {
+			for(int j = 0; j < 2; j++) {
+				for(int k = 0; k < 2; k++) {
+					E[i][j][k] = 1.0;
+				}
+			}
+		}
+
+		force = computeElectricForce(E, p);
+
+		EXPECT_EQ(2.0, force.x);
+		EXPECT_EQ(2.0, force.y);
+		EXPECT_EQ(2.0, force.z);
 
 	}
 

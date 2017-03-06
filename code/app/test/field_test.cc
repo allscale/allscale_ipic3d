@@ -56,13 +56,10 @@ namespace ipic3d {
 		properties.cellWidth = { 1,1,1 };
 		properties.useCase = UseCase::Dipole;
 
-		// Create Universe with these properties
-		Universe universe = Universe(properties);
-
 		utils::Coordinate<3> pos{0, 0, 0};
 
 		// initialize field
-		Field& field = universe.field;
+		Field field(properties.size + coordinate_type(1));
 		decltype(field.size()) zero = 0;
 		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.0, 0.0, 0.0 };
@@ -70,7 +67,7 @@ namespace ipic3d {
 		});
 
 	    // apply static field solver and check results
-		FieldSolverStatic(properties, pos, field);
+		solveFieldStatically(properties, pos, field);
 		auto E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
@@ -85,7 +82,7 @@ namespace ipic3d {
 	    // change target position and re-evaluate
 		properties.size = { 11,6,2 };
 	    pos = {10, 5, 1};
-		FieldSolverStatic(properties, pos, field);
+		solveFieldStatically(properties, pos, field);
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
@@ -106,7 +103,7 @@ namespace ipic3d {
 
 		properties.size = { 11,11,21 };
 	    pos = {10, 10, 20};
-		FieldSolverStatic(properties, pos, field);
+		solveFieldStatically(properties, pos, field);
 
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );

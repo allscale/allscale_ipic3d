@@ -33,9 +33,10 @@ namespace ipic3d {
 		}
 
 	    Universe(Cells&& cells, Field&& field, const UniverseProperties& properties) : cells(std::move(cells)), field(std::move(field)), properties(properties) {
-			auto dims = cells.size();
-			assert_true(dims == properties.size) << "Expected size of universe and size of cell grid to match, but got " << dims << " and " << properties.size;
-			assert_true(dims.x > 0 || dims.y > 0 || dims.z > 0) << "Expected positive non-zero dimensions, but got " << dims;
+			auto size = cells.size();
+			assert_true(size == properties.size) << "Expected size of universe and size of cell grid to match, but got " << size << " and " << properties.size;
+			assert_true((size + coordinate_type(1)) == field.size()) << "Expected size of field grid to be equal to size of cell grid + 1 but got " << field.size() << " and " << size;
+			assert_true(size.x > 0 || size.y > 0 || size.z > 0) << "Expected positive non-zero dimensions, but got " << size;
 		}
 
 	};
