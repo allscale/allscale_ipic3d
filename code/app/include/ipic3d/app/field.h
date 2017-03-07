@@ -168,12 +168,13 @@ namespace ipic3d {
 				Vector3<double> curlE;
 				curlN2C(universeProperties, pos, field, curlE);
 
-				//		scale curl by -cdt
-				curlE = curlE * universeProperties.dt;
+				//		scale curl by -c*dt
+				//		TODO: check the speed of light
+				curlE -= curlE * universeProperties.dt;
 
 				//		update B_{n+1} on the center with the computed value
 				//		TODO: B should be defined in the center
-				field[pos].Bc = field[pos].Bc - curlE;
+				field[pos].Bc = field[pos].Bc + curlE;
 
 				//		TODO: Boundary conditions: periodic?
 						
