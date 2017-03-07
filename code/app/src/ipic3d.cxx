@@ -17,6 +17,8 @@ Grid<Cell> initCells(const InitProperties& initProperties, const UniversePropert
 
 Field initFields(const InitProperties& initProperties, const UniverseProperties&);
 
+BcField initBcFields(const UniverseProperties&);
+
 InitProperties initInitProperties(const Parameters& params);
 
 Universe initUniverse(const Parameters&);
@@ -78,7 +80,7 @@ Universe initUniverse(const Parameters& params) {
 	std::cout << universeProperties;
 
 	// create a universe with the given properties
-	Universe universe(initCells(initProperties, universeProperties), initFields(initProperties, universeProperties), universeProperties);
+	Universe universe(initCells(initProperties, universeProperties), initFields(initProperties, universeProperties), initBcFields(universeProperties), universeProperties);
 
 	return universe;
 }
@@ -224,5 +226,28 @@ Field initFields(const InitProperties& initProperties, const UniverseProperties&
 
 	// return the produced field
 	return std::move(fields);
+}
+
+BcField initBcFields(const UniverseProperties& universeProperties) {
+
+	using namespace allscale::api::user;
+
+	utils::Size<3> zero = 0;
+	utils::Size<3> fieldSize = universeProperties.size;
+
+	// the 3-D force fields
+	BcField bcfields(fieldSize);
+
+	pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
+
+		// init magnetic field
+		bcfields[cur].Bc = 0;
+
+		// interpolate N2C
+		// TODO: interpN2C(cur, bcfields, fields);
+	});
+
+	// return the produced field
+	return std::move(bcfields);
 }
 
