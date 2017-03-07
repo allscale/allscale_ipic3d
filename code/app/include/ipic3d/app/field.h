@@ -9,17 +9,21 @@
 namespace ipic3d {
 
 	struct FieldNode {
-		Vector3<double> E;				// electric field components defined on nodes
-		Vector3<double> B;				// magnetic field components defined on nodes
-		Vector3<double> Bc;				// magnetic field components defined on central points between nodes TODO: to clarify this
-		Vector3<double> Bext;			// external magnetic field on nodes
+		// electric field components defined on nodes
+		Vector3<double> E;
+		// magnetic field components defined on nodes
+		// TODO: should possibly be defined on its own grid with nodes inbetween the electric field nodes
+		Vector3<double> B;
+		// external magnetic field from dipole defined on nodes
+		// TODO: read-only should only influence universe but not be modified by field solver
+		Vector3<double> Bext;
 	};
 
-
-	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes
+	// a 3D grid of field nodes
+	using Field = allscale::api::user::data::Grid<FieldNode,3>;
 
 	/**
-	* TODO: provide a description of how the static field solver works
+	* TODO: provide a reference and a description of how the static field solver works
 	*/
 	void solveFieldStatically(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
 
