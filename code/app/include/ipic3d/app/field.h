@@ -35,7 +35,7 @@ namespace ipic3d {
 	/**
  	* calculate curl on central points, given a vector field defined on nodes
  	*/
-	void curlN2C(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, const Field& field, Vector3<double> &curl) {
+	void computeCurlE(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, const Field& field, Vector3<double> &curl) {
 		// extract electric field values from nodes of the cell
 		Vector3<double> Es[2][2][2];
 		for(int i=0; i<2; i++) {
@@ -209,7 +209,7 @@ namespace ipic3d {
 				// 2. Compute B
 				// 		curl of E
 				Vector3<double> curlE;
-				curlN2C(universeProperties, pos, field, curlE);
+				computeCurlE(universeProperties, pos, field, curlE);
 
 				//		scale curl by -c*dt
 				//		TODO: check the speed of light
