@@ -155,21 +155,21 @@ namespace ipic3d {
 		// curl - X
 		compZDY = .25 * (Es[0][1][0].z - Es[0][0][0].z + Es[0][1][1].z - Es[0][0][1].z + Es[1][1][0].z - Es[1][0][0].z + Es[1][1][1].z - Es[1][0][1].z) / universeProperties.cellWidth.y;
 		compYDZ = .25 * (Es[0][0][1].y - Es[0][0][0].y + Es[1][0][1].y - Es[1][0][0].y + Es[0][1][1].y - Es[0][1][0].y + Es[1][1][1].y - Es[1][1][0].y) / universeProperties.cellWidth.z;
-		curl.x = compZDY - compYDZ; 
+		curl.x = compZDY - compYDZ;
 
 		// curl - Y
 		compXDZ = .25 * (Es[0][0][1].x - Es[0][0][0].x + Es[1][0][1].x - Es[1][0][0].x + Es[0][1][1].x - Es[0][1][0].x + Es[1][1][1].x - Es[1][1][0].x) / universeProperties.cellWidth.z;
 		compZDX = .25 * (Es[1][0][0].z - Es[0][0][0].z + Es[1][0][1].z - Es[0][0][1].z + Es[1][1][0].z - Es[0][1][0].z + Es[1][1][1].z - Es[0][1][1].z) / universeProperties.cellWidth.x;
-		curl.y = compXDZ - compZDX; 
+		curl.y = compXDZ - compZDX;
 
 		// curl - Z
 		compYDX = .25 * (Es[1][0][0].y - Es[0][0][0].y + Es[1][0][1].y - Es[0][0][1].y + Es[1][1][0].y - Es[0][1][0].y + Es[1][1][1].y - Es[0][1][1].y) / universeProperties.cellWidth.x;
 		compXDY = .25 * (Es[0][1][0].x - Es[0][0][0].x + Es[0][1][1].x - Es[0][0][1].x + Es[1][1][0].x - Es[1][0][0].x + Es[1][1][1].x - Es[1][0][1].x) / universeProperties.cellWidth.y;
-		curl.z = compYDX - compXDY; 
+		curl.z = compYDX - compXDY;
 	}
 
 	/**
- 	* interpolate on nodes from central points for the magnetic field 	
+ 	* interpolate on nodes from central points for the magnetic field
  	*/
 	void interpC2N(const utils::Coordinate<3>& pos, const BcField& bcfields, Field& fields) {
 		// extract magnetic field values from centers of the cells
@@ -182,11 +182,11 @@ namespace ipic3d {
 				}
 			}
 		}
-		
+
 		fields[pos].B = .125 * Bc;
 	}
 
-	/** 
+	/**
  	* interpolate on central points from nodes
  	*/
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields) {
@@ -272,7 +272,7 @@ namespace ipic3d {
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
 				// 		Boundary conditions: periodic?
-				
+
 				// 2. Compute B
 				// 		curl of E
 				Vector3<double> curlE;
@@ -289,7 +289,7 @@ namespace ipic3d {
 				//		interpC2N
 				// 		interpolate B from center to nodes
 				interpC2N(pos, bcfield, field);
-	
+
 				break;
 			}
 

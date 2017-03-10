@@ -57,16 +57,13 @@ namespace ipic3d {
 			//Universe universe(initCells(initProperties, universeProperties), initFields(initProperties, universeProperties), initBcFields(universeProperties), universeProperties);
 
 			// initialize grid of cells
-			//cells = initCells( initProperties, properties );
-			cells(properties.size);
+			cells = initCells( initProperties, properties );
 
 			// initialize fields on node
-			//field = initFields( initProperties, properties );
-			field(properties.size);
+			field = initFields( initProperties, properties );
 
 			// initialize magnetic fields on centers
-			//bcfield = initBcFields( properties, field );
-			bvfield(properties.size);
+			bcfield = initBcFields( properties, field );
 		}
 
 	};
