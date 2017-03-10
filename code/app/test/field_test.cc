@@ -5,6 +5,132 @@
 
 namespace ipic3d {
 
+	TEST(Field, curlE) {
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1, 1, 1 };
+		properties.cellWidth = { 1.0, 1.0, 1.0 };
+		properties.useCase = UseCase::Dipole;
+
+		utils::Coordinate<3> pos{0, 0, 0};
+
+		// initialize field
+		Field fields(properties.size + coordinate_type(1));
+		decltype(fields.size()) zero = 0;
+		allscale::api::user::pfor(zero,fields.size(),[&](auto& pos){
+			fields[pos].E = { 0.0, 0.0, 0.0 };
+		});
+
+		Vector3<double> curlE = { 0.0, 0.0, 0.0 };
+
+		computeCurlE(properties, pos, fields, curlE); 
+		EXPECT_NEAR( curlE.x, 0.0, 1e-06 );
+		EXPECT_NEAR( curlE.y, 0.0, 1e-06 );
+		EXPECT_NEAR( curlE.z, 0.0, 1e-06 );
+
+		// change the values of electric field
+	    for(int i = 0; i < 2; i++) {
+		    for(int j = 0; j < 2; j++) {
+			    for(int k = 0; k < 2; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+				    fields[cur].E = {0.0, 2.0, i * 1.0 + j * 2.0 + k * 3.0};
+			    }
+		    }
+	    }
+
+		// re-evaluate
+		computeCurlE(properties, pos, fields, curlE); 
+		EXPECT_NEAR( curlE.x, 2.0, 1e-06 );
+		EXPECT_NEAR( curlE.y, -1.0, 1e-06 );
+		EXPECT_NEAR( curlE.z, 0.0, 1e-06 );
+
+		// change the width of cells
+		properties.cellWidth = { 1.0, 5.0, 10.0 };
+
+		// re-evaluate
+		computeCurlE(properties, pos, fields, curlE); 
+		EXPECT_NEAR( curlE.x, 0.4, 1e-06 );
+		EXPECT_NEAR( curlE.y, -1.0, 1e-06 );
+		EXPECT_NEAR( curlE.z, 0.0, 1e-06 );
+    }
+
+	TEST(Field, interpC2N) {
+	    // use center position
+		utils::Coordinate<3> pos{1, 1, 1};
+
+		// initialize field
+		BcField bcfields(2);
+		decltype(bcfields.size()) zero = 0;
+		allscale::api::user::pfor(zero,bcfields.size(),[&](auto& pos){
+			bcfields[pos].Bc = { 1.0, 1.0, 1.0 };
+		});
+
+		Field fields(1);
+		fields[pos].B = { 0.0, 0.0, 0.0};
+
+		
+		interpC2N(pos, bcfields, fields); 
+		auto B = fields[pos].B;
+		EXPECT_NEAR( B.x, 1.0, 1e-06 );
+		EXPECT_NEAR( B.y, 1.0, 1e-06 );
+		EXPECT_NEAR( B.z, 1.0, 1e-06 );
+
+		// change the values of magnetic field on nodes
+	    for(int i = 0; i < 2; i++) {
+		    for(int j = 0; j < 2; j++) {
+			    for(int k = 0; k < 2; k++) {
+					utils::Coordinate<3> cur({pos[0]-i,pos[1]-j,pos[2]-k});
+				    bcfields[cur].Bc = {0.0, (i + 1.0) * (j + 1.0) * (k + 1.0), i * 1.0 + j * 2.0 + k * 3.0};
+			    }
+		    }
+	    }
+
+		// re-evaluate
+		interpC2N(pos, bcfields, fields); 
+		B = fields[pos].B;
+		EXPECT_NEAR( B.x, 0.0, 1e-06 );
+		EXPECT_NEAR( B.y, 3.375, 1e-06 );
+		EXPECT_NEAR( B.z, 3.0, 1e-06 );
+    }
+
+	TEST(Field, interpN2C) {
+	    // use center position
+		utils::Coordinate<3> pos{0, 0, 0};
+
+		// initialize field
+		Field fields(2);
+		decltype(fields.size()) zero = 0;
+		allscale::api::user::pfor(zero,fields.size(),[&](auto& pos){
+			fields[pos].B = { 1.0, 1.0, 1.0 };
+		});
+
+		BcField bcfields(1);
+		bcfields[pos].Bc = { 0.0, 0.0, 0.0};
+
+		interpN2C(pos, fields, bcfields); 
+		auto Bc = bcfields[pos].Bc;
+		EXPECT_NEAR( Bc.x, 1.0, 1e-06 );
+		EXPECT_NEAR( Bc.y, 1.0, 1e-06 );
+		EXPECT_NEAR( Bc.z, 1.0, 1e-06 );
+
+		// change the values of magnetic field on nodes
+	    for(int i = 0; i < 2; i++) {
+		    for(int j = 0; j < 2; j++) {
+			    for(int k = 0; k < 2; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+				    fields[cur].B = {0.0, 2.0, i * 1.0 + j * 2.0 + k * 3.0};
+			    }
+		    }
+	    }
+
+		// re-evaluate
+		interpN2C(pos, fields, bcfields); 
+		Bc = bcfields[pos].Bc;
+		EXPECT_NEAR( Bc.x, 0.0, 1e-06 );
+		EXPECT_NEAR( Bc.y, 2.0, 1e-06 );
+		EXPECT_NEAR( Bc.z, 3.0, 1e-06 );
+    }
+
 	TEST(Field, TrilinearInterpolation) {
 	    // use center position
 	    Vector3<double> pos{0.5, 0.5, 0.5};

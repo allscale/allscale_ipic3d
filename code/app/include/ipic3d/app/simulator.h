@@ -101,6 +101,7 @@ namespace ipic3d {
 			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos){
 				fieldSolver(universe.properties, pos, universe.field);
 			});
+			// TODO: update cells around the grid for periodic boundary conditions
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 

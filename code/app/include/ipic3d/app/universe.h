@@ -15,7 +15,10 @@ namespace ipic3d {
 		Cells cells;
 
 		// The field of this universe
-		Field field;
+		Field field;	
+
+		// The magnetic field of this universe defined on centers of cells
+		BcField bcfield;	
 
 		// Uniform properties of this universe
 		const UniverseProperties properties;
@@ -27,12 +30,12 @@ namespace ipic3d {
 		* @param dims the size of the Universe (equal to the size of the grid of cells)
 		*/
 	    Universe(const UniverseProperties& properties = UniverseProperties())
-	        : cells(Cells(properties.size)), field(Field(properties.size + coordinate_type(1))), properties(properties) {
+	        : cells(Cells(properties.size)), field(Field(properties.size + coordinate_type(1))), bcfield(properties.size), properties(properties) {
 			auto dims = properties.size;
 			assert_true(dims.x > 0 || dims.y > 0 || dims.z > 0) << "Expected positive non-zero dimensions, but got " << dims;
 		}
 
-	    Universe(Cells&& cells, Field&& field, const UniverseProperties& properties) : cells(std::move(cells)), field(std::move(field)), properties(properties) {
+	    Universe(Cells&& cells, Field&& field, BcField&& bcfield, const UniverseProperties& properties) : cells(std::move(cells)), field(std::move(field)), bcfield(std::move(bcfield)), properties(properties) {
 			auto size = cells.size();
 			assert_true(size == properties.size) << "Expected size of universe and size of cell grid to match, but got " << size << " and " << properties.size;
 			assert_true((size + coordinate_type(1)) == field.size()) << "Expected size of field grid to be equal to size of cell grid + 1 but got " << field.size() << " and " << size;

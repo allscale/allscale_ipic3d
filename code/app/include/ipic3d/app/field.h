@@ -9,18 +9,21 @@
 namespace ipic3d {
 
 	struct FieldNode {
-		// electric field components defined on nodes
-		Vector3<double> E;
-		// magnetic field components defined on nodes
-		// TODO: should possibly be defined on its own grid with nodes inbetween the electric field nodes
-		Vector3<double> B;
-		// external magnetic field from dipole defined on nodes
-		// TODO: read-only should only influence universe but not be modified by field solver
-		Vector3<double> Bext;
+		Vector3<double> E;				// electric field components defined on nodes
+		Vector3<double> B;				// magnetic field components defined on nodes
+		Vector3<double> Bext;			// external magnetic field on nodes
 	};
 
-	// a 3D grid of field nodes
-	using Field = allscale::api::user::data::Grid<FieldNode,3>;
+	struct BcFieldNode {
+		Vector3<double> Bc;				// magnetic field components defined on central points between nodes TODO: to clarify this
+										// we assume that they are define on centers of cells
+	};
+
+
+	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes
+
+	using BcField = allscale::api::user::data::Grid<BcFieldNode,3>;	// a 3D grid of magnetic field nodes defined on centers
+
 
 	/**
  	* calculate curl on nodes, given a vector field defined on central points
@@ -32,7 +35,7 @@ namespace ipic3d {
 	/**
  	* calculate curl on central points, given a vector field defined on nodes
  	*/
-	void curlN2C(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, const Field& field, Vector3<double> &curl) {
+	void computeCurlE(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, const Field& field, Vector3<double> &curl) {
 		// extract electric field values from nodes of the cell
 		Vector3<double> Es[2][2][2];
 		for(int i=0; i<2; i++) {
@@ -67,7 +70,43 @@ namespace ipic3d {
 	}
 
 	/**
-	* TODO: provide a reference and a description of how the static field solver works
+ 	* interpolate on nodes from central points for the magnetic field
+ 	*/
+	void interpC2N(const utils::Coordinate<3>& pos, const BcField& bcfields, Field& fields) {
+		// extract magnetic field values from centers of the cells
+		Vector3<double> Bc;
+		for(int i=0; i<2; i++) {
+			for(int j=0; j<2; j++) {
+				for(int k=0; k<2; k++) {
+					utils::Coordinate<3> cur({pos[0]-i,pos[1]-j,pos[2]-k});
+					Bc += bcfields[cur].Bc;
+				}
+			}
+		}
+
+		fields[pos].B = .125 * Bc;
+	}
+
+	/**
+ 	* interpolate on central points from nodes
+ 	*/
+	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields) {
+		// extract magnetic field values from nodes
+		Vector3<double> Bn;
+		for(int i=0; i<2; i++) {
+			for(int j=0; j<2; j++) {
+				for(int k=0; k<2; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+					Bn += fields[cur].B;
+				}
+			}
+		}
+
+		bcfields[pos].Bc = .125 * Bn;
+	}
+
+	/**
+	* TODO: provide a reference and short description of how the static field solver works
 	*/
 	void solveFieldStatically(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
 
@@ -144,7 +183,7 @@ namespace ipic3d {
 	/**
 	* Explicit Field Solver: Fields are computed using forward approximation
 	*/
-	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field, BcField& bcfield) {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
@@ -168,22 +207,24 @@ namespace ipic3d {
 				// 		Boundary conditions: periodic?
 
 				// 2. Compute B
-				// 		curlN2C()
+				// 		curl of E
 				Vector3<double> curlE;
-				curlN2C(universeProperties, pos, field, curlE);
+				computeCurlE(universeProperties, pos, field, curlE);
 
 				//		scale curl by -c*dt
 				//		TODO: check the speed of light
-				curlE -= curlE * universeProperties.dt;
-
 				//		update B_{n+1} on the center with the computed value
 				//		TODO: B should be defined in the center
-				field[pos].Bc = field[pos].Bc + curlE;
+				bcfield[pos].Bc -= curlE * universeProperties.dt;
 
 				//		TODO: Boundary conditions: periodic?
+				//
+				//		should be automatic as we added an extra row of cells around the grid
 
 				//		interpC2N
 				// 		interpolate B from center to nodes
+				interpC2N(pos, bcfield, field);
+
 				break;
 			}
 
