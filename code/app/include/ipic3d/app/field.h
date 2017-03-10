@@ -3,6 +3,7 @@
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/data/vector.h"
 
+#include "ipic3d/app/init_properties.h"
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
 
@@ -16,7 +17,7 @@ namespace ipic3d {
 
 	struct BcFieldNode {
 		Vector3<double> Bc;				// magnetic field components defined on central points between nodes TODO: to clarify this
-										// we assume that they are define on centers of cells
+										// we assume that they are define at center of each cell
 	};
 
 
@@ -24,11 +25,109 @@ namespace ipic3d {
 
 	using BcField = allscale::api::user::data::Grid<BcFieldNode,3>;	// a 3D grid of magnetic field nodes defined on centers
 
+	// declaration
+	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields);
+
+	// definition
+	Field initFields(const InitProperties& initProperties, const UniverseProperties& universeProperties) {
+
+		using namespace allscale::api::user;
+
+		utils::Size<3> zero = 0;
+		// determine the field size (grid size + 1 in each dimension)
+		utils::Size<3> fieldSize = universeProperties.size + coordinate_type(1);
+
+		// the 3-D force fields
+		Field fields(fieldSize);
+
+		auto driftVel = initProperties.driftVelocity;
+		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
+		auto ebc = crossProduct(driftVel[0], initProperties.magneticFieldAmplitude) * -1;
+
+		pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
+
+			// init electrical field
+			fields[cur].E = ebc;
+
+			// init magnetic field
+			fields[cur].B = initProperties.magneticFieldAmplitude;
+
+			// -- add earth model --
+
+			switch(universeProperties.useCase) {
+
+				case UseCase::Dipole: {
+
+					// radius of the planet
+					double a = universeProperties.objectRadius;
+
+					auto objectCenter = universeProperties.objectCenter;
+					auto location = getLocation(cur, universeProperties);
+
+					auto diff = location - objectCenter;
+
+					double r2 = allscale::api::user::data::sumOfSquares(diff);
+
+					// Compute dipolar field B_ext
+
+					if (r2 > a*a) {
+						auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
+						fields[cur].Bext.x = 3.0 * diff.x * diff.z * fac1;
+						fields[cur].Bext.y = 3.0 * diff.y * diff.z * fac1;
+						fields[cur].Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
+					} else { // no field inside the planet
+						fields[cur].Bext = { 0.0, 0.0, 0.0 };
+					}
+
+					break;
+				}
+
+				case UseCase::ParticleWave: {
+
+					fields[cur].Bext = { 0, 0, 0 };
+
+					break;
+				}
+
+				default:
+						assert_not_implemented()
+							<< "The specified use case is not supported yet!";
+			}
+
+		});
+
+		// return the produced field
+		return std::move(fields);
+	}
+
+	BcField initBcFields(const UniverseProperties& universeProperties, const Field field) {
+
+		using namespace allscale::api::user;
+
+		utils::Size<3> zero = 0;
+		utils::Size<3> fieldSize = universeProperties.size;
+
+		// the 3-D force fields
+		BcField bcfield(fieldSize);
+
+		pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
+
+			// init magnetic field
+			bcfield[cur].Bc = 0;
+
+			// interpolate N2C
+			interpN2C(cur, field, bcfield);
+		});
+
+		// return the produced field
+		return std::move(bcfield);
+	}
+
 
 	/**
  	* calculate curl on nodes, given a vector field defined on central points
  	*/
-	void curlC2N(){
+	void computeCurlB(){
 
 	}
 
@@ -106,7 +205,8 @@ namespace ipic3d {
 	}
 
 	/**
-	* TODO: provide a description of how the static field solver works
+	* Static filed solver in this case works as a push for simulation at the its beginning.
+	* So that, fields are computed only once and then updated via interpolation
 	*/
 	void solveFieldStatically(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
 
@@ -147,40 +247,6 @@ namespace ipic3d {
 	}
 
 	/**
-	* Initial version of the Field Solver: compute fields E and B for the Boris mover
-	*
-	* Fields are computed with respect to each particle position
-	*/
-	void computeFields(const Particle& p, Vector3<double> &E, Vector3<double> &B, const UseCase useCase) {
-		switch(useCase) {
-
-			case UseCase::Dipole:
-			{
-				E = { 0, 0, 0 };
-				double fac1 = -B0 * pow(Re, 3.0) / pow(sumOfSquares(p.position), 2.5);
-				B.x = 3.0 * p.position.x * p.position.z * fac1;
-				B.y = 3.0 * p.position.y * p.position.z * fac1;
-				B.z = (2.0 * p.position.z * p.position.z - p.position.x * p.position.x - p.position.y * p.position.y) * fac1;
-				return;
-			}
-
-			case UseCase::ParticleWave:
-			{
-				E.x = sin(2.0 * M_PI * p.position.x) * cos(2.0 * M_PI * p.position.y);
-				E.y = p.position.x * (1.0 - p.position.x) * p.position.y * (1.0 - p.position.y);
-				E.z = p.position.x * p.position.x + p.position.z * p.position.z;
-				B.x = 0.0;
-				B.y = cos(2.0 * M_PI * p.position.z);
-				B.z = sin(2.0 * M_PI * p.position.x);
-				return;
-			}
-
-			default:
-				assert_not_implemented() << "Unknown use case " << useCase << " for computeFields";
-		}
-	}
-
-	/**
 	* Explicit Field Solver: Fields are computed using forward approximation
 	*/
 	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field, BcField& bcfield) {
@@ -199,7 +265,8 @@ namespace ipic3d {
 			case UseCase::Dipole:
 			{
 				// 1. Compute E
-				// 		curlC2N()
+				// 		curl of B
+				// 		computeCurlB()
 				// 		scale Jh by -4PI/c
 				// 		sum curl B and Jh
 				// 		scale the sum by dt
@@ -214,11 +281,10 @@ namespace ipic3d {
 				//		scale curl by -c*dt
 				//		TODO: check the speed of light
 				//		update B_{n+1} on the center with the computed value
-				//		TODO: B should be defined in the center
 				bcfield[pos].Bc -= curlE * universeProperties.dt;
 
 				//		TODO: Boundary conditions: periodic?
-				//		should be automatic as we added an extra row of cells around the grid
+				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
 						
 				//		interpC2N
 				// 		interpolate B from center to nodes

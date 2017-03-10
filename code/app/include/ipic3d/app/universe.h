@@ -21,7 +21,7 @@ namespace ipic3d {
 		BcField bcfield;	
 
 		// Uniform properties of this universe
-		const UniverseProperties properties;
+		UniverseProperties properties;
 
 		/**
 		* Creates a Universe of cells and a field of forces the given size.
@@ -40,6 +40,33 @@ namespace ipic3d {
 			assert_true(size == properties.size) << "Expected size of universe and size of cell grid to match, but got " << size << " and " << properties.size;
 			assert_true((size + coordinate_type(1)) == field.size()) << "Expected size of field grid to be equal to size of cell grid + 1 but got " << field.size() << " and " << size;
 			assert_true(size.x > 0 || size.y > 0 || size.z > 0) << "Expected positive non-zero dimensions, but got " << size;
+		}
+
+		Universe(const Parameters& params) {
+
+			// initialize initial properties
+			InitProperties initProperties = InitProperties(params);
+
+			std::cout << initProperties;
+
+			// initialize universe properties
+			properties = UniverseProperties(params);
+
+			std::cout << properties;
+
+			//Universe universe(initCells(initProperties, universeProperties), initFields(initProperties, universeProperties), initBcFields(universeProperties), universeProperties);
+
+			// initialize grid of cells
+			//cells = initCells( initProperties, properties );
+			cells(properties.size);
+
+			// initialize fields on node
+			//field = initFields( initProperties, properties );
+			field(properties.size);
+
+			// initialize magnetic fields on centers
+			//bcfield = initBcFields( properties, field );
+			bvfield(properties.size);
 		}
 
 	};

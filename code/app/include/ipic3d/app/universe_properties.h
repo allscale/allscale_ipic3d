@@ -3,17 +3,13 @@
 #include "allscale/api/user/data/grid.h"
 
 #include "ipic3d/app/vector.h"
+#include "ipic3d/app/parameters.h"
 
 #include <map>
 
 namespace ipic3d {
 
 	using coordinate_type = allscale::api::user::data::GridPoint<3>;
-
-	/**
-	* An enumeration of use cases.
-	*/
-    enum class UseCase { ParticleWave, Dipole, Test };
 
     static const std::map<UseCase, std::string> useCaseNaming = {{UseCase::Dipole, "Dipole"}, {UseCase::ParticleWave, "ParticleWave"}, {UseCase::Test, "Test"}};
 
@@ -74,6 +70,13 @@ namespace ipic3d {
 		    assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
 		    assert_le(0, objectRadius) << "Expected positive or zero object radius, but got " << objectRadius;
 	    }
+
+		UniverseProperties(const Parameters& params) {
+			cellWidth = { params.dx, params.dy, params.dz };
+			size = { params.nxc, params.nyc, params.nzc };
+			dt = params.dt;
+			useCase = params.useCase;
+		}
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
 			out << "Universe properties:" << std::endl;

@@ -39,6 +39,53 @@ namespace ipic3d {
 
 	using Cells = allscale::api::user::data::Grid<Cell, 3>; // a 3D grid of cells
 
+
+	Cells initCells(const InitProperties& initProperties, const UniverseProperties& properties) {
+
+		const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
+
+		// -- initialize the grid of cells --
+
+		// the 3-D grid of cells
+		//Grid<Cell> cells(properties.size);								// the grid of cells containing the particles
+		Cells cells(properties.size);
+
+		// -- initialize the state of each individual cell --
+
+		// TODO: return this as a treeture
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+
+			Cell& cell = cells[pos];
+
+			// -- add particles --
+
+			// compute number of particles to be added
+			unsigned particlesPerCell = initProperties.particlesPerCell[0].x + initProperties.particlesPerCell[0].y + initProperties.particlesPerCell[0].z;
+
+			// add the requested number of parameters
+			unsigned random_state = pos[0] * 10000 + pos[1] * 100 + pos[2];
+			for (unsigned i = 0; i < particlesPerCell; i++) {
+				Particle p;
+
+				Vector3<double> randVals = {(double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX};
+				// initialize particle position
+				p.position = getCenterOfCell(pos, properties) + elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
+
+				// TODO: initialize the speed of particles
+				p.velocity = { 0, 0, 0 };
+
+				// TODO: initialize charge
+				p.q = 0.15;
+
+				cell.particles.push_back(p);
+			}
+
+		});
+
+		// return the initialized cells
+		return std::move(cells);
+	}
+
 	/**
 	* This function projects the effect of the particles contained in the specified cell
 	* to the given density contributions grid.

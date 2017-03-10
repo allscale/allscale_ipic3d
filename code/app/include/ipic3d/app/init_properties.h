@@ -3,6 +3,7 @@
 #include "allscale/utils/printer/vectors.h"
 
 #include "ipic3d/app/vector.h"
+#include "ipic3d/app/parameters.h"
 
 namespace ipic3d {
 
@@ -27,6 +28,21 @@ namespace ipic3d {
 		InitProperties(const unsigned numSteps = 1, const std::vector<Vector3<unsigned>>& particlesPerCell = {},
 			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticFieldAmplitude = { 0,0,0 })
 			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticFieldAmplitude(magneticFieldAmplitude) {}
+
+		InitProperties(const Parameters& params) {
+
+			numSteps = params.ncycles;
+
+			for(int i = 0; i < params.ns; i++) {
+				driftVelocity.push_back({ params.u0[i], params.v0[i], params.w0[i] });
+			}
+
+			for(int i = 0; i < (params.ns+params.nstestpart); i++) {
+				particlesPerCell.push_back({ (unsigned)params.npcelx[i], (unsigned)params.npcely[i], (unsigned)params.npcelz[i] });
+			}
+
+			magneticFieldAmplitude = {params.B0x, params.B0y, params.B0z};
+		}
 
 	    friend std::ostream& operator<<(std::ostream& out, const InitProperties& props) {
 			out << "InitProperties:" << std::endl;
