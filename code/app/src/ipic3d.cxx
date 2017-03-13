@@ -27,7 +27,6 @@ int main(int argc, char** argv) {
 	std::cout << "Loading configuration file \"" << argv[1] << "\" ..." << std::endl;
 	auto params = Parameters::read(argv[1]);
 
-
 	params.dx = 10;
 	params.dy = 10;
 	params.dz = 10;
@@ -38,7 +37,7 @@ int main(int argc, char** argv) {
 	std::cout << "Initializing simulation state ..." << std::endl;
 
 	// initialize universe
-	auto universe = Universe(params);
+	auto universe = createUniverseFromParams(params);
 
 	// ----- run the simulation ------
 

@@ -95,7 +95,6 @@ namespace ipic3d {
 				particletoFieldProjector(universe.properties,universe.cells[pos],pos,entry);
 			});
 
-
 			// STEP 2: solve field equations
 			// TODO: fieldSolver(universe.field,density,universe.cells);
 			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos){
@@ -132,8 +131,8 @@ namespace ipic3d {
 		};
 
 		struct default_field_solver {
-			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
-				//solveFieldStatically(universeProperties, pos, field);
+			void operator()(const UniverseProperties& /*universeProperties*/, const utils::Coordinate<3>& /*pos*/, Field& /*field*/) const {
+				// don't do anything here
 			}
 
 		};

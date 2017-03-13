@@ -100,7 +100,7 @@ namespace ipic3d {
 		return std::move(fields);
 	}
 
-	BcField initBcFields(const UniverseProperties& universeProperties, const Field field) {
+	BcField initBcFields(const UniverseProperties& universeProperties, const Field& field) {
 
 		using namespace allscale::api::user;
 
@@ -285,7 +285,7 @@ namespace ipic3d {
 
 				//		TODO: Boundary conditions: periodic?
 				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
-						
+
 				//		interpC2N
 				// 		interpolate B from center to nodes
 				interpC2N(pos, bcfield, field);

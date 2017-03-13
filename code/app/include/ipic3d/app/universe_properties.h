@@ -71,12 +71,15 @@ namespace ipic3d {
 		    assert_le(0, objectRadius) << "Expected positive or zero object radius, but got " << objectRadius;
 	    }
 
-		UniverseProperties(const Parameters& params) {
-			cellWidth = { params.dx, params.dy, params.dz };
-			size = { params.nxc, params.nyc, params.nzc };
-			dt = params.dt;
-			useCase = params.useCase;
-		}
+		UniverseProperties(const Parameters& params)
+			: useCase(params.useCase),
+			size({ params.nxc, params.nyc, params.nzc }),
+			cellWidth({ params.dx, params.dy, params.dz }),
+			dt(params.dt),
+			objectRadius(0),
+			objectCenter({ 0,0,0 }),
+			magneticField({ 0,0,0 })
+		{}
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
 			out << "Universe properties:" << std::endl;
