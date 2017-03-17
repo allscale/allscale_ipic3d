@@ -5,6 +5,55 @@
 
 namespace ipic3d {
 
+	TEST(Field, curlB) {
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1, 1, 1 };
+		properties.cellWidth = { 1.0, 1.0, 1.0 };
+		properties.useCase = UseCase::Dipole;
+
+		utils::Coordinate<3> pos{1, 1, 1};
+
+		// initialize field
+		BcField bcfields(properties.size + coordinate_type(1));
+		decltype(bcfields.size()) zero = 0;
+		allscale::api::user::pfor(zero,bcfields.size(),[&](auto& pos){
+			bcfields[pos].Bc = { 0.0, 0.0, 0.0 };
+		});
+
+		Vector3<double> curlB = { 0.0, 0.0, 0.0 };
+
+		computeCurlB(properties, pos, bcfields, curlB); 
+		EXPECT_NEAR( curlB.x, 0.0, 1e-06 );
+		EXPECT_NEAR( curlB.y, 0.0, 1e-06 );
+		EXPECT_NEAR( curlB.z, 0.0, 1e-06 );
+
+		// change the values of electric field
+	    for(int i = 0; i < 2; i++) {
+		    for(int j = 0; j < 2; j++) {
+			    for(int k = 0; k < 2; k++) {
+					utils::Coordinate<3> cur({pos[0]-i,pos[1]-j,pos[2]-k});
+				    bcfields[cur].Bc = {0.0, 2.0, i * 1.0 + j * 2.0 + k * 3.0};
+			    }
+		    }
+	    }
+
+		// re-evaluate
+		computeCurlB(properties, pos, bcfields, curlB); 
+		EXPECT_NEAR( curlB.x, -2.0, 1e-06 );
+		EXPECT_NEAR( curlB.y, 1.0, 1e-06 );
+		EXPECT_NEAR( curlB.z, 0.0, 1e-06 );
+
+		// change the width of cells
+		properties.cellWidth = { 1.0, 5.0, 10.0 };
+
+		// re-evaluate
+		computeCurlB(properties, pos, bcfields, curlB); 
+		EXPECT_NEAR( curlB.x, -0.4, 1e-06 );
+		EXPECT_NEAR( curlB.y, 1.0, 1e-06 );
+		EXPECT_NEAR( curlB.z, 0.0, 1e-06 );
+    }
+
 	TEST(Field, curlE) {
 		// Set universe properties
 		UniverseProperties properties;

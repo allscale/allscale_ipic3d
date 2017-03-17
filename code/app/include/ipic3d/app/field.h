@@ -126,8 +126,37 @@ namespace ipic3d {
 	/**
  	* calculate curl on nodes, given a vector field defined on central points
  	*/
-	void computeCurlB(){
+	void computeCurlB(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, const BcField& bcfield, Vector3<double> &curl){
+		// extract magnetic field values from centers of the cells
+		Vector3<double> Bs[2][2][2];
+		for(int i=0; i<2; i++) {
+			for(int j=0; j<2; j++) {
+				for(int k=0; k<2; k++) {
+					utils::Coordinate<3> cur({pos[0]-i,pos[1]-j,pos[2]-k});
+					Bs[i][j][k] = bcfield[cur].Bc;
+				}
+			}
+		}
 
+		// compute curl of E on central points
+		double compZDY, compYDZ;
+		double compXDZ, compZDX;
+		double compYDX, compXDY;
+
+		// curl - X
+		compZDY = .25 * (Bs[0][0][0].z - Bs[0][1][0].z + Bs[0][0][1].z - Bs[0][1][1].z + Bs[1][0][0].z - Bs[1][1][0].z + Bs[1][0][1].z - Bs[1][1][1].z) / universeProperties.cellWidth.y;
+		compYDZ = .25 * (Bs[0][0][0].y - Bs[0][0][1].y + Bs[1][0][0].y - Bs[1][0][1].y + Bs[0][1][0].y - Bs[0][1][1].y + Bs[1][1][0].y - Bs[1][1][1].y) / universeProperties.cellWidth.z;
+		curl.x = compZDY - compYDZ;
+
+		// curl - Y
+		compXDZ = .25 * (Bs[0][0][0].x - Bs[0][0][1].x + Bs[1][0][0].x - Bs[1][0][1].x + Bs[0][1][0].x - Bs[0][1][1].x + Bs[1][1][0].x - Bs[1][1][1].x) / universeProperties.cellWidth.z;
+		compZDX = .25 * (Bs[0][0][0].z - Bs[1][0][0].z + Bs[0][0][1].z - Bs[1][0][1].z + Bs[0][1][0].z - Bs[1][1][0].z + Bs[0][1][1].z - Bs[1][1][1].z) / universeProperties.cellWidth.x;
+		curl.y = compXDZ - compZDX;
+
+		// curl - Z
+		compYDX = .25 * (Bs[0][0][0].y - Bs[1][0][0].y + Bs[0][0][1].y - Bs[1][0][1].y + Bs[0][1][0].y - Bs[1][1][0].y + Bs[0][1][1].y - Bs[1][1][1].y) / universeProperties.cellWidth.x;
+		compXDY = .25 * (Bs[0][0][0].x - Bs[0][1][0].x + Bs[0][0][1].x - Bs[0][1][1].x + Bs[1][0][0].x - Bs[1][1][0].x + Bs[1][0][1].x - Bs[1][1][1].x) / universeProperties.cellWidth.y;
+		curl.z = compYDX - compXDY;
 	}
 
 	/**
@@ -146,7 +175,6 @@ namespace ipic3d {
 		}
 
 		// compute curl of E on central points
-		curl = 0;
 		double compZDY, compYDZ;
 		double compXDZ, compZDX;
 		double compYDX, compXDY;
@@ -269,12 +297,18 @@ namespace ipic3d {
 			{
 				// 1. Compute E
 				// 		curl of B
-				// 		computeCurlB()
+				Vector3<double> curlB;
+				computeCurlB(universeProperties, pos, bcfield, curlB);
+
 				// 		scale Jh by -4PI/c
 				// 		sum curl B and Jh
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
-				// 		Boundary conditions: periodic?
+				//field[pos].E = 
+
+				// 		TODO:Boundary conditions: periodic?
+				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
+
 
 				// 2. Compute B
 				// 		curl of E
