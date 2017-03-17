@@ -208,35 +208,36 @@ namespace ipic3d {
 	    // change target position and re-evaluate
 		properties.size = { 11,6,2 };
 	    pos = {10, 5, 1};
-		solveFieldStatically(properties, pos, field);
-		E = field[pos].E;
+		Field field2(properties.size + coordinate_type(1));
+		solveFieldStatically(properties, pos, field2);
+		E = field2[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
 		EXPECT_NEAR( E.z, 0.0, 1e-06 );
 
-		B = field[pos].B;
+		B = field2[pos].B;
 		EXPECT_NEAR( B.x, -1545900104359.654, 1e-02 );
 		EXPECT_NEAR( B.y, -809757197521.7235, 1e-02 );
 		EXPECT_NEAR( B.z,  4449574903553.713, 1e-02 );
 
-		properties.useCase = UseCase::Test;
 
         // verify test case
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
-			field[pos].E = { 0.0, 0.0, 0.0 };
-			field[pos].B = { 0.0, 0.0, 0.0 };
-		});
-
+		properties.useCase = UseCase::Test;
 		properties.size = { 11,11,21 };
 	    pos = {10, 10, 20};
-		solveFieldStatically(properties, pos, field);
+		Field field3(properties.size + coordinate_type(1));
+		allscale::api::user::pfor(zero,field3.size(),[&](auto& pos){
+			field3[pos].E = { 0.0, 0.0, 0.0 };
+			field3[pos].B = { 0.0, 0.0, 0.0 };
+		});
+		solveFieldStatically(properties, pos, field3);
 
-		E = field[pos].E;
+		E = field3[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
 		EXPECT_NEAR( E.z, 0.0, 1e-06 );
 
-		B = field[pos].B;
+		B = field3[pos].B;
 		EXPECT_NEAR( B.x, 0.0, 1e-06 );
 		EXPECT_NEAR( B.y, 0.0, 1e-06 );
 		EXPECT_NEAR( B.z, 0.0, 1e-06 );

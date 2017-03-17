@@ -46,10 +46,10 @@ namespace ipic3d {
 
 		pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
 
-			// init electrical field
+			// initialize electrical field
 			fields[cur].E = ebc;
 
-			// init magnetic field
+			// initialize magnetic field
 			fields[cur].B = initProperties.magneticFieldAmplitude;
 
 			// -- add earth model --
@@ -61,7 +61,9 @@ namespace ipic3d {
 					// radius of the planet
 					double a = universeProperties.objectRadius;
 
+					// Dipole's Center
 					auto objectCenter = universeProperties.objectCenter;
+					// Node coordinates
 					auto location = getLocation(cur, universeProperties);
 
 					auto diff = location - objectCenter;
@@ -110,12 +112,9 @@ namespace ipic3d {
 		// the 3-D force fields
 		BcField bcfield(fieldSize);
 
-		pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
+		pfor(zero, fieldSize, [&](const utils::Coordinate<3>& cur) {
 
-			// init magnetic field
-			bcfield[cur].Bc = 0;
-
-			// interpolate N2C
+			// init magnetic field at centers
 			interpN2C(cur, field, bcfield);
 		});
 
@@ -207,6 +206,7 @@ namespace ipic3d {
 	/**
 	* Static filed solver in this case works as a push for simulation at the its beginning.
 	* So that, fields are computed only once and then updated via interpolation
+	* Computations should be done at centers
 	*/
 	void solveFieldStatically(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
 
@@ -218,7 +218,9 @@ namespace ipic3d {
 			{
 				field[pos].E = { 0.0, 0.0, 0.0 };
 				auto B = field[pos].B;
-				auto location = getLocation(pos, universeProperties);
+
+				// Node coordinates
+				auto location = getCenterOfCell(pos, universeProperties);
 
 				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::api::user::data::sumOfSquares(location), 2.5);
 				B.x = 3.0 * location.x * location.z * fac1;
@@ -226,6 +228,7 @@ namespace ipic3d {
 				B.z = (2.0 * location.z * location.z - location.x * location.x - location.y * location.y) * fac1;
 
 				field[pos].B = B;
+
 				break;
 			}
 
