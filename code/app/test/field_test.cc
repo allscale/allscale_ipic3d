@@ -135,6 +135,7 @@ namespace ipic3d {
 	    }
 
 		// re-evaluate
+		fields[pos].B = { 0.0, 0.0, 0.0};
 		interpC2N(pos, bcfields, fields); 
 		B = fields[pos].B;
 		EXPECT_NEAR( B.x, 0.0, 1e-06 );
@@ -173,6 +174,7 @@ namespace ipic3d {
 	    }
 
 		// re-evaluate
+		bcfields[pos].Bc = { 0.0, 0.0, 0.0};
 		interpN2C(pos, fields, bcfields); 
 		Bc = bcfields[pos].Bc;
 		EXPECT_NEAR( Bc.x, 0.0, 1e-06 );
