@@ -104,17 +104,21 @@ namespace ipic3d {
     }
 
 	TEST(Field, interpC2N) {
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1, 1, 1 };
+
 	    // use center position
 		utils::Coordinate<3> pos{1, 1, 1};
 
 		// initialize field
-		BcField bcfields(2);
+		BcField bcfields(properties.size + coordinate_type(1));
 		decltype(bcfields.size()) zero = 0;
 		allscale::api::user::pfor(zero,bcfields.size(),[&](auto& pos){
 			bcfields[pos].Bc = { 1.0, 1.0, 1.0 };
 		});
 
-		Field fields(1);
+		Field fields(properties.size);
 		fields[pos].B = { 0.0, 0.0, 0.0};
 
 		
@@ -135,7 +139,6 @@ namespace ipic3d {
 	    }
 
 		// re-evaluate
-		fields[pos].B = { 0.0, 0.0, 0.0};
 		interpC2N(pos, bcfields, fields); 
 		B = fields[pos].B;
 		EXPECT_NEAR( B.x, 0.0, 1e-06 );
@@ -144,17 +147,21 @@ namespace ipic3d {
     }
 
 	TEST(Field, interpN2C) {
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1, 1, 1 };
+
 	    // use center position
 		utils::Coordinate<3> pos{0, 0, 0};
 
 		// initialize field
-		Field fields(2);
+		Field fields(properties.size + coordinate_type(1));
 		decltype(fields.size()) zero = 0;
 		allscale::api::user::pfor(zero,fields.size(),[&](auto& pos){
 			fields[pos].B = { 1.0, 1.0, 1.0 };
 		});
 
-		BcField bcfields(1);
+		BcField bcfields(properties.size);
 		bcfields[pos].Bc = { 0.0, 0.0, 0.0};
 
 		interpN2C(pos, fields, bcfields); 
@@ -174,7 +181,6 @@ namespace ipic3d {
 	    }
 
 		// re-evaluate
-		bcfields[pos].Bc = { 0.0, 0.0, 0.0};
 		interpN2C(pos, fields, bcfields); 
 		Bc = bcfields[pos].Bc;
 		EXPECT_NEAR( Bc.x, 0.0, 1e-06 );
