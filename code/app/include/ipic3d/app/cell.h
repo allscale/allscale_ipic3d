@@ -172,18 +172,18 @@ namespace ipic3d {
 	*/
 	template<typename T>
 	T trilinearInterpolationF2P(const T corners[2][2][2], const Vector3<double>& pos, const double vol) {
-		T res = T();
+		T res = T(0);
 
 	    for(int i = 0; i < 2; ++i) {
 		    for(int j = 0; j < 2; ++j) {
 			    for(int k = 0; k < 2; ++k) {
-				    auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z) / vol;
+				    auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z);
 				    res += corners[i][j][k] * fac;
 			    }
 		    }
 	    }
 
-	    return res;
+	    return res / vol;
 	}
 
 	/**

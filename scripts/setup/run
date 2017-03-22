@@ -33,17 +33,26 @@ if [[ ! -d "$TGT/code" ]]; then
 	# setup README
 	render_template "$DIR/README.md.tpl" "$TGT/README.md"
 
+	# CMakeLists.txt chain loader
+	cp "$DIR/CMakeLists_root.txt" "$TGT/CMakeLists.txt"
+
 	mkdir "$TGT/code"
 
 	# setup root CMakeLists
 	render_template "$DIR/CMakeLists.txt.tpl" "$TGT/code/CMakeLists.txt"
 
-	# setup example module
-	add_module example
-	render_template "$DIR/example/answer.h.tpl" "$TGT/code/example/include/$project/example/answer.h"
-	render_template "$DIR/example/answer.cpp.tpl" "$TGT/code/example/src/answer.cpp"
-	render_template "$DIR/example/answer_test.cc.tpl" "$TGT/code/example/test/answer_test.cc"
-	render_template "$DIR/example/main.cxx.tpl" "$TGT/code/example/src/main.cxx"
+	# setup app module
+	add_module app
+	render_template "$DIR/example/answer.h.tpl" "$TGT/code/app/include/$project/app/answer.h"
+	render_template "$DIR/example/answer.cpp.tpl" "$TGT/code/app/src/answer.cpp"
+	render_template "$DIR/example/answer_test.cc.tpl" "$TGT/code/app/test/answer_test.cc"
+	render_template "$DIR/example/main.cxx.tpl" "$TGT/code/app/src/$project.cxx"
+
+	# reset origin if not forked properly
+	if [[ -d "$TGT/.git" && $(git config remote.origin.url) == "https://github.com/allscale/allscale_sdk" ]]; then
+		git remote rename origin sdk
+		git config --unset branch.master.remote
+	fi
 fi
 
 for module in "$@"; do

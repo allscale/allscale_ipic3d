@@ -93,3 +93,4 @@ It is preferred to use the operating system's package manager, if applicable.
 
 Make sure your build folder is located outside the source folder. Eclipse is
 not capable of dealing with such a setup correctly.
+
