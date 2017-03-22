@@ -200,7 +200,7 @@ namespace ipic3d {
  	*/
 	void interpC2N(const utils::Coordinate<3>& pos, const BcField& bcfields, Field& fields) {
 		// extract magnetic field values from centers of the cells
-		Vector3<double> Bc;
+		Vector3<double> Bc(0);
 		for(int i=0; i<2; i++) {
 			for(int j=0; j<2; j++) {
 				for(int k=0; k<2; k++) {
@@ -218,7 +218,7 @@ namespace ipic3d {
  	*/
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields) {
 		// extract magnetic field values from nodes
-		Vector3<double> Bn;
+		Vector3<double> Bn(0);
 		for(int i=0; i<2; i++) {
 			for(int j=0; j<2; j++) {
 				for(int k=0; k<2; k++) {
