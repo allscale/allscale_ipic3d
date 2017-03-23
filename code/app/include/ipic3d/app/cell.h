@@ -97,6 +97,7 @@ namespace ipic3d {
 		// aggregate particles
 		for(const auto& p : cell.particles) {
 			contributions.rho += p.q;
+			// TODO: computation of J should also include weights from the particles as for E
 			contributions.J += p.q * p.velocity;
 		}
 
@@ -211,10 +212,10 @@ namespace ipic3d {
 
 		const auto cellCenter = getCenterOfCell(pos, universeProperties);
 
-        double vol = 1.0; //universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+        double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+
 		// update particles
 		allscale::api::user::pfor(cell.particles, [&](Particle& p){
-
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 

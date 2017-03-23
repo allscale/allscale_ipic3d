@@ -201,78 +201,6 @@ namespace ipic3d {
 	}
 
 
-	TEST(Simulation, SingleParticleBorisMoverLarmorRadiusPseudo) {
-
-		// Set universe properties
-		UniverseProperties properties;
-		properties.size = { 1,2,1 };
-		properties.cellWidth = { 10,5,10 };
-		properties.dt = 0.1;
-		properties.useCase = UseCase::Test;
-
-		// number of steps
-		unsigned niter = 100;
-
-		// Create Universe with these properties
-		Universe universe = Universe(properties);
-
-		Cell& a = universe.cells[{0,0,0}];
-		Cell& b = universe.cells[{0,1,0}];
-
-		// initialize field
-		Field& field = universe.field;
-		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
-			field[pos].E = { 0.0, 0.0, 0.0 };
-			field[pos].B = { 0.0, 0.0, 0.1 };
-		});
-
-		// add one particle
-		Particle p;
-		p.position.x = p.position.y = p.position.z = 0.0;
-
-		p.velocity.x = p.velocity.z = 0.0;
-		p.velocity.y = 1.0;
-
-		p.q = -1.0;
-		p.mass = 1.0;
-
-		// compute Larmor radius
-		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[{0,0,0}].B.z);
-		EXPECT_NEAR( rL, 10, 0.1 );
-		p.position.x = rL;
-
-		// push velocity back in time by 1/2 dt
-		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
-
-		a.particles.push_back(p);
-
-		// check particle position
-		EXPECT_FALSE(a.particles.empty());
-		EXPECT_TRUE(b.particles.empty());
-
-		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
-
-		// check where particle ended up
-		EXPECT_TRUE(a.particles.empty());
-		ASSERT_FALSE(b.particles.empty());
-
-		Particle res = b.particles.front();
-
-		// check that the position is close to what is expected
-		// comparing against the matlab code after 10 iterations
-		EXPECT_NEAR( res.position.x, 5.4030, 1e-04);
-		EXPECT_NEAR( res.position.y, 8.4147, 1e-04);
-		EXPECT_NEAR( res.position.z, 0.0,	 1e-05);
-
-		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.velocity.x, -0.8388, 1e-04);
-		EXPECT_NEAR( res.velocity.y,  0.5445, 1e-04);
-		EXPECT_NEAR( res.velocity.z,  0.0,    1e-04);
-	}
-
-
 	TEST(Simulation, SingleParticleBorisMoverLarmorRadius) {
 
 		// Set universe properties
@@ -330,14 +258,14 @@ namespace ipic3d {
 
 		// check that the position is close to what is expected
 		// comparing against the matlab code after 10 iterations
-		EXPECT_NEAR( res.position.x, 4.9127e-05, 1e-06);
-		EXPECT_NEAR( res.position.y, 2.8631e-05, 1e-06);
+		EXPECT_NEAR( res.position.x, 5.7652e-05, 1e-06);
+		EXPECT_NEAR( res.position.y, 2.9990e-05, 1e-06);
 		EXPECT_NEAR( res.position.z, 0.0,		 1e-06);
 
 		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.velocity.x, -4.8050e+04, 1e2);
-		EXPECT_NEAR( res.velocity.y,  8.7699e+04, 1e2);
-		EXPECT_NEAR( res.velocity.z,  0.0,        1e-2);
+		EXPECT_NEAR( res.velocity.x, 2637.59, 1e2);
+		EXPECT_NEAR( res.velocity.y, 99965.2, 1e2);
+		EXPECT_NEAR( res.velocity.z, 0.0,     1e-2);
 	}
 
 } // end namespace ipic3d
