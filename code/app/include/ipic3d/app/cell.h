@@ -17,15 +17,6 @@ namespace ipic3d {
 
 	//using Coord = utils::Coordinate<3>;
 
-	struct DensityCell {
-		// charge density
-		double rho;
-		// current density
-		Vector3<double> J;
-	};
-
-	using Density = allscale::api::user::data::Grid<DensityCell,3>;	// a 3D grid of density cells
-
 	/**
 	 * The structure of a single cell, forming a container for particles
 	 * located within a confined (rectangular) area of space.

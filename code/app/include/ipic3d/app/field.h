@@ -20,10 +20,17 @@ namespace ipic3d {
 										// we assume that they are define at center of each cell
 	};
 
+	struct DensityCell {
+		double rho;						// charge density
+		Vector3<double> J;				// current density
+	};
+
 
 	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes
 
 	using BcField = allscale::api::user::data::Grid<BcFieldNode,3>;	// a 3D grid of magnetic field nodes defined on centers
+
+	using Density = allscale::api::user::data::Grid<DensityCell,3>;	// a 3D grid of density cells
 
 	// declaration
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields);
@@ -280,7 +287,7 @@ namespace ipic3d {
 	/**
 	* Explicit Field Solver: Fields are computed using forward approximation
 	*/
-	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field, BcField& bcfield) {
+	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Density& density, Field& field, BcField& bcfield) {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
@@ -304,7 +311,7 @@ namespace ipic3d {
 				// 		sum curl B and Jh
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
-				//field[pos].E = 
+				field[pos].E += (curlB + density[pos].J) * universeProperties.dt; 
 
 				// 		TODO:Boundary conditions: periodic?
 				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
@@ -323,7 +330,6 @@ namespace ipic3d {
 				//		TODO: Boundary conditions: periodic?
 				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
 
-				//		interpC2N
 				// 		interpolate B from center to nodes
 				interpC2N(pos, bcfield, field);
 

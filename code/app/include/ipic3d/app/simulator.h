@@ -73,7 +73,7 @@ namespace ipic3d {
 		// -- auxiliary structures for communication --
 
 		// the 3-D density field
-		Density density(size);
+		Density density(fieldSize);
 
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
@@ -89,16 +89,19 @@ namespace ipic3d {
 			// STEP 1: collect particle contributions
 
 			// project particles to density field
-			pfor(zero,size,[&](const utils::Coordinate<3>& pos) {
+			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos) {
 				DensityCell& entry = density[pos];
 
+				// TODO: this should be improved:
+				// 	J is defined on nodes
+				// 	rho 
 				particletoFieldProjector(universe.properties,universe.cells[pos],pos,entry);
 			});
 
 			// STEP 2: solve field equations
 			// TODO: fieldSolver(universe.field,density,universe.cells);
 			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos){
-				fieldSolver(universe.properties, pos, universe.field);
+				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
 			});
 			// TODO: update cells around the grid for periodic boundary conditions
 
@@ -131,17 +134,15 @@ namespace ipic3d {
 		};
 
 		struct default_field_solver {
-			void operator()(const UniverseProperties& /*universeProperties*/, const utils::Coordinate<3>& /*pos*/, Field& /*field*/) const {
-				// don't do anything here
+			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Density& density, Field& field, BcField& bcfield) const {
+				solveFieldForward(universeProperties, pos, density, field, bcfield);
 			}
-
 		};
 
 		struct leapfrog_field_solver {
 			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
 				solveFieldLeapfrog(universeProperties, pos, field);
 			}
-
 		};
 
 		struct default_particle_mover {
@@ -158,7 +159,5 @@ namespace ipic3d {
 			}
 		};
 	}
-
-
 
 } // end namespace ipic3d
