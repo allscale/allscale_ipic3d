@@ -15,22 +15,27 @@ namespace ipic3d {
 		Vector3<double> Bext;			// external magnetic field on nodes
 	};
 
-	struct BcFieldNode {
+	struct BcFieldCell {
 		Vector3<double> Bc;				// magnetic field components defined on central points between nodes TODO: to clarify this
 										// we assume that they are define at center of each cell
 	};
 
+	struct DensityNode {
+		Vector3<double> J;				// current density
+	};
+
 	struct DensityCell {
 		double rho;						// charge density
-		Vector3<double> J;				// current density
 	};
 
 
 	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes
 
-	using BcField = allscale::api::user::data::Grid<BcFieldNode,3>;	// a 3D grid of magnetic field nodes defined on centers
+	using BcField = allscale::api::user::data::Grid<BcFieldCell,3>;	// a 3D grid of magnetic field cells defined on centers
 
-	using Density = allscale::api::user::data::Grid<DensityCell,3>;	// a 3D grid of density cells
+	using DensityCells = allscale::api::user::data::Grid<DensityCell,3>;	// a 3D grid of density cells
+
+	using DensityNodes = allscale::api::user::data::Grid<DensityNode,3>;	// a 3D grid of density nodes
 
 	// declaration
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields);
@@ -287,7 +292,7 @@ namespace ipic3d {
 	/**
 	* Explicit Field Solver: Fields are computed using forward approximation
 	*/
-	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Density& density, Field& field, BcField& bcfield) {
+	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 

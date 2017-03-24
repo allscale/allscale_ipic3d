@@ -83,27 +83,42 @@ namespace ipic3d {
 	*
 	* @param universeProperties the properties of this universe
 	* @param cell the cell whose particles are considered in the density contributions computation
+	* @param pos the coordinates of this cell in the grid
 	* @param contributions the density contributions output
 	*/
-	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, DensityCell& contributions) {
+	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, DensityNodes& density) {
 
 		// quick-check
 		if(cell.particles.empty()) return;		// nothing to contribute
 
 		// init aggregated densities of neighboring cells
-		contributions.rho = 0.0;
-		contributions.J = 0.0;
+		Vector3<double> Js[2][2][2] = {0};
 
-		// aggregate particles
+		// aggregate charge density from particles
+		// TODO: use pfor here
 		for(const auto& p : cell.particles) {
-			contributions.rho += p.q;
-			// TODO: computation of J should also include weights from the particles as for E
-			contributions.J += p.q * p.velocity;
+			// computation of J also includes weights from the particles as for E
+			for(int i = 0; i < 2; ++i) {
+				for(int j = 0; j < 2; ++j) {
+					for(int k = 0; k < 2; ++k) {
+						utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+						auto cornerPos = getLocation(cur, universeProperties); 
+						auto fac = (i == 0 ? (1 - cornerPos.x) : cornerPos.x) * (j == 0 ? (1 - cornerPos.y) : cornerPos.y) * (k == 0 ? (1 - cornerPos.z) : cornerPos.z);
+						Js[i][j][k] += p.q * p.velocity * fac;
+					}
+				}
+			}
 		}
 
 		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		contributions.rho /= vol;
-		contributions.J /= vol;
+		for(int i=0; i<2; i++) {
+			for(int j=0; j<2; j++) {
+				for(int k=0; k<2; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+					density[cur].J = Js[i][j][k] / vol;
+				}
+			}
+		}
 	}
 
 	/**

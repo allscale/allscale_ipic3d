@@ -73,7 +73,7 @@ namespace ipic3d {
 		// -- auxiliary structures for communication --
 
 		// the 3-D density field
-		Density density(fieldSize);
+		DensityNodes density(fieldSize);
 
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
@@ -89,13 +89,11 @@ namespace ipic3d {
 			// STEP 1: collect particle contributions
 
 			// project particles to density field
-			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos) {
-				DensityCell& entry = density[pos];
-
+			pfor(zero,size,[&](const utils::Coordinate<3>& pos) {
 				// TODO: this should be improved:
 				// 	J is defined on nodes
 				// 	rho 
-				particletoFieldProjector(universe.properties,universe.cells[pos],pos,entry);
+				particletoFieldProjector(universe.properties,universe.cells[pos],pos,density);
 			});
 
 			// STEP 2: solve field equations
@@ -128,13 +126,13 @@ namespace ipic3d {
 	namespace detail {
 
 		struct default_particle_to_field_projector {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& /*pos*/, DensityCell& densityContributions) const {
-				projectToDensityField(universeProperties,cell,densityContributions);
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, DensityNodes& density) const {
+				projectToDensityField(universeProperties,cell,pos,density);
 			}
 		};
 
 		struct default_field_solver {
-			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Density& density, Field& field, BcField& bcfield) const {
+			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) const {
 				solveFieldForward(universeProperties, pos, density, field, bcfield);
 			}
 		};
