@@ -55,7 +55,7 @@ namespace ipic3d {
 			unsigned particlesPerCell = initProperties.particlesPerCell[0].x + initProperties.particlesPerCell[0].y + initProperties.particlesPerCell[0].z;
 
 			// add the requested number of parameters
-			std::minstd_rand randGenerator(pos[0] * 10000 + pos[1] * 100 + pos[2]);
+			std::minstd_rand randGenerator((unsigned)(pos[0] * 10000 + pos[1] * 100 + pos[2]));
 			const double randMax = std::minstd_rand::max();
 			for (unsigned i = 0; i < particlesPerCell; i++) {
 				Particle p;
