@@ -300,5 +300,61 @@ namespace ipic3d {
 		EXPECT_NEAR( B.z, 0.0, 1e-06 );
     }
 
+	TEST(Field, updateFieldsOnBoundaries) {
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 10, 10, 10 };
+		properties.cellWidth = { 1, 1, 1 };
+		properties.useCase = UseCase::Dipole;
+
+		utils::Coordinate<3> pos{0, 0, 0};
+
+		// initialize field
+		Field field(properties.size + coordinate_type(3));
+		decltype(field.size()) start = 1;
+		allscale::api::user::pfor(start, field.size() - coordinate_type(1), [&](auto& pos){
+			field[pos].E = { 1.0, 1.0, 1.0 };
+			field[pos].B = { 2.0, 2.0, 2.0 };
+		});
+		BcField bcfield(properties.size + coordinate_type(2));
+		allscale::api::user::pfor(start, bcfield.size() - coordinate_type(1), [&](auto& pos){
+			bcfield[pos].Bc = { 3.0, 3.0, 3.0 };
+		});
+
+		updateFieldsOnBoundaries(field, bcfield);
+
+		auto E = field[ {0, 5, 11} ].E;
+		EXPECT_NEAR( E.x, 1.0, 1e-06 );
+		EXPECT_NEAR( E.y, 1.0, 1e-06 );
+		EXPECT_NEAR( E.z, 1.0, 1e-06 );
+
+		auto B = field[ {9, 12, 2} ].B;		
+		EXPECT_NEAR( B.x, 2.0, 1e-06 );
+		EXPECT_NEAR( B.y, 2.0, 1e-06 );
+		EXPECT_NEAR( B.z, 2.0, 1e-06 );
+
+		auto Bc = bcfield[ {3, 8, 12} ].Bc;
+		EXPECT_NEAR( Bc.x, 3.0, 1e-06 );
+		EXPECT_NEAR( Bc.y, 3.0, 1e-06 );
+		EXPECT_NEAR( Bc.z, 3.0, 1e-06 );
+
+		allscale::api::user::pfor(start, field.size() - coordinate_type(1), [&](auto& pos){
+			field[pos].E = { (double) pos[0], (double) pos[1], (double) pos[2] };
+			field[pos].B = { 2.0 * pos[0], 2.0 * pos[1], 2.0 * pos[2]};
+		});
+
+		updateFieldsOnBoundaries(field, bcfield);
+
+		E = field[ {0, 5, 11} ].E;
+		EXPECT_NEAR( E.x, 11.0, 1e-06 );
+		EXPECT_NEAR( E.y, 5.0, 1e-06 );
+		EXPECT_NEAR( E.z, 11.0, 1e-06 );
+
+		B = field[ {9, 12, 2} ].B;		
+		EXPECT_NEAR( B.x, 18.0, 1e-06 );
+		EXPECT_NEAR( B.y, 2.0, 1e-06 );
+		EXPECT_NEAR( B.z, 4.0, 1e-06 );
+	}
+
 } // end namespace ipic3d
 
