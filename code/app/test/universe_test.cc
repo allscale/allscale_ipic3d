@@ -78,7 +78,7 @@ namespace ipic3d {
 		// Check its dimensions for cells and field
 	    ASSERT_EQ(coordinate_type({1, 2, 3}), cells.size());
 		// field grid should be 1 larger than cell grid in every dimension
-	    ASSERT_EQ(coordinate_type({2, 3, 4}), field.size());
+	    ASSERT_EQ(coordinate_type({4, 5, 6}), field.size());
 
 		// check a few cell positions
 	    using Point = Vector3<double>;

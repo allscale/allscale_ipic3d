@@ -45,9 +45,10 @@ namespace ipic3d {
 
 		using namespace allscale::api::user;
 
-		utils::Size<3> zero = 0;
+		utils::Size<3> start = 1;
 		// determine the field size (grid size + 1 in each dimension)
-		utils::Size<3> fieldSize = universeProperties.size + coordinate_type(1);
+		utils::Size<3> fieldSize = universeProperties.size + coordinate_type(3); // two for the two extra boundary cells and one as fields are defined on nodes of the cells
+		utils::Size<3> workingFieldSize = universeProperties.size + coordinate_type(2);
 
 		// the 3-D force fields
 		Field fields(fieldSize);
@@ -56,7 +57,7 @@ namespace ipic3d {
 		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
 		auto ebc = crossProduct(driftVel[0], initProperties.magneticFieldAmplitude) * -1;
 
-		pfor(zero, fieldSize,[&](const utils::Coordinate<3>& cur) {
+		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
 
 			// initialize electrical field
 			fields[cur].E = ebc;
@@ -76,7 +77,7 @@ namespace ipic3d {
 					// Dipole's Center
 					auto objectCenter = universeProperties.objectCenter;
 					// Node coordinates
-					auto location = getLocation(cur, universeProperties);
+					auto location = getLocationForFields(cur, universeProperties);
 
 					auto diff = location - objectCenter;
 
@@ -118,13 +119,14 @@ namespace ipic3d {
 
 		using namespace allscale::api::user;
 
-		utils::Size<3> zero = 0;
-		utils::Size<3> fieldSize = universeProperties.size;
+		utils::Size<3> start = 1;
+		utils::Size<3> fieldSize = universeProperties.size + coordinate_type(2); // two extra boundary cells
+		utils::Size<3> workingFieldSize = universeProperties.size + coordinate_type(1);
 
 		// the 3-D force fields
 		BcField bcfield(fieldSize);
 
-		pfor(zero, fieldSize, [&](const utils::Coordinate<3>& cur) {
+		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
 
 			// init magnetic field at centers
 			interpN2C(cur, field, bcfield);
@@ -316,8 +318,8 @@ namespace ipic3d {
 				// 		sum curl B and Jh
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
-				field[pos].E += (curlB + density[pos].J) * universeProperties.dt; 
-
+				field[pos].E += (curlB + density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
+ 
 				// 		TODO:Boundary conditions: periodic?
 				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
 

@@ -168,9 +168,10 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
+		std::cout << field.size() << "\n";
 		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
-			field[pos].E = { 0.2, 0, 0 };
-			field[pos].B = { 0.2, 0, 0 };
+			field[pos].E = { 0.2, 0.0, 0.0 };
+			field[pos].B = { 0.2, 0.0, 0.0 };
 		});
 
 		// add one particle
@@ -187,7 +188,7 @@ namespace ipic3d {
 		cell.particles.push_back(p);
 
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());

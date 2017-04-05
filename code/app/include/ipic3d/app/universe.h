@@ -30,7 +30,8 @@ namespace ipic3d {
 		* @param properties the properties of the universe to be created
 		*/
 	    Universe(const UniverseProperties& properties = UniverseProperties())
-	        : properties(properties), cells(Cells(properties.size)), field(Field(properties.size + coordinate_type(1))), bcfield(properties.size) {
+	        : properties(properties), cells(Cells(properties.size)), field(Field(properties.size + coordinate_type(3))), bcfield(BcField(properties.size + coordinate_type(2))) // two for the two extra boundary cells and one as fields are defined on nodes of the cells
+		{ 
 			auto dims = properties.size;
 			assert_true(dims.x > 0 || dims.y > 0 || dims.z > 0) << "Expected positive non-zero dimensions, but got " << dims;
 		}
@@ -38,7 +39,7 @@ namespace ipic3d {
 	    Universe(const UniverseProperties& properties, Cells&& cells, Field&& field, BcField&& bcfield) : properties(properties), cells(std::move(cells)), field(std::move(field)), bcfield(std::move(bcfield)) {
 			auto size = cells.size();
 			assert_true(size == properties.size) << "Expected size of universe and size of cell grid to match, but got " << size << " and " << properties.size;
-			assert_true((size + coordinate_type(1)) == field.size()) << "Expected size of field grid to be equal to size of cell grid + 1 but got " << field.size() << " and " << size;
+			assert_true((size + coordinate_type(3)) == field.size()) << "Expected size of field grid to be equal to size of cell grid + 1 but got " << field.size() << " and " << size;
 			assert_true(size.x > 0 || size.y > 0 || size.z > 0) << "Expected positive non-zero dimensions, but got " << size;
 		}
 

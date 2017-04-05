@@ -67,13 +67,16 @@ namespace ipic3d {
 		// extract size of grid
 		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
+		auto densitySize = size + utils::Coordinate<3>(1); // J is defined on nodes
 		auto fieldSize = universe.field.size();
+		auto fieldStart = utils::Coordinate<3>(1);
+		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 
 
 		// -- auxiliary structures for communication --
 
 		// the 3-D density field
-		DensityNodes density(fieldSize);
+		DensityNodes density(densitySize);
 
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
@@ -82,23 +85,22 @@ namespace ipic3d {
 		// -- run the simulation --
 
 		// run time loop for the simulation
-		for(unsigned i = 0; i<numSteps; ++i) {
+		for(unsigned i = 0; i < numSteps; ++i) {
 
 			using namespace allscale::api::user;
 
 			// STEP 1: collect particle contributions
-
 			// project particles to density field
-			pfor(zero,size,[&](const utils::Coordinate<3>& pos) {
+			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
 				// TODO: this should be improved:
 				// 	J is defined on nodes
 				// 	rho 
-				particletoFieldProjector(universe.properties,universe.cells[pos],pos,density);
+				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
 			});
 
 			// STEP 2: solve field equations
 			// TODO: fieldSolver(universe.field,density,universe.cells);
-			pfor(zero,fieldSize,[&](const utils::Coordinate<3>& pos){
+			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
 				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
 			});
 			// TODO: update cells around the grid for periodic boundary conditions
@@ -106,15 +108,15 @@ namespace ipic3d {
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 3: project forces to particles and move particles
-			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				particleMover(universe.properties,universe.cells[pos],pos,universe.field,particleTransfers);
+			pfor(zero, size, [&](const utils::Coordinate<3>& pos){
+				particleMover(universe.properties, universe.cells[pos], pos, universe.field, particleTransfers);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 4: import particles into destination cells
 			pfor(zero,size,[&](const utils::Coordinate<3>& pos){
-				importParticles(universe.properties,universe.cells[pos],pos,particleTransfers);
+				importParticles(universe.properties, universe.cells[pos], pos, particleTransfers);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
