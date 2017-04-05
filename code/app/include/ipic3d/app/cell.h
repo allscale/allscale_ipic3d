@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <random>
 
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/data/vector.h"
@@ -54,11 +55,12 @@ namespace ipic3d {
 			unsigned particlesPerCell = initProperties.particlesPerCell[0].x + initProperties.particlesPerCell[0].y + initProperties.particlesPerCell[0].z;
 
 			// add the requested number of parameters
-			unsigned random_state = pos[0] * 10000 + pos[1] * 100 + pos[2];
+			std::minstd_rand randGenerator((unsigned)(pos[0] * 10000 + pos[1] * 100 + pos[2]));
+			const double randMax = std::minstd_rand::max();
 			for (unsigned i = 0; i < particlesPerCell; i++) {
 				Particle p;
 
-				Vector3<double> randVals = {(double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX, (double)rand_r(&random_state) / RAND_MAX};
+				Vector3<double> randVals = {(double)randGenerator() / randMax, (double)randGenerator() / randMax, (double)randGenerator() / randMax};
 				// initialize particle position
 				p.position = getCenterOfCell(pos, properties) + elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
 
