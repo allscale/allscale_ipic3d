@@ -132,17 +132,11 @@ namespace ipic3d {
 
 	}
 
+
 	TEST(Simulation, SingleParticleFirstOrder) {
 
 		// this test checks whether particles are properly migrated between cells
 		detail::testSingleParticle<detail::default_particle_mover>();
-
-	}
-
-	TEST(Simulation, SingleParticleSecondOrder) {
-
-		// this test checks whether particles are properly migrated between cells
-		detail::testSingleParticle<detail::boris_mover>();
 
 	}
 
@@ -168,7 +162,6 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		std::cout << field.size() << "\n";
 		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.2, 0.0, 0.0 };
 			field[pos].B = { 0.2, 0.0, 0.0 };
@@ -267,6 +260,70 @@ namespace ipic3d {
 		EXPECT_NEAR( res.velocity.x, 2637.59, 1e2);
 		EXPECT_NEAR( res.velocity.y, 99965.2, 1e2);
 		EXPECT_NEAR( res.velocity.z, 0.0,     1e-2);
+	}
+
+
+	TEST(SimulationTest, ParticleMigration) {
+
+		// this test checks whether particles are properly migrated between cells
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = {2,1,1};
+		properties.cellWidth = { .5,1,1 };
+		properties.dt = 0.1;
+		properties.useCase = UseCase::Test;
+
+		// number of steps
+		unsigned niter = 9;
+
+		// Create a universe with these properties
+		Universe universe = Universe(properties);
+
+		// configure the cell
+		Cell& a = universe.cells[{0,0,0}];
+		Cell& b = universe.cells[{1,0,0}];
+
+		// initialize the field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.2, 0.0, 0.0 };
+			field[pos].B = { 0.2, 0.0, 0.0 };
+		});
+
+		// add one particle
+		Particle p;
+		p.position.x = p.position.y = 0.5;
+		p.position.z = 0;
+		p.velocity.z = p.velocity.y = 0;
+		p.velocity.x = 1;
+		p.q = 1;
+		p.mass = 1;
+
+		// add test particle to first cell
+		a.particles.push_back(p);
+
+		// check particle position
+		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+
+		// run the simulation
+		niter = 4;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		// check whether the particle was moved from one cell to another
+		ASSERT_TRUE(a.particles.empty());
+		ASSERT_FALSE(b.particles.empty());
+
+		// run the simulation
+		niter = 1;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		// check whether the particle was moved out of the domain
+		// TODO: the particle has to move back to cell a due to the periodic boundary conditions
+		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
 	}
 
 } // end namespace ipic3d

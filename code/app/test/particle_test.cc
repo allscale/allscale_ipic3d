@@ -131,9 +131,5 @@ namespace ipic3d {
 	}
 
 
-
-	TEST(SimulationTest, ParticleMigration) {
-		// this test checks whether particles are properly migrated between cells
-	}
-
 } // end namespace ipic3d
+

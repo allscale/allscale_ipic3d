@@ -100,7 +100,7 @@ namespace ipic3d {
 
 			// STEP 2: solve field equations
 			// update boundaries
-			//updateFieldsOnBoundaries(universe.field, universe.bcfield);
+			updateFieldsOnBoundaries(universe.field, universe.bcfield);
 			
 			// TODO: fieldSolver(universe.field,density,universe.cells);
 			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
