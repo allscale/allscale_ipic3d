@@ -7,6 +7,7 @@
 #include "ipic3d/app/parameters.h"
 #include "ipic3d/app/simulator.h"
 #include "ipic3d/app/universe.h"
+#include "ipic3d/app/common.h"
 
 #include "ipic3d/app/utils/points.h"
 
@@ -39,6 +40,9 @@ int main(int argc, char** argv) {
 	// initialize universe
 	auto universe = createUniverseFromParams(params);
 
+	// get the number of particles in all cells before the simulation begins
+	int start_particles = countParticlesInDomain(universe);
+
 	// ----- run the simulation ------
 
 	std::cout << "Running simulation..." << std::endl;
@@ -48,6 +52,12 @@ int main(int argc, char** argv) {
 	simulateSteps(params.ncycles, universe);
 
 	// ----- finish ------
+
+	// get the number of particles in all cells at the end of the simulation
+	int end_particles = countParticlesInDomain(universe);
+	if (start_particles != end_particles) {
+		std::cout << "[Error]: Periodic boundary conditions on particles were not preserved!\n";
+	}
 
 	// be done
 	std::cout << "Simulation finished successfully!" << std::endl;
