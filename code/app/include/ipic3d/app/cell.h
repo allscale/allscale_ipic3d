@@ -289,15 +289,23 @@ namespace ipic3d {
 		// move particles
 		std::vector<Particle> remaining;
 		remaining.reserve(cell.particles.size());
-		for(const auto& p : cell.particles) {
+		for(auto& p : cell.particles) {
 			// compute relative position
 			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
 			auto halfWidth = universeProperties.cellWidth / 2;
 			if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 				// compute corresponding neighbor cell
-				int i = (relPos.x < -halfWidth.x) ? 0 : ( (relPos.x > halfWidth.x) ? 2 : 1 );
-				int j = (relPos.y < -halfWidth.y) ? 0 : ( (relPos.y > halfWidth.y) ? 2 : 1 );
-				int k = (relPos.z < -halfWidth.z) ? 0 : ( (relPos.z > halfWidth.z) ? 2 : 1 );
+				// cover the inner cells as well as the boundary cells on positions 0 and N-1
+				int i = (relPos.x < -halfWidth.x) ? ( pos.x == 0 ? size.x - 1 : 0 ) : ( (relPos.x > halfWidth.x) ? ( (pos.x == universeProperties.size.x - 1) ? 0 : 2 ) : 1 );
+				// adjust particle's position in case it exits the domain
+				p.position.x = ( (pos.x == 0) && (relPos.x < -halfWidth.x) ) ? (universeProperties.size.x * universeProperties.cellWidth.x - p.position.x) : ( ( (pos.x == universeProperties.size.x - 1) && (relPos.x > halfWidth.x) ) ? p.position.x - universeProperties.size.x * universeProperties.cellWidth.x : p.position.x );
+
+				int j = (relPos.y < -halfWidth.y) ? ( pos.y == 0 ? size.y - 1 : 0 ) : ( (relPos.y > halfWidth.y) ? ( (pos.y == universeProperties.size.y - 1) ? 0 : 2 ) : 1 );
+				p.position.y = ( (pos.y == 0) && (relPos.y < -halfWidth.y) ) ? (universeProperties.size.y * universeProperties.cellWidth.y - p.position.y) : ( ( (pos.y == universeProperties.size.y - 1) && (relPos.y > halfWidth.y) ) ? p.position.y - universeProperties.size.y * universeProperties.cellWidth.y : p.position.y );
+
+				int k = (relPos.z < -halfWidth.z) ? ( pos.z == 0 ? size.z - 1 : 0 ) : ( (relPos.z > halfWidth.z) ? ( (pos.z == universeProperties.size.z - 1) ? 0 : 2 ) : 1 );
+				p.position.z = ( (pos.z == 0) && (relPos.z < -halfWidth.z) ) ? (universeProperties.size.z * universeProperties.cellWidth.z - p.position.z) : ( ( (pos.z == universeProperties.size.z - 1) && (relPos.z > halfWidth.z) ) ? p.position.z - universeProperties.size.z * universeProperties.cellWidth.z : p.position.z );
+
 				// send to neighbor cell
 				auto target = neighbors[{i,j,k}];
 				if (target) target->push_back(p);
@@ -331,6 +339,7 @@ namespace ipic3d {
 		for(int i = 0; i<3; i++) {
 			for(int j = 0; j<3; j++) {
 				for(int k = 0; k<3; k++) {
+					// iterates through all buffers attached to the cell at the given position
 					auto cur = centerIndex + utils::Coordinate<3>{i-1,j-1,k-1};
 					if (cur[0] < 0 || cur[0] >= size[0]) continue;
 					if (cur[1] < 0 || cur[1] >= size[1]) continue;

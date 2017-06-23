@@ -270,12 +270,9 @@ namespace ipic3d {
 		// Set universe properties
 		UniverseProperties properties;
 		properties.size = {2,1,1};
-		properties.cellWidth = { .5,1,1 };
+		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
 		properties.useCase = UseCase::Test;
-
-		// number of steps
-		unsigned niter = 9;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
@@ -294,7 +291,7 @@ namespace ipic3d {
 
 		// add one particle
 		Particle p;
-		p.position.x = p.position.y = 0.5;
+		p.position.x = p.position.y = 0.4;
 		p.position.z = 0;
 		p.velocity.z = p.velocity.y = 0;
 		p.velocity.x = 1;
@@ -308,8 +305,10 @@ namespace ipic3d {
 		ASSERT_FALSE(a.particles.empty());
 		ASSERT_TRUE(b.particles.empty());
 
+		// number of steps
+		unsigned niter = 4;
+
 		// run the simulation
-		niter = 4;
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
 
 		// check whether the particle was moved from one cell to another
