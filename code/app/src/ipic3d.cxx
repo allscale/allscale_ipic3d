@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
 	auto universe = createUniverseFromParams(params);
 
 	// get the number of particles in all cells before the simulation begins
+	// TODO: disable it for performance runs
 	int start_particles = countParticlesInDomain(universe);
 
 	// ----- run the simulation ------
@@ -54,6 +55,7 @@ int main(int argc, char** argv) {
 	// ----- finish ------
 
 	// get the number of particles in all cells at the end of the simulation
+	// TODO: disable it for performance runs
 	int end_particles = countParticlesInDomain(universe);
 	if (start_particles != end_particles) {
 		std::cout << "[Error]: Periodic boundary conditions on particles were not preserved!\n";
