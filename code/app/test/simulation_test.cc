@@ -263,7 +263,7 @@ namespace ipic3d {
 	}
 
 
-	TEST(SimulationTest, ParticleMigration) {
+	TEST(SimulationTest, ParticleMigrationOneParticle) {
 
 		// this test checks whether particles are properly migrated between cells
 
@@ -323,6 +323,87 @@ namespace ipic3d {
 		// TODO: the particle has to move back to cell a due to the periodic boundary conditions
 		ASSERT_FALSE(a.particles.empty());
 		ASSERT_TRUE(b.particles.empty());
+	}
+
+
+	TEST(SimulationTest, ParticleMigrationManyParticles) {
+
+		// this test checks whether particles are properly migrated between cells
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = {2,2,2};
+		properties.cellWidth = { .5,.5,.5 };
+		properties.dt = 0.1;
+		properties.useCase = UseCase::Test;
+
+		// Create a universe with these properties
+		Universe universe = Universe(properties);
+
+		// configure the cell
+		Cell& a = universe.cells[{0,0,0}];
+		Cell& b = universe.cells[{1,0,0}];
+		Cell& c = universe.cells[{0,1,0}];
+		Cell& d = universe.cells[{1,1,0}];
+		Cell& e = universe.cells[{0,0,1}];
+		Cell& f = universe.cells[{1,0,1}];
+		Cell& g = universe.cells[{0,1,1}];
+		Cell& h = universe.cells[{1,1,1}];
+
+		// initialize the field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.2, 0.2, 0.2 };
+			field[pos].B = { 0.2, 0.2, 0.2 };
+		});
+
+		// add one particle
+		Particle p0, p1, p2, p3, p4, p5, p6, p7;
+		p0.position.x = 0.4; p0.position.y = p0.position.z = 0.4;
+		p0.velocity.z = 0.6; p0.velocity.y = p0.velocity.z = 0.6;
+		p0.q = p0.mass = 1;
+		p1.position.x = 0.8; p1.position.y = p1.position.z = 0.4;
+		p1.velocity.z = 0.3; p1.velocity.y = p1.velocity.z = 0.3;
+		p1.q = p1.mass = 1;
+		p2.position.y = 0.8; p2.position.x = p2.position.z = 0.4;
+		p2.velocity.z = 0.1; p2.velocity.y = p2.velocity.z = 0.1;
+		p2.q = p2.mass = 1;
+		p3.position.x = 0.75; p3.position.y = 0.75; p3.position.z = 0.4;
+		p3.velocity.z = 0.8; p3.velocity.y = p3.velocity.z = 0.8;
+		p3.q = p3.mass = 1;
+		p4 = p0;
+		p4.position.z = 0.6;
+		p5 = p1;
+		p5.position.z = 0.8;
+		p6 = p3;
+		p6.position.z = 0.75;
+		p7 = p3;
+		p7.position.z = 0.8;
+
+		// add test particle to first cell
+		a.particles.push_back(p0);
+		b.particles.push_back(p1);
+		c.particles.push_back(p2);
+		d.particles.push_back(p3);
+		e.particles.push_back(p4);
+		f.particles.push_back(p5);
+		g.particles.push_back(p6);
+		h.particles.push_back(p7);
+
+		// number of steps
+		unsigned niter = 20;
+
+		// run the simulation
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		// check number of particles in the domain
+		std::atomic<int> total_particles = ATOMIC_VAR_INIT(0);;
+		decltype(field.size()) size = 2;
+		allscale::api::user::pfor(zero,size,[&](auto& pos){
+			std::atomic_fetch_add( &total_particles, (int) universe.cells[pos].particles.size() );
+		});
+		EXPECT_EQ(8, total_particles);
 	}
 
 } // end namespace ipic3d
