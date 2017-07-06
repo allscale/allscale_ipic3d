@@ -321,6 +321,30 @@ namespace ipic3d {
 	}
 
 	/**
+ 	* This function verifies whether the position of the particle is within the current cell boundaries
+ 	*
+	* @param universeProperties the properties of this universe
+ 	* @param cell the current cell
+	* @param pos the coordinates of this cell in the grid
+ 	*/
+	void VerifyCorrectParticlesPositionInCell(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos) {
+		int incorrectlyPlacedParticles = 0;
+
+		for(auto& p : cell.particles) {
+			// compute relative position
+			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
+			auto halfWidth = universeProperties.cellWidth / 2;
+			if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
+				++incorrectlyPlacedParticles;
+			}
+		}
+		
+		if (incorrectlyPlacedParticles) {
+			std::cout << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
+		}
+	}  
+
+	/**
 	* This function imports all particles that are directed towards the specified cell
 	* into the cell from the provided transfer buffers.
 	*
@@ -350,6 +374,10 @@ namespace ipic3d {
 				}
 			}
 		}
+
+		// verify correct placement of the particles
+		// TODO: this potential should only be used in tests due to the performance reasons
+		VerifyCorrectParticlesPositionInCell(universeProperties, cell, pos);
 
 	}
 

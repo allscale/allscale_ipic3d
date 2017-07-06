@@ -37,7 +37,7 @@ B1z = 2.0
 
 #  %%%%%%%%%%%%%%%%%%% TIME %%%%%%%%%%%%%%%%%%
 dt = 0.15                   # dt = time step  
-ncycles = 640		 #!!!    # cycles
+ncycles = 40		 #!!!    # cycles
 th = 1.0                     # th =   decentering parameter
 c = 1.0                      # c = light speed 
 
