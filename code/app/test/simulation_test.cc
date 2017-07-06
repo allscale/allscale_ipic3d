@@ -314,6 +314,12 @@ namespace ipic3d {
 		// check whether the particle was moved from one cell to another
 		ASSERT_TRUE(a.particles.empty());
 		ASSERT_FALSE(b.particles.empty());
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
+
 
 		// run the simulation
 		niter = 1;
@@ -323,6 +329,11 @@ namespace ipic3d {
 		// TODO: the particle has to move back to cell a due to the periodic boundary conditions
 		ASSERT_FALSE(a.particles.empty());
 		ASSERT_TRUE(b.particles.empty());
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
 	}
 
 
@@ -404,6 +415,11 @@ namespace ipic3d {
 			std::atomic_fetch_add( &total_particles, (int) universe.cells[pos].particles.size() );
 		});
 		EXPECT_EQ(8, total_particles);
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
 	}
 
 } // end namespace ipic3d

@@ -327,7 +327,7 @@ namespace ipic3d {
  	* @param cell the current cell
 	* @param pos the coordinates of this cell in the grid
  	*/
-	void VerifyCorrectParticlesPositionInCell(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos) {
+	bool VerifyCorrectParticlesPositionInCell(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos) {
 		int incorrectlyPlacedParticles = 0;
 
 		for(auto& p : cell.particles) {
@@ -341,7 +341,10 @@ namespace ipic3d {
 		
 		if (incorrectlyPlacedParticles) {
 			std::cout << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
+			return false;
 		}
+
+		return true;
 	}  
 
 	/**
