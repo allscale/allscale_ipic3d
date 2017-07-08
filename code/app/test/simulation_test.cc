@@ -576,7 +576,7 @@ namespace ipic3d {
 
 		// Set universe properties
 		UniverseProperties properties;
-		properties.size = {2,2,2};
+		properties.size = {4,4,4};
 		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
 		properties.useCase = UseCase::Test;
