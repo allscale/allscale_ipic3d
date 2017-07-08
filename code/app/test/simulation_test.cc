@@ -2,6 +2,7 @@
 
 #include "ipic3d/app/simulator.h"
 #include "ipic3d/app/universe.h"
+#include "ipic3d/app/common.h"
 
 #include "allscale/api/user/operator/pfor.h"
 
@@ -263,13 +264,14 @@ namespace ipic3d {
 	}
 
 
-	TEST(SimulationTest, ParticleMigrationOneParticle) {
+	TEST(SimulationTest, ParticleMigrationOneDirectionOneParticle) {
 
 		// this test checks whether particles are properly migrated between cells
+		// especially for the periodic boundary conditions when particles exit the domain
 
 		// Set universe properties
 		UniverseProperties properties;
-		properties.size = {2,1,1};
+		properties.size = {3,3,3};
 		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
 		properties.useCase = UseCase::Test;
@@ -278,8 +280,9 @@ namespace ipic3d {
 		Universe universe = Universe(properties);
 
 		// configure the cell
-		Cell& a = universe.cells[{0,0,0}];
-		Cell& b = universe.cells[{1,0,0}];
+		Cell& a = universe.cells[{0,1,0}];
+		Cell& b = universe.cells[{1,1,0}];
+		Cell& c = universe.cells[{2,1,0}];
 
 		// initialize the field
 		Field& field = universe.field;
@@ -291,12 +294,12 @@ namespace ipic3d {
 
 		// add one particle
 		Particle p;
-		p.position.x = p.position.y = 0.4;
-		p.position.z = 0;
-		p.velocity.z = p.velocity.y = 0;
-		p.velocity.x = 1;
-		p.q = 1;
-		p.mass = 1;
+		p.position.z = 0.0; p.position.y = 0.8;
+		p.position.x = 0.4;
+		p.velocity.z = p.velocity.y = 0.0;
+		p.velocity.x = 1.0;
+		p.q = 1.0;
+		p.mass = 1.0;
 
 		// add test particle to first cell
 		a.particles.push_back(p);
@@ -304,16 +307,30 @@ namespace ipic3d {
 		// check particle position
 		ASSERT_FALSE(a.particles.empty());
 		ASSERT_TRUE(b.particles.empty());
+		ASSERT_TRUE(c.particles.empty());
 
-		// number of steps
-		unsigned niter = 4;
 
 		// run the simulation
+		// number of steps
+		unsigned niter = 1;
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
 
 		// check whether the particle was moved from one cell to another
 		ASSERT_TRUE(a.particles.empty());
 		ASSERT_FALSE(b.particles.empty());
+		ASSERT_TRUE(c.particles.empty());
+
+		EXPECT_NEAR(b.particles.front().position.x, 0.516, 1e-3);
+		EXPECT_NEAR(b.particles.front().position.y, 0.8, 1e-1);
+		EXPECT_NEAR(b.particles.front().position.z, 0.0, 1e-0);
+
+		EXPECT_NEAR(b.particles.front().velocity.x, 1.16, 1e-2);
+		EXPECT_NEAR(b.particles.front().velocity.y, 0.0, 1e-0);
+		EXPECT_NEAR(b.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		int total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
@@ -321,19 +338,235 @@ namespace ipic3d {
 		});
 
 
-		// run the simulation
-		niter = 1;
+		// run the simulation to propagate the particle further
+		niter = 4;
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
 
 		// check whether the particle was moved out of the domain
-		// TODO: the particle has to move back to cell a due to the periodic boundary conditions
-		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(a.particles.empty());
 		ASSERT_TRUE(b.particles.empty());
+		ASSERT_FALSE(c.particles.empty());
+
+		EXPECT_NEAR(c.particles.front().position.x, 1.14, 1e-2);
+		EXPECT_NEAR(c.particles.front().position.y, 0.8, 1e-1);
+		EXPECT_NEAR(c.particles.front().position.z, 0.0, 1e-0);
+
+		EXPECT_NEAR(c.particles.front().velocity.x, 1.8, 1e-1);
+		EXPECT_NEAR(c.particles.front().velocity.y, 0.0, 1e-0);
+		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
+	
+
+		// run the simulation to push the particle outside the domain
+		niter = 2;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		// check whether the particle was moved out of the domain
+		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+		ASSERT_TRUE(c.particles.empty());
+
+		EXPECT_NEAR(a.particles.front().position.x, 0.048, 1e-3);
+		EXPECT_NEAR(a.particles.front().position.y, 0.8, 1e-1);
+		EXPECT_NEAR(a.particles.front().position.z, 0.0, 1e-0);
+
+		EXPECT_NEAR(a.particles.front().velocity.x, 2.12, 1e-2);
+		EXPECT_NEAR(a.particles.front().velocity.y, 0.0, 1e-0);
+		EXPECT_NEAR(a.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
+
+
+		// now we push the same particle in the oposite direction 
+		Particle& p2 = a.particles.front();
+		p2.velocity.x  = -1.0;
+		niter = 1;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		EXPECT_NEAR(c.particles.front().position.x, 1.464, 1e-3);
+		EXPECT_NEAR(c.particles.front().position.y, 0.8, 1e-1);
+		EXPECT_NEAR(c.particles.front().position.z, 0.0, 1e-0);
+
+		EXPECT_NEAR(c.particles.front().velocity.x, -0.84, 1e-2);
+		EXPECT_NEAR(c.particles.front().velocity.y, 0.0, 1e-0);
+		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
+
+		// check whether the particle was moved out of the domain
+		ASSERT_TRUE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+		ASSERT_FALSE(c.particles.empty());
+	}
+
+
+	TEST(SimulationTest, ParticleMigrationTwoDirectionsOneParticle) {
+
+		// this test checks whether particles are properly migrated between cells
+		// especially for the periodic boundary conditions when particles exit the domain
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = {3,3,3};
+		properties.cellWidth = { .5,.5,.5 };
+		properties.dt = 0.1;
+		properties.useCase = UseCase::Test;
+
+		// Create a universe with these properties
+		Universe universe = Universe(properties);
+
+		// configure the cell
+		Cell& a = universe.cells[{0,0,1}];
+		Cell& b = universe.cells[{1,1,1}];
+		Cell& c = universe.cells[{2,2,1}];
+
+		// initialize the field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.2, 0.2, 0.0 };
+			field[pos].B = { 0.2, 0.2, 0.0 };
+		});
+
+		// add one particle
+		Particle p;
+		p.position.x = p.position.y = 0.4;
+		p.position.z = 0.8;
+		p.velocity.x = p.velocity.y = 1.0;
+		p.velocity.z = 0.0;
+		p.q = 1.0;
+		p.mass = 1.0;
+
+		// add test particle to first cell
+		a.particles.push_back(p);
+
+		// check particle position
+		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+		ASSERT_TRUE(c.particles.empty());
+
+
+		// run the simulation
+		// number of steps
+		unsigned niter = 1;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		// check whether the particle was moved from one cell to another
+		ASSERT_TRUE(a.particles.empty());
+		ASSERT_FALSE(b.particles.empty());
+		ASSERT_TRUE(c.particles.empty());
+
+		EXPECT_NEAR(b.particles.front().position.x, 0.516, 1e-3);
+		EXPECT_NEAR(b.particles.front().position.y, 0.516, 1e-3);
+		EXPECT_NEAR(b.particles.front().position.z, 0.8, 1e-1);
+
+		EXPECT_NEAR(b.particles.front().velocity.x, 1.16, 1e-2);
+		EXPECT_NEAR(b.particles.front().velocity.y, 1.16, 1e-2);
+		EXPECT_NEAR(b.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		int total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
+
+
+		// run the simulation to propagate the particle further
+		niter = 4;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		// check whether the particle was moved out of the domain
+		ASSERT_TRUE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+		ASSERT_FALSE(c.particles.empty());
+
+		EXPECT_NEAR(c.particles.front().position.x, 1.14, 1e-2);
+		EXPECT_NEAR(c.particles.front().position.y, 1.14, 1e-2);
+		EXPECT_NEAR(c.particles.front().position.z, 0.8, 1e-1);
+
+		EXPECT_NEAR(c.particles.front().velocity.x, 1.8, 1e-1);
+		EXPECT_NEAR(c.particles.front().velocity.y, 1.8, 1e-1);
+		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
+	
+
+		// run the simulation to push the particle outside the domain
+		niter = 2;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		// check whether the particle was moved out of the domain
+		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+		ASSERT_TRUE(c.particles.empty());
+
+		EXPECT_NEAR(a.particles.front().position.x, 0.048, 1e-3);
+		EXPECT_NEAR(a.particles.front().position.y, 0.048, 1e-3);
+		EXPECT_NEAR(a.particles.front().position.z, 0.8, 1e-1);
+
+		EXPECT_NEAR(a.particles.front().velocity.x, 2.12, 1e-2);
+		EXPECT_NEAR(a.particles.front().velocity.y, 2.12, 1e-2);
+		EXPECT_NEAR(a.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
+
+
+		// now we push the same particle in the oposite direction 
+		Particle& p2 = a.particles.front();
+		p2.velocity.x = p2.velocity.y = -1.0;
+		niter = 1;
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+
+		EXPECT_NEAR(c.particles.front().position.x, 1.464, 1e-3);
+		EXPECT_NEAR(c.particles.front().position.y, 1.464, 1e-3);
+		EXPECT_NEAR(c.particles.front().position.z, 0.8, 1e-1);
+
+		EXPECT_NEAR(c.particles.front().velocity.x, -0.84, 1e-2);
+		EXPECT_NEAR(c.particles.front().velocity.y, -0.84, 1e-2);
+		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
+
+		// check number of particles in the domain
+		total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(1, total_particles);
+
+		// check whether the particle was moved out of the domain
+		ASSERT_TRUE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+		ASSERT_FALSE(c.particles.empty());
 	}
 
 
@@ -388,6 +621,7 @@ namespace ipic3d {
 		p5 = p1;
 		p5.position.z = 0.8;
 		p6 = p3;
+		p6.position.x = 0.25;
 		p6.position.z = 0.75;
 		p7 = p3;
 		p7.position.z = 0.8;
@@ -402,18 +636,22 @@ namespace ipic3d {
 		g.particles.push_back(p6);
 		h.particles.push_back(p7);
 
-		// number of steps
-		unsigned niter = 20;
+		// check number of particles in the domain
+		int total_particles = countParticlesInDomain(universe);
+		EXPECT_EQ(8, total_particles);
+	   
+		// verify the proper placement of particles 
+		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+		});
 
 		// run the simulation
+		// number of steps
+		unsigned niter = 20;
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
 
 		// check number of particles in the domain
-		std::atomic<int> total_particles = ATOMIC_VAR_INIT(0);;
-		decltype(field.size()) size = 2;
-		allscale::api::user::pfor(zero,size,[&](auto& pos){
-			std::atomic_fetch_add( &total_particles, (int) universe.cells[pos].particles.size() );
-		});
+		total_particles = countParticlesInDomain(universe);
 		EXPECT_EQ(8, total_particles);
 	   
 		// verify the proper placement of particles 

@@ -277,7 +277,6 @@ namespace ipic3d {
 			for(int j = 0; j<3; j++) {
 				for(int k = 0; k<3; k++) {
 					auto cur = centerIndex + utils::Coordinate<3>{i-1,j-1,k-1} * 2;
-					// TODO: deal with boundaries
 					if (cur[0] < 0 || cur[0] >= size[0]) { neighbors[{i,j,k}] = nullptr; continue; }
 					if (cur[1] < 0 || cur[1] >= size[1]) { neighbors[{i,j,k}] = nullptr; continue; }
 					if (cur[2] < 0 || cur[2] >= size[2]) { neighbors[{i,j,k}] = nullptr; continue; }
@@ -298,16 +297,23 @@ namespace ipic3d {
 				// cover the inner cells as well as the boundary cells on positions 0 and N-1
 				int i = (relPos.x < -halfWidth.x) ? ( pos.x == 0 ? size.x - 1 : 0 ) : ( (relPos.x > halfWidth.x) ? ( (pos.x == universeProperties.size.x - 1) ? 0 : 2 ) : 1 );
 				// adjust particle's position in case it exits the domain
-				p.position.x = ( (pos.x == 0) && (relPos.x < -halfWidth.x) ) ? (universeProperties.size.x * universeProperties.cellWidth.x - p.position.x) : ( ( (pos.x == universeProperties.size.x - 1) && (relPos.x > halfWidth.x) ) ? p.position.x - universeProperties.size.x * universeProperties.cellWidth.x : p.position.x );
+				p.position.x = ( (pos.x == 0) && (relPos.x < -halfWidth.x) ) ? (universeProperties.size.x * universeProperties.cellWidth.x - fabs(p.position.x)) : ( ( (pos.x == universeProperties.size.x - 1) && (relPos.x > halfWidth.x) ) ? p.position.x - universeProperties.size.x * universeProperties.cellWidth.x : p.position.x );
 
 				int j = (relPos.y < -halfWidth.y) ? ( pos.y == 0 ? size.y - 1 : 0 ) : ( (relPos.y > halfWidth.y) ? ( (pos.y == universeProperties.size.y - 1) ? 0 : 2 ) : 1 );
-				p.position.y = ( (pos.y == 0) && (relPos.y < -halfWidth.y) ) ? (universeProperties.size.y * universeProperties.cellWidth.y - p.position.y) : ( ( (pos.y == universeProperties.size.y - 1) && (relPos.y > halfWidth.y) ) ? p.position.y - universeProperties.size.y * universeProperties.cellWidth.y : p.position.y );
+				p.position.y = ( (pos.y == 0) && (relPos.y < -halfWidth.y) ) ? (universeProperties.size.y * universeProperties.cellWidth.y - fabs(p.position.y)) : ( ( (pos.y == universeProperties.size.y - 1) && (relPos.y > halfWidth.y) ) ? p.position.y - universeProperties.size.y * universeProperties.cellWidth.y : p.position.y );
 
 				int k = (relPos.z < -halfWidth.z) ? ( pos.z == 0 ? size.z - 1 : 0 ) : ( (relPos.z > halfWidth.z) ? ( (pos.z == universeProperties.size.z - 1) ? 0 : 2 ) : 1 );
-				p.position.z = ( (pos.z == 0) && (relPos.z < -halfWidth.z) ) ? (universeProperties.size.z * universeProperties.cellWidth.z - p.position.z) : ( ( (pos.z == universeProperties.size.z - 1) && (relPos.z > halfWidth.z) ) ? p.position.z - universeProperties.size.z * universeProperties.cellWidth.z : p.position.z );
+				p.position.z = ( (pos.z == 0) && (relPos.z < -halfWidth.z) ) ? (universeProperties.size.z * universeProperties.cellWidth.z - fabs(p.position.z)) : ( ( (pos.z == universeProperties.size.z - 1) && (relPos.z > halfWidth.z) ) ? p.position.z - universeProperties.size.z * universeProperties.cellWidth.z : p.position.z );
 
 				// send to neighbor cell
 				auto target = neighbors[{i,j,k}];
+				// to place particles that exit the domain into the proper buffers
+				if ( ((relPos.x < -halfWidth.x) && (pos.x == 0)) || ((relPos.y < -halfWidth.y) && (pos.y == 0)) || ((relPos.z < -halfWidth.z) && (pos.z == 0)) || ((relPos.x > halfWidth.x) && (pos.x == universeProperties.size.x - 1)) || ((relPos.y > halfWidth.y) && (pos.y == universeProperties.size.y - 1)) || ((relPos.z > halfWidth.z) && (pos.z == universeProperties.size.z - 1)) ) {
+					i = ( (i == 0) || (i == size.x - 1) ) ? i : ( pos.x + (i - 1) ) * 3 + 1;
+					j = ( (j == 0) || (j == size.y - 1) ) ? j : ( pos.y + (j - 1) ) * 3 + 1;
+					k = ( (k == 0) || (k == size.z - 1) ) ? k : ( pos.z + (k - 1) ) * 3 + 1;
+					target = &transfers[{i,j,k}];
+				}
 				if (target) target->push_back(p);
 			} else {
 				// keep particle
@@ -371,6 +377,7 @@ namespace ipic3d {
 					if (cur[0] < 0 || cur[0] >= size[0]) continue;
 					if (cur[1] < 0 || cur[1] >= size[1]) continue;
 					if (cur[2] < 0 || cur[2] >= size[2]) continue;
+
 					auto& in = transfers[cur];
 					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
 					in.clear();
@@ -381,7 +388,6 @@ namespace ipic3d {
 		// verify correct placement of the particles
 		// TODO: this potential should only be used in tests due to the performance reasons
 		VerifyCorrectParticlesPositionInCell(universeProperties, cell, pos);
-
 	}
 
 } // end namespace ipic3d
