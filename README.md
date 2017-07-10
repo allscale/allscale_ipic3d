@@ -5,12 +5,19 @@ the original pilot is called iPIC3D. This pilot is used for the simulation of sp
 and fusion plasmas during the interaction between the solar wind and the Earth magnetic 
 field. These physical processes may effect people and technology in space and on the Earth. 
 
-## Installation
-
-### Prerequisites
+## Quickstart
 
 Ensure you have GCC 5 installed and set as your default C/C++ compiler.
 Furthermore CMake 3.5 (or later) is required for the build and testing process.
+Simply execute the following commands to build the project and run all tests.
+
+    $ mkdir build
+    $ cd build
+    $ cmake ../code
+    $ make -j8
+    $ ctest -j8
+
+## Advanced Options
 
 ### Configuration
 
@@ -22,20 +29,15 @@ Following options can be supplied to CMake
 | -DBUILD_SHARED_LIBS | ON / OFF        |
 | -DBUILD_TESTS       | ON / OFF        |
 | -DBUILD_DOCS        | ON / OFF        |
+| -DBUILD_COVERAGE    | ON / OFF        |
 | -DUSE_ASSERT        | ON / OFF        |
 | -DUSE_VALGRIND      | ON / OFF        |
 | -DUSE_ALLSCALECC    | ON / OFF        |
+| -DENABLE_PROFILING  | ON / OFF        |
 | -DTHIRD_PARTY_DIR   | \<path\>        |
 
-The file `cmake/build_settings.cmake` states their default value.
-
-### Building / Testing
-
-    $ mkdir build
-    $ cd build
-    $ cmake ../code
-    $ make -j8
-    $ ctest -j8
+The files `cmake/build_settings.cmake` and `code/CMakeLists.txt` state their
+default value.
 
 ## Using the AllScale Compiler
 
@@ -58,6 +60,26 @@ between GCC and AllScaleCC.
     $ ctest -j8
 
 ## Development
+
+### Adding new Modules
+
+The setup script can be run again to add new modules, just provide the same
+project name.
+
+    $ scripts/setup/run ipic3d frontend backend utils
+
+### Adding new Parts to Modules
+
+There is a utility script to add new *parts* to an existing module. The project
+name and module name must be provided followed by a list of *parts* to
+generate. Folders will be created along the way.
+
+    $ scripts/setup/add_part ipic3d frontend sema extensions/malloc_extension
+
+This will add the files `sema.h`, `sema.cpp` and `sema_test.cc` to the
+*frontend* module. Furthermore new subfolders `extensions` will be created
+containing `malloc_extension.h`, `malloc_extension.cpp` and
+`malloc_extension_test.cc` in their respective subdirectories.
 
 ### Executable Bit
 
@@ -94,3 +116,12 @@ It is preferred to use the operating system's package manager, if applicable.
 Make sure your build folder is located outside the source folder. Eclipse is
 not capable of dealing with such a setup correctly.
 
+### Coverage
+
+Building the coverage us currently only supported on Linux, as Perl and Bash
+are required. To build and view the coverage set the corresponding CMake flag
+to `ON` and run:
+
+    $ make
+    $ make coverage
+    $ xdg-open coverage/index.html

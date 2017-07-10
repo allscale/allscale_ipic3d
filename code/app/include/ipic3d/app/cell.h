@@ -4,7 +4,7 @@
 #include <random>
 
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/data/vector.h"
+#include "allscale/utils/vector.h"
 #include "allscale/api/user/operator/pfor.h"
 
 #include "ipic3d/app/particle.h"
@@ -62,7 +62,7 @@ namespace ipic3d {
 
 				Vector3<double> randVals = {(double)randGenerator() / randMax, (double)randGenerator() / randMax, (double)randGenerator() / randMax};
 				// initialize particle position
-				p.position = getCenterOfCell(pos, properties) + elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
+				p.position = getCenterOfCell(pos, properties) + allscale::utils::elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
 
 				// TODO: initialize the speed of particles
 				p.velocity = { 0, 0, 0 };
@@ -238,7 +238,7 @@ namespace ipic3d {
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
 			// get relative position of particle within cell
-			const auto relPos = allscale::api::user::data::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
+			const auto relPos = allscale::utils::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
 
 			// interpolate
 			auto E = trilinearInterpolationF2P(Es, relPos, vol);

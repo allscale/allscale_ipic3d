@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "allscale/api/user/data/vector.h"
+#include "allscale/utils/vector.h"
 
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/parameters.h"

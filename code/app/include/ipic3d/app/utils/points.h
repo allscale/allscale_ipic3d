@@ -4,13 +4,13 @@
 #include <initializer_list>
 
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/data/vector.h"
+#include "allscale/utils/vector.h"
 
 namespace ipic3d {
 namespace utils {
 
 	template<typename T, size_t Dims>
-	using vec = allscale::api::user::data::Vector<T,Dims>;
+	using vec = allscale::utils::Vector<T,Dims>;
 
 	template<size_t Dims>
 	using Coordinate = allscale::api::user::data::GridPoint<Dims>;

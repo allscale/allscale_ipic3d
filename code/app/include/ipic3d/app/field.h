@@ -1,7 +1,7 @@
 #pragma once
 
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/data/vector.h"
+#include "allscale/utils/vector.h"
 
 #include "ipic3d/app/init_properties.h"
 #include "ipic3d/app/universe_properties.h"
@@ -81,7 +81,7 @@ namespace ipic3d {
 
 					auto diff = location - objectCenter;
 
-					double r2 = allscale::api::user::data::sumOfSquares(diff);
+					double r2 = allscale::utils::sumOfSquares(diff);
 
 					// Compute dipolar field B_ext
 
@@ -264,7 +264,7 @@ namespace ipic3d {
 				// Node coordinates
 				auto location = getCenterOfCell(pos, universeProperties);
 
-				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::api::user::data::sumOfSquares(location), 2.5);
+				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::utils::sumOfSquares(location), 2.5);
 				B.x = 3.0 * location.x * location.z * fac1;
 				B.y = 3.0 * location.y * location.z * fac1;
 				B.z = (2.0 * location.z * location.z - location.x * location.x - location.y * location.y) * fac1;

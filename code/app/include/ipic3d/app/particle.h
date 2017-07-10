@@ -35,7 +35,7 @@ namespace ipic3d {
 
 			auto t = k * B;
 
-			auto t_mag2 = allscale::api::user::data::sumOfSquares(t);
+			auto t_mag2 = allscale::utils::sumOfSquares(t);
 
 			auto s = (2.0 * t) / (1+t_mag2);
 
