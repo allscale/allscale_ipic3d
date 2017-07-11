@@ -17,3 +17,5 @@ glob_tests(app_tests test)
 foreach(test ${app_tests})
 	add_module_unittest(app ${test})
 endforeach(test)
+
+add_definitions( -DPATH_TO_INPUTS="${PROJECT_SOURCE_DIR}/../inputs" )

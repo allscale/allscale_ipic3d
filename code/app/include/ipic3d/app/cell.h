@@ -34,8 +34,6 @@ namespace ipic3d {
 
 	Cells initCells(const InitProperties& initProperties, const UniverseProperties& properties) {
 
-		const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
-
 		// -- initialize the grid of cells --
 
 		// the 3-D grid of cells
@@ -44,15 +42,17 @@ namespace ipic3d {
 
 		// -- initialize the state of each individual cell --
 
+		// compute number of particles to be added for the uniform distribution
+		unsigned particlesPerCell = initProperties.particlesPerCell[0].x * initProperties.particlesPerCell[0].y * initProperties.particlesPerCell[0].z;
+
+		const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
+
 		// TODO: return this as a treeture
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 
 			Cell& cell = cells[pos];
 
 			// -- add particles --
-
-			// compute number of particles to be added
-			unsigned particlesPerCell = initProperties.particlesPerCell[0].x + initProperties.particlesPerCell[0].y + initProperties.particlesPerCell[0].z;
 
 			// add the requested number of parameters
 			std::minstd_rand randGenerator((unsigned)(pos[0] * 10000 + pos[1] * 100 + pos[2]));
