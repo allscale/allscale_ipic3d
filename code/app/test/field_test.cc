@@ -5,6 +5,47 @@
 
 namespace ipic3d {
 
+	TEST(Field, initField) {
+
+		// this test verifies the init function
+
+		std::string path = std::string(PATH_TO_INPUTS) + "/micro.inp";
+		auto params = Parameters::read(path);
+
+		// initialize initial properties
+		InitProperties initProperties = InitProperties(params);
+
+		// initialize universe properties
+		UniverseProperties universeProperties = UniverseProperties(params);
+
+
+		// verify dipole init
+		// to cover the else statement
+		universeProperties.useCase = UseCase::Dipole;
+		universeProperties.objectRadius = 1000; 
+		Field fields = initFields(initProperties, universeProperties);
+
+		utils::Coordinate<3> start = 1;
+		utils::Coordinate<3> workingFieldSize = universeProperties.size + coordinate_type(2);
+		allscale::api::user::pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+			EXPECT_NEAR(fields[cur].Bext.x, 0.0, 1e-15);
+			EXPECT_NEAR(fields[cur].Bext.y, 0.0, 1e-15);
+			EXPECT_NEAR(fields[cur].Bext.z, 0.0, 1e-15);
+		});
+
+
+		// verify particle wave init
+		universeProperties.useCase = UseCase::ParticleWave;
+		Field fields2 = initFields(initProperties, universeProperties);
+
+		allscale::api::user::pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+			EXPECT_NEAR(fields2[cur].Bext.x, 0.0, 1e-15);
+			EXPECT_NEAR(fields2[cur].Bext.y, 0.0, 1e-15);
+			EXPECT_NEAR(fields2[cur].Bext.z, 0.0, 1e-15);
+		});
+	} 
+
+
 	TEST(Field, curlB) {
 		// Set universe properties
 		UniverseProperties properties;
@@ -53,6 +94,7 @@ namespace ipic3d {
 		EXPECT_NEAR( curlB.y, 1.0, 1e-06 );
 		EXPECT_NEAR( curlB.z, 0.0, 1e-06 );
     }
+
 
 	TEST(Field, curlE) {
 		// Set universe properties
@@ -103,6 +145,7 @@ namespace ipic3d {
 		EXPECT_NEAR( curlE.z, 0.0, 1e-06 );
     }
 
+
 	TEST(Field, interpC2N) {
 		// Set universe properties
 		UniverseProperties properties;
@@ -145,6 +188,7 @@ namespace ipic3d {
 		EXPECT_NEAR( B.y, 3.375, 1e-06 );
 		EXPECT_NEAR( B.z, 3.0, 1e-06 );
     }
+
 
 	TEST(Field, interpN2C) {
 		// Set universe properties
@@ -232,6 +276,7 @@ namespace ipic3d {
 	    EXPECT_EQ(fieldAtPos, 6.0);
     }
 
+
 	TEST(Field, FieldSolverStatic) {
 		// Set universe properties
 		UniverseProperties properties;
@@ -278,10 +323,10 @@ namespace ipic3d {
 		EXPECT_NEAR( B.z,  4449574903553.713, 1e-02 );
 
 
-        // verify test case
-		properties.useCase = UseCase::Test;
-		properties.size = { 11,11,21 };
-	    pos = {10, 10, 20};
+        // verify particle wave test case
+		properties.useCase = UseCase::ParticleWave;
+		properties.size = { 10,10,15 };
+	    pos = {7, 9, 13};
 		Field field3(properties.size + coordinate_type(1));
 		allscale::api::user::pfor(zero,field3.size(),[&](auto& pos){
 			field3[pos].E = { 0.0, 0.0, 0.0 };
@@ -298,7 +343,30 @@ namespace ipic3d {
 		EXPECT_NEAR( B.x, 0.0, 1e-06 );
 		EXPECT_NEAR( B.y, 0.0, 1e-06 );
 		EXPECT_NEAR( B.z, 0.0, 1e-06 );
+
+
+        // verify test case
+		properties.useCase = UseCase::Test;
+		properties.size = { 11,11,21 };
+	    pos = {10, 10, 20};
+		Field field4(properties.size + coordinate_type(1));
+		allscale::api::user::pfor(zero,field4.size(),[&](auto& pos){
+			field4[pos].E = { 0.0, 0.0, 0.0 };
+			field4[pos].B = { 0.0, 0.0, 0.0 };
+		});
+		solveFieldStatically(properties, pos, field4);
+
+		E = field4[pos].E;
+		EXPECT_NEAR( E.x, 0.0, 1e-06 );
+		EXPECT_NEAR( E.y, 0.0, 1e-06 );
+		EXPECT_NEAR( E.z, 0.0, 1e-06 );
+
+		B = field4[pos].B;
+		EXPECT_NEAR( B.x, 0.0, 1e-06 );
+		EXPECT_NEAR( B.y, 0.0, 1e-06 );
+		EXPECT_NEAR( B.z, 0.0, 1e-06 );
     }
+
 
 	TEST(Field, updateFieldsOnBoundaries) {
 		// Set universe properties
@@ -354,6 +422,148 @@ namespace ipic3d {
 		EXPECT_NEAR( B.x, 18.0, 1e-06 );
 		EXPECT_NEAR( B.y, 2.0, 1e-06 );
 		EXPECT_NEAR( B.z, 4.0, 1e-06 );
+	}
+
+
+	TEST(Field, solveFieldForward) {
+		
+		// this test verifies the explicit forward method§§§
+		// for a moment the test as well as the code are empty
+		
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 5.0,5.0,5.0 };
+		properties.cellWidth = { 1.0,1.0,1.0 };
+		properties.dt = 1.0;
+
+		utils::Coordinate<3> pos{2, 2, 2};
+		properties.useCase = UseCase::Dipole;
+
+		// initialize field
+		Field field(properties.size + coordinate_type(3));
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.2, 0.2, 0.2 };
+			field[pos].B = { 0.4, 0.4, 0.4 };
+		});
+		// initialize field
+		BcField bcfield(properties.size + coordinate_type(2));
+		allscale::api::user::pfor(zero,bcfield.size(),[&](auto& pos){
+			bcfield[pos].Bc = { 0.8, 0.8, 0.8 };
+		});
+		// initialize density
+		DensityNodes density(properties.size + coordinate_type(3));
+		allscale::api::user::pfor(zero,density.size(),[&](auto& pos){
+			density[pos].J = { 0.6, 0.6, 0.6 };
+		});
+		
+
+	    // apply leapfrog field solver and check results
+		solveFieldForward(properties, pos, density, field, bcfield);
+		auto E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.8, 1e-15 );
+		EXPECT_NEAR( E.y, 0.8, 1e-15 );
+		EXPECT_NEAR( E.z, 0.8, 1e-15 );
+
+		auto Bc = bcfield[pos].Bc;
+		EXPECT_NEAR( Bc.x, 0.8, 1e-15 );
+		EXPECT_NEAR( Bc.y, 0.8, 1e-15 );
+		EXPECT_NEAR( Bc.z, 0.8, 1e-15 );
+	
+
+		// for the particle wave case
+		properties.useCase = UseCase::ParticleWave;
+		pos = {1, 2, 3};
+		solveFieldForward(properties, pos, density, field, bcfield);
+		E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.2, 1e-15 );
+		EXPECT_NEAR( E.y, 0.2, 1e-15 );
+		EXPECT_NEAR( E.z, 0.2, 1e-15 );
+
+		Bc = bcfield[pos].Bc;
+		EXPECT_NEAR( Bc.x, 0.8, 1e-15 );
+		EXPECT_NEAR( Bc.y, 0.8, 1e-15 );
+		EXPECT_NEAR( Bc.z, 0.8, 1e-15 );
+
+
+		// for the test case	
+		properties.useCase = UseCase::Test;
+		pos = {3, 4, 5};
+		solveFieldForward(properties, pos, density, field, bcfield);
+		E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.2, 1e-15 );
+		EXPECT_NEAR( E.y, 0.2, 1e-15 );
+		EXPECT_NEAR( E.z, 0.2, 1e-15 );
+
+		Bc = bcfield[pos].Bc;
+		EXPECT_NEAR( Bc.x, 0.8, 1e-15 );
+		EXPECT_NEAR( Bc.y, 0.8, 1e-15 );
+		EXPECT_NEAR( Bc.z, 0.8, 1e-15 );
+	}
+
+
+	TEST(Field, solveFieldLeapfrog) {
+		
+		// this test verifies the leapfrog algorithm
+		// for a moment the test as well as the code are empty
+		
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 5,5,5 };
+		properties.cellWidth = { 1,1,1 };
+		properties.useCase = UseCase::Dipole;
+
+		utils::Coordinate<3> pos{2, 2, 2};
+
+		// initialize field
+		Field field(properties.size + coordinate_type(1));
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.0, 0.0, 0.0 };
+			field[pos].B = { 0.0, 0.0, 0.0 };
+		});
+
+	    // apply leapfrog field solver and check results
+		solveFieldLeapfrog(properties, pos, field);
+		auto E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.0, 1e-15 );
+		EXPECT_NEAR( E.y, 0.0, 1e-15 );
+		EXPECT_NEAR( E.z, 0.0, 1e-15 );
+
+		auto B = field[pos].B;
+		EXPECT_NEAR( B.x, 0.0, 1e-15 );
+		EXPECT_NEAR( B.y, 0.0, 1e-15 );
+		EXPECT_NEAR( B.z, 0.0, 1e-15 );
+	
+
+		// for the particle wave case
+		properties.useCase = UseCase::ParticleWave;
+		pos = {1, 2, 3};
+		solveFieldLeapfrog(properties, pos, field);
+		E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.0, 1e-15 );
+		EXPECT_NEAR( E.y, 0.0, 1e-15 );
+		EXPECT_NEAR( E.z, 0.0, 1e-15 );
+
+		B = field[pos].B;
+		EXPECT_NEAR( B.x, 0.0, 1e-15 );
+		EXPECT_NEAR( B.y, 0.0, 1e-15 );
+		EXPECT_NEAR( B.z, 0.0, 1e-15 );
+
+
+		// for the test case	
+		properties.useCase = UseCase::Test;
+		pos = {3, 4, 5};
+		solveFieldLeapfrog(properties, pos, field);
+		E = field[pos].E;
+		EXPECT_NEAR( E.x, 0.0, 1e-15 );
+		EXPECT_NEAR( E.y, 0.0, 1e-15 );
+		EXPECT_NEAR( E.z, 0.0, 1e-15 );
+
+		B = field[pos].B;
+		EXPECT_NEAR( B.x, 0.0, 1e-15 );
+		EXPECT_NEAR( B.y, 0.0, 1e-15 );
+		EXPECT_NEAR( B.z, 0.0, 1e-15 );
 	}
 
 } // end namespace ipic3d

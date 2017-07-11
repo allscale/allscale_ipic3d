@@ -15,8 +15,6 @@ namespace ipic3d {
 		// initialize initial properties
 		InitProperties initProperties = InitProperties(params);
 
-//		Cells cells = initCells(initProperties, properties);
-		
 		Universe universe = createUniverseFromParams(params);	
 
 		// verify the number of particles per cell
