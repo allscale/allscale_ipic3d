@@ -43,6 +43,16 @@ namespace ipic3d {
 		std::stringstream ss;
 		ss << useCase;
 		EXPECT_EQ("ParticleWave", ss.str());
+
+		UseCase useCase2 = UseCase::Dipole;
+		std::stringstream ss2;
+		ss2 << useCase2;
+		EXPECT_EQ("Dipole", ss2.str());
+
+		UseCase useCase3 = UseCase::Test;
+		std::stringstream ss3;
+		ss3 << useCase3;
+		EXPECT_EQ("Test", ss3.str());
 	}
 
 	TEST(UniverseProperties, TypeProperties) {
