@@ -73,8 +73,8 @@ namespace ipic3d {
 
 		UniverseProperties(const Parameters& params)
 			: useCase(params.useCase),
-			size({ params.nxc, params.nyc, params.nzc }),
-			cellWidth({ params.dx, params.dy, params.dz }),
+			size({ params.ncells.x, params.ncells.y, params.ncells.z }),
+			cellWidth({ params.dspace.x, params.dspace.y, params.dspace.z }),
 			dt(params.dt),
 			objectRadius(0),
 			objectCenter({ 0,0,0 }),

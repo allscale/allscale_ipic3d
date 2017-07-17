@@ -10,7 +10,7 @@ namespace ipic3d {
 		// this test verifies the init function
 
 		std::string path = std::string(PATH_TO_INPUTS) + "/micro.inp";
-		auto params = Parameters::read(path);
+		auto params = Parameters(path);
 
 		// initialize initial properties
 		InitProperties initProperties = InitProperties(params);

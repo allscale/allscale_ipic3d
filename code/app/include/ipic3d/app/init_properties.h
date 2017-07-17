@@ -34,14 +34,14 @@ namespace ipic3d {
 			numSteps = params.ncycles;
 
 			for(int i = 0; i < params.ns; i++) {
-				driftVelocity.push_back({ params.u0[i], params.v0[i], params.w0[i] });
+				driftVelocity.push_back({ params.u0.at(i), params.v0.at(i), params.w0.at(i) });
 			}
 
-			for(int i = 0; i < (params.ns+params.nstestpart); i++) {
-				particlesPerCell.push_back({ (unsigned)params.npcelx[i], (unsigned)params.npcely[i], (unsigned)params.npcelz[i] });
+			for(int i = 0; i < (params.ns); i++) {
+				particlesPerCell.push_back({ params.npcelx.at(i), params.npcely.at(i), params.npcelz.at(i) });
 			}
 
-			magneticFieldAmplitude = {params.B0x, params.B0y, params.B0z};
+			magneticFieldAmplitude = { params.B0.x, params.B0.y, params.B0.z };
 		}
 
 	    friend std::ostream& operator<<(std::ostream& out, const InitProperties& props) {

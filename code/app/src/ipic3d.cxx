@@ -26,11 +26,7 @@ int main(int argc, char** argv) {
 
 	// load input configuration
 	std::cout << "Loading configuration file \"" << argv[1] << "\" ..." << std::endl;
-	auto params = Parameters::read(argv[1]);
-
-	params.dx = 10;
-	params.dy = 10;
-	params.dz = 10;
+	auto params = Parameters(argv[1]);
 
 	// ----- initialize simulation environment ------
 
