@@ -9,11 +9,11 @@ namespace ipic3d {
 		// this test verifies the parser
 
 		// test wrong file name
-		std::string path = std::string(PATH_TO_INPUTS) + "/micro.inp1";
+		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp1";
 		auto params = Parameters(path);
 
 		// test with the correct path
-		path = std::string(PATH_TO_INPUTS) + "/micro.inp";
+		path = std::string(PATH_TO_INPUTS) + "/test.inp";
 		params = Parameters(path);
 
 		EXPECT_NEAR(params.c, 1.0, 1e-15);
@@ -30,21 +30,21 @@ namespace ipic3d {
 		EXPECT_NEAR(params.planetRadius, 0.5, 1e-15);
 		EXPECT_NEAR(params.delta, 0.5, 1e-15);
 
-		EXPECT_EQ(params.ncells.x, 16);
-		EXPECT_EQ(params.ncells.y, 16);
-		EXPECT_EQ(params.ncells.z, 16);
+		EXPECT_EQ(params.ncells.x, 4);
+		EXPECT_EQ(params.ncells.y, 4);
+		EXPECT_EQ(params.ncells.z, 4);
 
-		EXPECT_NEAR(params.dspace.x, 0.625, 1e-15);
-		EXPECT_NEAR(params.dspace.y, 0.625, 1e-15);
-		EXPECT_NEAR(params.dspace.z, 0.625, 1e-15);
+		EXPECT_NEAR(params.dspace.x, 2.5, 1e-15);
+		EXPECT_NEAR(params.dspace.y, 2.5, 1e-15);
+		EXPECT_NEAR(params.dspace.z, 2.5, 1e-15);
 
 		EXPECT_EQ(params.ns, 2);
 		for (auto it = params.npcelx.cbegin(); it != params.npcelx.cend(); ++it) 
-			EXPECT_EQ(*it, 3);
+			EXPECT_EQ(*it, 5);
 		for (auto it = params.npcely.cbegin(); it != params.npcely.cend(); ++it) 
-			EXPECT_EQ(*it, 3);
+			EXPECT_EQ(*it, 5);
 		for (auto it = params.npcelz.cbegin(); it != params.npcelz.cend(); ++it) 
-			EXPECT_EQ(*it, 3);
+			EXPECT_EQ(*it, 5);
 
 		EXPECT_NEAR(params.qom[0], -25.0, 1e-15);
 		EXPECT_NEAR(params.qom[1], 1.0, 1e-15);

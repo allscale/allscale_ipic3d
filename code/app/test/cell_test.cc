@@ -9,7 +9,7 @@ namespace ipic3d {
 
 		// this test checks the initCells() function
 
-		std::string path = std::string(PATH_TO_INPUTS) + "/micro.inp";
+		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp";
 		auto params = Parameters(path);
 
 		// initialize initial properties
