@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <regex>
 
 #include "ipic3d/app/vector.h"
 
@@ -127,21 +128,15 @@ namespace ipic3d {
 		/**
 		* Auxiliary function to split the line
 		*/ 
-		std::vector<std::string> split(const std::string & str, const char delim = ' ') {
+		std::vector<std::string> split(const std::string & s, std::string delim = "\\s+") {
 			std::vector<std::string> elems;
 
-			// low-level solution
-			std::string next;
-			for (unsigned i = 0; i < str.length(); ++i) {
-				if ( str[i] != delim ) {
-					next += str[i];
-				} else if ( !next.empty() ) {
-					elems.push_back(next);
-					next = "";
-				}
-			}
-			if ( !next.empty() ) {
-				elems.push_back(next);
+			std::regex rgx(delim);
+
+			std::sregex_token_iterator iter(s.begin(), s.end(), rgx, -1);
+			std::sregex_token_iterator end;
+			for (; iter != end; ++iter) {
+				elems.push_back(*iter);
 			}
 
 			return elems;
@@ -162,9 +157,6 @@ namespace ipic3d {
 				// ignore comments
 				static const std::string comment = "#";
 				str = str.substr( 0, str.find(comment) );
-
-				// replace all tabs with spaces
-				std::replace(str.begin(), str.end(), '\t', ' ');
 
 				// ignore those lines that do not follow the pattern
 				static const std::string eqsign = "=";
