@@ -34,11 +34,11 @@ namespace ipic3d {
 			numSteps = params.ncycles;
 
 			for(int i = 0; i < params.ns; i++) {
-				driftVelocity.push_back({ params.u0.at(i), params.v0.at(i), params.w0.at(i) });
+				driftVelocity.push_back({ params.u0[i], params.v0[i], params.w0[i] });
 			}
 
 			for(int i = 0; i < (params.ns); i++) {
-				particlesPerCell.push_back({ params.npcelx.at(i), params.npcely.at(i), params.npcelz.at(i) });
+				particlesPerCell.push_back({ params.npcelx[i], params.npcely[i], params.npcelz[i] });
 			}
 
 			magneticFieldAmplitude = { params.B0.x, params.B0.y, params.B0.z };

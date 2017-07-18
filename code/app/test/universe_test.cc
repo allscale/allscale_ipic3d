@@ -15,7 +15,7 @@ namespace ipic3d {
 	    EXPECT_EQ((coordinate_type{1, 1, 1}), properties.size);
 	    EXPECT_EQ((V{1, 1, 1}), properties.cellWidth);
 	    EXPECT_EQ(1, properties.dt);
-	    EXPECT_EQ(0.0, properties.objectRadius);
+	    EXPECT_EQ(0.0, properties.planetRadius);
 	    EXPECT_EQ((V{0, 0, 0}), properties.objectCenter);
 	    EXPECT_EQ((V{0, 0, 0}), properties.magneticField);
 
@@ -25,7 +25,7 @@ namespace ipic3d {
 		EXPECT_EQ((coordinate_type{ 2,3,4 }), properties2.size);
 		EXPECT_EQ((V{ 0.2,0.3,0.4 }), properties2.cellWidth);
 		EXPECT_EQ(5, properties2.dt);
-		EXPECT_EQ(42, properties2.objectRadius);
+		EXPECT_EQ(42, properties2.planetRadius);
 		EXPECT_EQ((V{ 0.7,0.8,0.9 }), properties2.objectCenter);
 		EXPECT_EQ((V{ -0.1,-0.2,-0.3 }), properties2.magneticField);
     }

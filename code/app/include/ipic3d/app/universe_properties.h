@@ -55,30 +55,30 @@ namespace ipic3d {
 		Vector3<double> cellWidth;
 		// The timestep
 		double dt;
-		// object radius
-		double objectRadius;
+		// planet radius
+		double planetRadius;
 		// object center
 		Vector3<double> objectCenter;
 		// magnetic field
 		Vector3<double> magneticField;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::ParticleWave, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1, 1, 1},
-			const double dt = 1, const double objectRadius = 0, const Vector3<double>& objectCenter = { 0, 0, 0 }, const Vector3<double>& magneticField = {0, 0, 0})
-	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), objectRadius(objectRadius), objectCenter(objectCenter), magneticField(magneticField) {
+			const double dt = 1, const double planetRadius = 0, const Vector3<double>& objectCenter = { 0, 0, 0 }, const Vector3<double>& magneticField = {0, 0, 0})
+	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), planetRadius(planetRadius), objectCenter(objectCenter), magneticField(magneticField) {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
 		    assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
-		    assert_le(0, objectRadius) << "Expected positive or zero object radius, but got " << objectRadius;
+		    assert_le(0, planetRadius) << "Expected positive or zero object radius, but got " << planetRadius;
 	    }
 
 		UniverseProperties(const Parameters& params)
 			: useCase(params.useCase),
 			size({ params.ncells.x, params.ncells.y, params.ncells.z }),
 			cellWidth({ params.dspace.x, params.dspace.y, params.dspace.z }),
-			dt(params.dt),
-			objectRadius(0),
-			objectCenter({ 0,0,0 }),
-			magneticField({ 0,0,0 })
+			dt( params.dt ),
+			planetRadius( params.planetRadius ),
+			objectCenter({ params.objectCenter.x, params.objectCenter.y, params.objectCenter.z }),
+			magneticField({ params.B0.x, params.B0.y, params.B0.z })
 		{}
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
@@ -87,7 +87,7 @@ namespace ipic3d {
 			out << "\tSize: " << props.size << std::endl;
 			out << "\tCell width: " << props.cellWidth << std::endl;
 			out << "\tTimestep: " << props.dt<< std::endl;
-			out << "\tObject radius: " << props.objectRadius << std::endl;
+			out << "\tPlanet radius: " << props.planetRadius << std::endl;
 			out << "\tObject center: " << props.objectCenter << std::endl;
 			out << "\tMagnetic field: " << props.magneticField << std::endl;
 			return out;

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "allscale/api/user/data/grid.h"
-#include "allscale/utils/vector.h"
 
+#include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
@@ -72,7 +72,7 @@ namespace ipic3d {
 				case UseCase::Dipole: {
 
 					// radius of the planet
-					double a = universeProperties.objectRadius;
+					double a = universeProperties.planetRadius;
 
 					// Dipole's Center
 					auto objectCenter = universeProperties.objectCenter;

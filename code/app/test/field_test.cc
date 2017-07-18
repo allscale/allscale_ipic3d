@@ -22,7 +22,7 @@ namespace ipic3d {
 		// verify dipole init
 		// to cover the else statement
 		universeProperties.useCase = UseCase::Dipole;
-		universeProperties.objectRadius = 1000; 
+		universeProperties.planetRadius = 1000; 
 		Field fields = initFields(initProperties, universeProperties);
 
 		utils::Coordinate<3> start = 1;

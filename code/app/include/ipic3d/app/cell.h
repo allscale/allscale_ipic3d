@@ -4,9 +4,9 @@
 #include <random>
 
 #include "allscale/api/user/data/grid.h"
-#include "allscale/utils/vector.h"
 #include "allscale/api/user/operator/pfor.h"
 
+#include "ipic3d/app/vector.h"
 #include "ipic3d/app/particle.h"
 #include "ipic3d/app/field.h"
 #include "ipic3d/app/universe_properties.h"

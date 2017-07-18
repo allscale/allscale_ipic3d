@@ -1,12 +1,10 @@
 #pragma once
 
 #include <string>
-#include <iostream>
 #include <fstream>
 #include <vector>
-#include <algorithm>
-#include <iterator>
-#include <regex>
+
+#include "ipic3d/app/vector.h"
 
 namespace ipic3d {
 
@@ -24,7 +22,7 @@ namespace ipic3d {
 	struct Parameters {
 
 		// light speed
-		double c;
+		double c = 1.0;
 
 		// time step
 		double dt;
@@ -38,8 +36,8 @@ namespace ipic3d {
 		// object center per direction
 		Vector3<double> objectCenter;
 		
-		// object size, assuming a cubic box
-		double objectSize;
+		// planet radius, assuming a cubic box
+		double planetRadius;
 
 		// number of cells per direction of problem domain
 		Vector3<int> ncells;
@@ -81,7 +79,6 @@ namespace ipic3d {
 
 		// Poisson correction flag
 		std::string PoissonCorrection;
-		int PoissonCorrectionCycle;
 
 		// SaveDirName
 		std::string SaveDirName;
@@ -130,20 +127,22 @@ namespace ipic3d {
 		/**
 		* Auxiliary function to split the line
 		*/ 
-		std::vector<std::string> split(const std::string & s, std::string rgx_str = "\\s+") {
+		std::vector<std::string> split(const std::string & str, const char delim = ' ') {
 			std::vector<std::string> elems;
 
-			std::regex rgx(rgx_str);
-
-			std::sregex_token_iterator iter(s.begin(), s.end(), rgx, -1);
-			std::sregex_token_iterator end;
-//			while (iter != end)  {
-//				elems.push_back(*iter);
-//				++iter;
-//			}
-			for (; iter != end; ++iter) {
-				elems.push_back(*iter);
-			}			
+			// low-level solution
+			std::string next;
+			for (unsigned i = 0; i < str.length(); ++i) {
+				if ( str[i] != delim ) {
+					next += str[i];
+				} else if ( !next.empty() ) {
+					elems.push_back(next);
+					next = "";
+				}
+			}
+			if ( !next.empty() ) {
+				elems.push_back(next);
+			}
 
 			return elems;
 		}
@@ -153,6 +152,7 @@ namespace ipic3d {
 			std::ifstream in(inputfile);
 			if (!in) {
 				std::cout << "File not found: " << inputfile << '\n';
+				return;
 			}
 
 			// read the input file line by line and parse parameters	
@@ -162,6 +162,9 @@ namespace ipic3d {
 				// ignore comments
 				static const std::string comment = "#";
 				str = str.substr( 0, str.find(comment) );
+
+				// replace all tabs with spaces
+				std::replace(str.begin(), str.end(), '\t', ' ');
 
 				// ignore those lines that do not follow the pattern
 				static const std::string eqsign = "=";
@@ -176,11 +179,6 @@ namespace ipic3d {
 
 				if ( str.find("ncycles") != std::string::npos ) {
 					ncycles = std::stoi( split(str).back() );
-					continue;
-				}
-
-				if ( str.find("c = ") != std::string::npos ) {
-					c = std::stod( split(str).back() );
 					continue;
 				}
 
@@ -210,7 +208,7 @@ namespace ipic3d {
 					continue;
 				}
 				if ( str.find("L_square") != std::string::npos ) {
-					objectSize = std::stod( split(str).back() );
+					planetRadius = std::stod( split(str).back() );
 					continue;
 				}
 
@@ -259,7 +257,7 @@ namespace ipic3d {
 				}
 
 				if ( str.find("Case") != std::string::npos ) {
-					if ( split(str).back().compare("Dipole") )
+					if ( split(str).back().compare("Dipole") == 0 )
 						useCase = UseCase::Dipole;
 					else 
 						useCase = UseCase::Test;
