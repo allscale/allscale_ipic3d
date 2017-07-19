@@ -112,7 +112,7 @@ namespace ipic3d {
 		});
 
 		// return the produced field
-		return std::move(fields);
+		return fields;
 	}
 
 	BcField initBcFields(const UniverseProperties& universeProperties, const Field& field) {
@@ -133,7 +133,7 @@ namespace ipic3d {
 		});
 
 		// return the produced field
-		return std::move(bcfield);
+		return bcfield;
 	}
 
 
@@ -403,8 +403,8 @@ namespace ipic3d {
  	*/
 	void updateFieldsOnBoundaries(Field& field, BcField& bcfield) {
 		// update on the x = 0 and x = N face
-		int fieldSize = field.size()[1];
-		int bcfieldSize = bcfield.size()[1];
+		int fieldSize = (int)field.size().y;
+		int bcfieldSize = (int)bcfield.size().y;
 		for (int i = 1; i < fieldSize - 1; i++) { // for y
 			for (int j = 1; j < fieldSize - 1; j++) { // for z
 				utils::Coordinate<3> pos0{0, i, j};

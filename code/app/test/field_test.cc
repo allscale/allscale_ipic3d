@@ -432,7 +432,7 @@ namespace ipic3d {
 		
 		// Set universe properties
 		UniverseProperties properties;
-		properties.size = { 5.0,5.0,5.0 };
+		properties.size = { 5,5,5 };
 		properties.cellWidth = { 1.0,1.0,1.0 };
 		properties.dt = 1.0;
 
