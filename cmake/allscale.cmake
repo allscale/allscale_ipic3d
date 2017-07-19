@@ -11,18 +11,18 @@ if(NOT TARGET allscale)
 			execute_process(COMMAND ${CMAKE_COMMAND} -E sleep 5)
 			execute_process(
 				COMMAND bash ${PROJECT_SOURCE_DIR}/../scripts/dependencies/installer
-				WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+				WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			)
 			execute_process(
 				COMMAND bash ${PROJECT_SOURCE_DIR}/../scripts/dependencies/third_party_linker
-				WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+				WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 			)
 		endif()
 
 		ExternalProject_Add(
 			allscale
 			GIT_REPOSITORY https://github.com/allscale/allscale_compiler
-			GIT_TAG a48dc1ff7ee08d92f059c8352c05c1b3b94eb67f
+			GIT_TAG b3b7c10afee156826cf9fa5fd87ad395b5edb3c7
 			CMAKE_COMMAND
 				${CMAKE_COMMAND} -E env
 				"INSIEME_LIBS_HOME=${THIRD_PARTY_DIR}"
@@ -42,7 +42,7 @@ if(NOT TARGET allscale)
 
 		set(ALLSCALECC ${binary_dir}/code/compiler/allscalecc)
 		set(ALLSCALE_API_INCLUDE_PATH ${source_dir}/api/code/api/include ${source_dir}/api/code/utils/include)
-	else()
+	elseif(NOT OVERRIDE_ALLSCALE_API)
 		ExternalProject_Add(
 			allscale
 			GIT_REPOSITORY https://github.com/allscale/allscale_api
@@ -56,5 +56,16 @@ if(NOT TARGET allscale)
 		ExternalProject_Get_Property(allscale source_dir binary_dir)
 
 		set(ALLSCALE_API_INCLUDE_PATH ${source_dir}/code/api/include ${source_dir}/code/utils/include)
+	else()
+		# dummy target
+		add_custom_target(allscale)
+	endif()
+
+	if(OVERRIDE_ALLSCALECC)
+		set(ALLSCALECC ${OVERRIDE_ALLSCALECC})
+	endif()
+
+	if(OVERRIDE_ALLSCALE_API)
+		set(ALLSCALE_API_INCLUDE_PATH ${OVERRIDE_ALLSCALE_API}/code/api/include ${OVERRIDE_ALLSCALE_API}/code/utils/include)
 	endif()
 endif()

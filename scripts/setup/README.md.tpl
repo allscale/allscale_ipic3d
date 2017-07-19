@@ -44,7 +44,6 @@ commands should be sufficient on most systems. See
 `scripts/dependencies/README.md` for more details.
 
     $ scripts/dependencies/installer
-    $ scripts/dependencies/third_party_linker
 
 To build this project using the AllScale compiler, simply set the corresponding
 CMake option. You may want to use a separate build directory to easily switch
@@ -52,6 +51,7 @@ between GCC and AllScaleCC.
 
     $ mkdir build_with_allscalecc
     $ cd build_with_allscalecc
+    $ ../scripts/dependencies/third_party_linker
     $ cmake -DUSE_ALLSCALECC=ON ..
     $ make -j8
     $ ctest -j8
@@ -78,6 +78,17 @@ This will add the files `sema.h`, `sema.cpp` and `sema_test.cc` to the
 containing `malloc_extension.h`, `malloc_extension.cpp` and
 `malloc_extension_test.cc` in their respective subdirectories.
 
+### Using a present AllScale Compiler / API project
+
+The following two CMake options allow you to manually set the AllScale Compiler
+and AllScale API to use. Note that `USE_ALLSCALECC` must *not* be enabled for
+this to work.
+
+| Option                  | Values                         |
+| ----------------------- | ------------------------------ |
+| -DOVERRIDE_ALLSCALECC   | *path to `allscalecc` binary*  |
+| -DOVERRIDE_ALLSCALE_API | *path to AllScale API project* |
+
 ### Executable Bit
 
 When working on Windows via SMB share, consider setting following Git setting.
@@ -95,7 +106,7 @@ header to each source file upon commit. See `scripts/license`.
 
 ### Visual Studio Solution
 
-    $ cmake -G "Visual Studio 14 Win64" -DBUILD_SHARED_LIBS=OFF Z:\path\to\project
+    $ cmake -G "Visual Studio 15 2017 Win64" -DBUILD_SHARED_LIBS=OFF Z:\path\to\project
 
 Add path for third-party libraries when needed.
 
