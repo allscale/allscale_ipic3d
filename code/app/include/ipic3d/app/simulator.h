@@ -92,7 +92,7 @@ namespace ipic3d {
 			// STEP 1: collect particle contributions
 			// project particles to density field
 			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-				// TODO: this should be improved:
+				// TODO: this can be improved:
 				// 	J is defined on nodes
 				// 	rho 
 				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
@@ -102,11 +102,10 @@ namespace ipic3d {
 			// update boundaries
 			updateFieldsOnBoundaries(universe.field, universe.bcfield);
 			
-			// TODO: fieldSolver(universe.field,density,universe.cells);
+			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
 			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
 				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
 			});
-			// TODO: update cells around the grid for periodic boundary conditions
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 

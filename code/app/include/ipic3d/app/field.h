@@ -319,9 +319,6 @@ namespace ipic3d {
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
 				field[pos].E += (curlB + density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
- 
-				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
-
 
 				// 2. Compute B
 				// 		curl of E
@@ -334,7 +331,7 @@ namespace ipic3d {
 				bcfield[pos].Bc -= curlE * universeProperties.dt;
 
 				//		TODO: Boundary conditions: periodic?
-				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
+				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
 
 				// 		interpolate B from center to nodes
 				interpC2N(pos, bcfield, field);
