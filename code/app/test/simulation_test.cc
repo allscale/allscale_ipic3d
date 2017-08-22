@@ -234,9 +234,9 @@ namespace ipic3d {
 		// compute Larmor radius
 		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[{0,0,0}].B.z);
 		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
-		p.position.x = rL;
 
 		// push velocity back in time by 1/2 dt
+		// 		this is purely done to compare against the Matlab version 
 		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
 
 		cell.particles.push_back(p);
@@ -253,14 +253,31 @@ namespace ipic3d {
 
 		// check that the position is close to what is expected
 		// comparing against the matlab code after 10 iterations
-		EXPECT_NEAR( res.position.x, 5.7652e-05, 1e-06);
-		EXPECT_NEAR( res.position.y, 2.9990e-05, 1e-06);
-		EXPECT_NEAR( res.position.z, 0.0,		 1e-06);
+		EXPECT_NEAR( res.position.x, 7.9127e-07, 1e-10);
+		EXPECT_NEAR( res.position.y, 2.9990e-05, 1e-09);
+		EXPECT_NEAR( res.position.z, 0.0,		 1e-10);
 
 		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.velocity.x, 2637.59, 1e2);
-		EXPECT_NEAR( res.velocity.y, 99965.2, 1e2);
-		EXPECT_NEAR( res.velocity.z, 0.0,     1e-2);
+		EXPECT_NEAR( res.velocity.x, 2637.59, 1e-02);
+		EXPECT_NEAR( res.velocity.y, 99965.2, 1e-02);
+		EXPECT_NEAR( res.velocity.z, 0.0,     1e-02);
+
+		// re-compute Larmor radius
+		rL = res.mass * res.velocity.y / (fabs(res.q) * field[{0,0,0}].B.z);
+		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
+
+		// run the simulation again
+		niter = 99;
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
+
+		// check where particle ended up
+		ASSERT_FALSE(cell.particles.empty());
+		res = cell.particles.front();
+
+		// re-compute Larmor radius
+		rL = res.mass * res.velocity.y / (fabs(res.q) * field[{0,0,0}].B.z);
+		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
+		p.position.x = rL;
 	}
 
 
