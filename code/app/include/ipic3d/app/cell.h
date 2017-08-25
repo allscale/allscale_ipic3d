@@ -67,12 +67,20 @@ namespace ipic3d {
 				Particle p;
 
 				Vector3<double> randVals = {(double)randGenerator() / randMax, (double)randGenerator() / randMax, (double)randGenerator() / randMax};
-				// initialize particle position
+				// initialize the particle position
 				p.position = getCenterOfCell(pos, properties) + allscale::utils::elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
 
-				// TODO: initialize the speed of particles
-				p.velocity = { 0, 0, 0 };
+				// initialize the particle speed
+				auto theta = 2.0 * M_PI * randVals;
+				Vector3<double> prob;
+				prob[0] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[0] ) );
+				prob[1] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[1] ) );
+				prob[2] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[2] ) );
 
+				p.velocity[0] = params.u0[0] + params.uth[0] * ( prob[0] * cos(theta[0]) );
+				p.velocity[1] = params.v0[1] + params.vth[1] * ( prob[1] * sin(theta[1]) );
+				p.velocity[2] = params.w0[2] + params.wth[2] * ( prob[2] * cos(theta[2]) );
+				
 				// TODO: compute the value
 				p.q = params.qom[0];
 
