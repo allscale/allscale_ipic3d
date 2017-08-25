@@ -32,7 +32,7 @@ namespace ipic3d {
 	using Cells = allscale::api::user::data::Grid<Cell, 3>; // a 3D grid of cells
 
 
-	Cells initCells(const InitProperties& initProperties, const UniverseProperties& properties) {
+	Cells initCells(const Parameters& params, const InitProperties& initProperties, const UniverseProperties& properties) {
 
 		// -- initialize the grid of cells --
 
@@ -47,6 +47,10 @@ namespace ipic3d {
 
 		const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
 
+		// pre-compute values for computing q
+		double q_factor = params.qom[0] / fabs(params.qom[0]);
+		q_factor = q_factor * (properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z) / particlesPerCell;
+		
 		// TODO: return this as a treeture
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 
@@ -57,6 +61,8 @@ namespace ipic3d {
 			// add the requested number of parameters
 			std::minstd_rand randGenerator((unsigned)(pos[0] * 10000 + pos[1] * 100 + pos[2]));
 			const double randMax = std::minstd_rand::max();
+			// TODO: can we use pfor here?
+			// Maxellian random velocity and uniform spatial distribution
 			for (unsigned i = 0; i < particlesPerCell; i++) {
 				Particle p;
 
@@ -67,8 +73,8 @@ namespace ipic3d {
 				// TODO: initialize the speed of particles
 				p.velocity = { 0, 0, 0 };
 
-				// TODO: initialize charge
-				p.q = 0.15;
+				// TODO: compute the value
+				p.q = params.qom[0];
 
 				cell.particles.push_back(p);
 			}

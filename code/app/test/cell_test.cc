@@ -14,15 +14,16 @@ namespace ipic3d {
 
 		// initialize initial properties
 		InitProperties initProperties = InitProperties(params);
+		UniverseProperties universeProperties = UniverseProperties(params);
 
-		Universe universe = createUniverseFromParams(params);	
+		Cells&& cells = initCells(params, initProperties, universeProperties);
 
 		// verify the number of particles per cell
 		int particlesPerCell = initProperties.particlesPerCell[0].x * initProperties.particlesPerCell[0].y * initProperties.particlesPerCell[0].z;
 
 		utils::Coordinate<3> zero = 0;
-		allscale::api::user::pfor(zero, universe.properties.size, [&](const utils::Coordinate<3>& pos) {
-	    	EXPECT_EQ(particlesPerCell, (int) universe.cells[pos].particles.size());		
+		allscale::api::user::pfor(zero, universeProperties.size, [&](const utils::Coordinate<3>& pos) {
+			EXPECT_EQ(particlesPerCell, (int) cells[pos].particles.size());
 		});
 	}
 

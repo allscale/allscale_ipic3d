@@ -103,5 +103,24 @@ namespace ipic3d {
 
 	}
 
+	TEST(Universe, createUniverseFromParams) {
+
+		// this test checks the createUniverseFromParams() function
+
+		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp";
+		auto params = Parameters(path);
+
+		// initialize initial properties
+		Universe universe = createUniverseFromParams(params);
+
+		// verify the number of particles per cell
+		int particlesPerCell = params.npcelx[0] * params.npcely[0] * params.npcelz[0];
+
+		utils::Coordinate<3> zero = 0;
+		allscale::api::user::pfor(zero, universe.properties.size, [&](const utils::Coordinate<3>& pos) {
+			EXPECT_EQ(particlesPerCell, (int) universe.cells[pos].particles.size());
+		});
+	}
+
 
 } // end namespace ipic3d
