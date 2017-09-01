@@ -61,6 +61,7 @@ namespace ipic3d {
 		Vector3<double> objectCenter;
 		// magnetic field
 		Vector3<double> magneticField;
+		int FieldOutputCycle;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::ParticleWave, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1, 1, 1},
 			const double dt = 1, const double planetRadius = 0, const Vector3<double>& objectCenter = { 0, 0, 0 }, const Vector3<double>& magneticField = {0, 0, 0})
@@ -78,7 +79,8 @@ namespace ipic3d {
 			dt( params.dt ),
 			planetRadius( params.planetRadius ),
 			objectCenter({ params.objectCenter.x, params.objectCenter.y, params.objectCenter.z }),
-			magneticField({ params.B0.x, params.B0.y, params.B0.z })
+			magneticField({ params.B0.x, params.B0.y, params.B0.z }),
+			FieldOutputCycle ( params.FieldOutputCycle ) 
 		{}
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {

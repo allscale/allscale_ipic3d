@@ -50,6 +50,15 @@ namespace ipic3d {
 	//										Definitions
 	// -------------------------------------------------------------------------------------
 
+	// write output depending on the set frequency
+	void writeOutput(int cycle, Universe& universe) {
+		if ( cycle % universe.properties.FieldOutputCycle == 0 ) {
+			std::cout << universe.properties.FieldOutputCycle << '\n';
+			std::cout << getEenergy(universe.field, universe.properties) << '\n';
+			std::cout << getBenergy(universe.field, universe.properties) << '\n';
+		}
+	}
+
 	template<
 		typename ParticleToFieldProjector,
 		typename FieldSolver,
@@ -88,6 +97,9 @@ namespace ipic3d {
 		for(unsigned i = 0; i < numSteps; ++i) {
 
 			using namespace allscale::api::user;
+
+			// write output to a file: total energy, momentum, E and B total energy
+			writeOutput(i, universe);
 
 			// STEP 1: collect particle contributions
 			// project particles to density field

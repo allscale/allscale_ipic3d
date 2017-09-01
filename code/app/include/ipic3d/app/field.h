@@ -1,6 +1,7 @@
 #pragma once
 
 #include "allscale/api/user/data/grid.h"
+#include "allscale/api/user/operator/pfor.h"
 
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
@@ -472,6 +473,40 @@ namespace ipic3d {
 				bcfield[posN] = bcfield[pos1];
 			}
 		}
+	}
+
+	// compute the electric field enery
+	double getEenergy(const Field& field, const UniverseProperties& universeProperties){
+		auto fieldSize = field.size();
+		auto fieldStart = utils::Coordinate<3>(1);
+		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		
+		double sum = 0.0;
+		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		double fourPI = 4.0 * M_PI;
+		allscale::api::user::pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+			auto e = field[pos].E;
+			sum += vol * ( e.x * e.x + e.y * e.y + e.z * e.z ) / (fourPI);
+		});
+
+		return sum;
+	} 
+
+	// compute the magnetic field enery
+	double getBenergy(const Field& field, const UniverseProperties& universeProperties){
+		auto fieldSize = field.size();
+		auto fieldStart = utils::Coordinate<3>(1);
+		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		
+		double sum = 0.0;
+		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		double fourPI = 4.0 * M_PI;
+		allscale::api::user::pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+			auto b = field[pos].B;
+			sum += vol * ( b.x * b.x + b.y * b.y + b.z * b.z ) / (fourPI);
+		});
+
+		return sum;
 	} 
 
 } // end namespace ipic3d
