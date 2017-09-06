@@ -3,6 +3,7 @@ set terminal postscript eps color enhanced "Times" 26
 set grid xtics ytics
 set xlabel "x" font "Times, 26"
 set ylabel "y" font "Times, 26"
+set xrange [:.67]
 set output "| epstopdf --filter > ../imgs/exb_drift.pdf"
 
 set datafile missing '#'
