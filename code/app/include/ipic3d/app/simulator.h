@@ -98,8 +98,6 @@ namespace ipic3d {
 
 			using namespace allscale::api::user;
 
-			//std::cout << i << " " << i * universe.properties.dt << " ";
-
 			// write output to a file: total energy, momentum, E and B total energy
 			//writeOutput(i, universe);
 

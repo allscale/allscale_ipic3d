@@ -259,18 +259,12 @@ namespace ipic3d {
 			// TODO: I am not really sure about this part
 			auto E = trilinearInterpolationF2P(Es, relPos, vol);
 			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
-			//utils::Coordinate<3> cur({pos[0]+1,pos[1]+1,pos[2]+1});
-			//auto E = field[cur].E;
-			//auto B = field[cur].B;
 
 			// update velocity
 			p.updateVelocityBorisStyle(E, B, universeProperties.dt);
 
 			// update position
 			p.updatePosition(universeProperties.dt);
-
-			//std::cout << p.position.x << " " << p.position.y << " " << p.position.z << " ";
-			//std::cout << p.velocity.x << " " << p.velocity.y << " " << p.velocity.z << "\n";
 		});
 
 	}

@@ -354,10 +354,11 @@ namespace ipic3d {
 
 		// Set universe properties
 		UniverseProperties properties;
+		properties.useCase = UseCase::Test;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 0.01;
-		properties.useCase = UseCase::Test;
+		properties.origin = { -100.0, -100.0, -100.0 };
 		properties.FieldOutputCycle = 1e6;
 
 		// Create Universe with these properties
@@ -373,57 +374,56 @@ namespace ipic3d {
 			field[pos].B = { 0.0, 0.0, 1.0 };
 		});
 
+		utils::Coordinate<3> field_pos = { 1, 1, 1 };
+
 		// add one particle
 		Particle p;
 		p.position.x = p.position.y = p.position.z = 0.0;
 
-		p.velocity.y = p.velocity.z = 0.0;
 		p.velocity.x = 0.5;
+		p.velocity.y = p.velocity.z = 0.0;
 
 		p.q = 1.0;
 		p.mass = 1.0;
 
 		// push velocity back in time by 1/2 dt
 		// 		this is purely done to compare against the Matlab version 
-		//p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
-
-		cell.particles.push_back(p);
-
-		// check particle position
-		EXPECT_FALSE(cell.particles.empty());
+		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
 
 		// run the simulation
 		// number of steps
-		unsigned niter = 5000;
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
-//		utils::Coordinate<3> pos = { 0, 0, 0 };
-//		std::cout << cell.particles.front();
-//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
-//		std::cout << cell.particles.front();
-//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
-//		std::cout << cell.particles.front();
-//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
-//		std::cout << cell.particles.front();
-//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
-//		std::cout << cell.particles.front();
-//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
-//		std::cout << cell.particles.front();
-		return;
+		unsigned numSteps = 5000;
+		//simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(numSteps,universe);
+		for(unsigned i = 0; i < numSteps; ++i) {
+			auto E = field[field_pos].E;
+			auto B = field[field_pos].B;
+
+			// update velocity
+			p.updateVelocityBorisStyle(E, B, properties.dt);
+
+			// update position
+			p.updatePosition(properties.dt);
+
+			//std::cout << i << " " << i * universe.properties.dt << " ";
+			//std::cout << p.position.x << " " << p.position.y << " " << p.position.z << " ";
+			//std::cout << p.velocity.x << " " << p.velocity.y << " " << p.velocity.z << "\n";
+		}
 
 		// check where particle ended up
+		cell.particles.push_back(p);
 		ASSERT_FALSE(cell.particles.empty());
 		Particle res = cell.particles.front();
 
 		// check that the position is close to what is expected
 		// comparing against the matlab code after 10 iterations
-		EXPECT_NEAR( res.position.x, 0.005009, 1e-4 );
-		EXPECT_NEAR( res.position.y, 1.0e-04 * -0.2503, 1e-06 );
-		EXPECT_NEAR( res.position.z, 0.0,		 1e-10 );
+		EXPECT_NEAR( res.position.x, -0.1131, 1e-01 );
+		EXPECT_NEAR( res.position.y, -10.0797,  1e-02 );
+		EXPECT_NEAR( res.position.z, 0.0,	    1e-10 );
 
 		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.velocity.x, 0.50197, 1e-04);
-		EXPECT_NEAR( res.velocity.y, -0.005009, 1e-04);
-		EXPECT_NEAR( res.velocity.z, 0.0,     1e-02);
+		EXPECT_NEAR( res.velocity.x, 0.4203, 1e-02 );
+		EXPECT_NEAR( res.velocity.y, 0.1131, 1e-01 );
+		EXPECT_NEAR( res.velocity.z, 0.0,    1e-10 );
 	}
 
 
