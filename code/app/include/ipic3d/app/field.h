@@ -259,7 +259,6 @@ namespace ipic3d {
 
 			case UseCase::Dipole:
 			{
-				field[pos].E = { 0.0, 0.0, 0.0 };
 				auto B = field[pos].B;
 
 				// Node coordinates
