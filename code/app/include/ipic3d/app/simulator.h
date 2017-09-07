@@ -98,8 +98,10 @@ namespace ipic3d {
 
 			using namespace allscale::api::user;
 
+			//std::cout << i << " " << i * universe.properties.dt << " ";
+
 			// write output to a file: total energy, momentum, E and B total energy
-			writeOutput(i, universe);
+			//writeOutput(i, universe);
 
 			// STEP 1: collect particle contributions
 			// project particles to density field
@@ -150,6 +152,7 @@ namespace ipic3d {
 		struct default_field_solver {
 			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) const {
 				solveFieldForward(universeProperties, pos, density, field, bcfield);
+				//solveFieldStatically(universeProperties, pos, field);
 			}
 		};
 

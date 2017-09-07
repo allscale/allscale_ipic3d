@@ -200,13 +200,12 @@ namespace ipic3d {
 
 		// Set universe properties
 		UniverseProperties properties;
+		properties.useCase = UseCase::Test;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 3e-11;
-		properties.useCase = UseCase::Test;
-
-		// number of steps
-		unsigned niter = 10;
+		properties.origin = { -10.0, -10.0, -10.0 };
+		properties.FieldOutputCycle = 1e6;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -221,6 +220,8 @@ namespace ipic3d {
 			field[pos].B = { 0.0, 0.0, 0.01 };
 		});
 
+		utils::Coordinate<3> field_pos = { 1, 1, 1 };
+
 		// add one particle
 		Particle p;
 		p.position.x = p.position.y = p.position.z = 0.0;
@@ -232,20 +233,105 @@ namespace ipic3d {
 		p.mass = 9.109e-31;
 
 		// compute Larmor radius
-		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[{0,0,0}].B.z);
+		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
 		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
+
+		// re-initialize the x coordinate
+		p.position.x = rL;
 
 		// push velocity back in time by 1/2 dt
 		// 		this is purely done to compare against the Matlab version 
-		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
+		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
+
+		// number of steps
+		unsigned numSteps = 1000;
+		// run the simulation
+		//simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
+		for(unsigned i = 0; i < numSteps; ++i) {
+			auto E = field[field_pos].E;
+			auto B = field[field_pos].B;
+
+			// update velocity
+			p.updateVelocityBorisStyle(E, B, properties.dt);
+
+			// update position
+			p.updatePosition(properties.dt);
+		}
+		
+
+		// check where particle ended up
+		cell.particles.push_back(p);
+		ASSERT_FALSE(cell.particles.empty());
+
+		// check that the position is close to what is expected
+		// comparing against the matlab code after 10 iterations
+		EXPECT_NEAR( p.position.x, -4.50134e-05, 1e-10);
+		EXPECT_NEAR( p.position.y, 3.47983e-05, 1e-09);
+		EXPECT_NEAR( p.position.z, 0.0,		 1e-10);
+
+		// check that the velocity is close to what is expected
+		EXPECT_NEAR( p.velocity.x, -63242.7, 1e1);
+		EXPECT_NEAR( p.velocity.y, -77462.0, 1e1);
+		EXPECT_NEAR( p.velocity.z, 0.0,     1e-02);
+	}
+
+
+	TEST(Simulation, SingleParticleLarmorRadius) {
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.useCase = UseCase::Test;
+		properties.size = { 1,1,1 };
+		properties.cellWidth = { 1e4,1e4,1e4 };
+		properties.dt = 3e-11;
+		properties.origin = { -10.0, -10.0, -10.0 };
+		properties.FieldOutputCycle = 1e6;
+
+		// Create Universe with these properties
+		Universe universe = Universe(properties);
+
+		Cell& cell = universe.cells[{0, 0, 0}];
+
+		// initialize field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.0, 0.0, 0.0  };
+			field[pos].B = { 0.0, 0.0, 0.01 };
+		});
+
+		utils::Coordinate<3> field_pos = { 1, 1, 1 };
+
+		// add one particle
+		Particle p;
+		p.position.x = p.position.y = p.position.z = 0.0;
+
+		p.velocity.x = p.velocity.z = 0.0;
+		p.velocity.y = 1e5;
+
+		p.q = -1.602e-19;
+		p.mass = 9.109e-31;
+
+		// compute Larmor radius
+		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
+		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
+
+		// re-initialize the x coordinate
+		p.position.x = rL;
+
+		// push velocity back in time by 1/2 dt
+		// 		this is purely done to compare against the Matlab version 
+		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
 
 		cell.particles.push_back(p);
 
 		// check particle position
 		EXPECT_FALSE(cell.particles.empty());
 
+		// number of steps
+		unsigned numSteps = 10;
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(numSteps,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
@@ -253,31 +339,91 @@ namespace ipic3d {
 
 		// check that the position is close to what is expected
 		// comparing against the matlab code after 10 iterations
-		EXPECT_NEAR( res.position.x, 7.9127e-07, 1e-10);
-		EXPECT_NEAR( res.position.y, 2.9990e-05, 1e-09);
-		EXPECT_NEAR( res.position.z, 0.0,		 1e-10);
+		EXPECT_NEAR( res.position.x, 5.7651e-05, 1e-09);
+	    EXPECT_NEAR( res.position.y, 2.9990e-05, 1e-09); 
+        EXPECT_NEAR( res.position.z, 0.0, 1e-10);
 
 		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.velocity.x, 2637.59, 1e-02);
-		EXPECT_NEAR( res.velocity.y, 99965.2, 1e-02);
-		EXPECT_NEAR( res.velocity.z, 0.0,     1e-02);
+		EXPECT_NEAR( p.velocity.x, 2637.59, 1e1);
+		EXPECT_NEAR( p.velocity.y, 99965.2, 1e1);
+		EXPECT_NEAR( p.velocity.z, 0.0,     1e-02);
+	}
 
-		// re-compute Larmor radius
-		rL = res.mass * res.velocity.y / (fabs(res.q) * field[{0,0,0}].B.z);
-		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
 
-		// run the simulation again
-		niter = 99;
+	TEST(Simulation, SingleParticleBorisMoverExBdrift) {
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 1,1,1 };
+		properties.cellWidth = { 1e4,1e4,1e4 };
+		properties.dt = 0.01;
+		properties.useCase = UseCase::Test;
+		properties.FieldOutputCycle = 1e6;
+
+		// Create Universe with these properties
+		Universe universe = Universe(properties);
+
+		Cell& cell = universe.cells[{0, 0, 0}];
+
+		// initialize field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.2, 0.0, 0.0 };
+			field[pos].B = { 0.0, 0.0, 1.0 };
+		});
+
+		// add one particle
+		Particle p;
+		p.position.x = p.position.y = p.position.z = 0.0;
+
+		p.velocity.y = p.velocity.z = 0.0;
+		p.velocity.x = 0.5;
+
+		p.q = 1.0;
+		p.mass = 1.0;
+
+		// push velocity back in time by 1/2 dt
+		// 		this is purely done to compare against the Matlab version 
+		//p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
+
+		cell.particles.push_back(p);
+
+		// check particle position
+		EXPECT_FALSE(cell.particles.empty());
+
+		// run the simulation
+		// number of steps
+		unsigned niter = 5000;
 		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
+//		utils::Coordinate<3> pos = { 0, 0, 0 };
+//		std::cout << cell.particles.front();
+//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
+//		std::cout << cell.particles.front();
+//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
+//		std::cout << cell.particles.front();
+//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
+//		std::cout << cell.particles.front();
+//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
+//		std::cout << cell.particles.front();
+//		moveParticlesBorisStyle(universe.properties, cell, pos, field);
+//		std::cout << cell.particles.front();
+		return;
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
-		res = cell.particles.front();
+		Particle res = cell.particles.front();
 
-		// re-compute Larmor radius
-		rL = res.mass * res.velocity.y / (fabs(res.q) * field[{0,0,0}].B.z);
-		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
-		p.position.x = rL;
+		// check that the position is close to what is expected
+		// comparing against the matlab code after 10 iterations
+		EXPECT_NEAR( res.position.x, 0.005009, 1e-4 );
+		EXPECT_NEAR( res.position.y, 1.0e-04 * -0.2503, 1e-06 );
+		EXPECT_NEAR( res.position.z, 0.0,		 1e-10 );
+
+		// check that the velocity is close to what is expected
+		EXPECT_NEAR( res.velocity.x, 0.50197, 1e-04);
+		EXPECT_NEAR( res.velocity.y, -0.005009, 1e-04);
+		EXPECT_NEAR( res.velocity.z, 0.0,     1e-02);
 	}
 
 

@@ -37,7 +37,7 @@ namespace ipic3d {
 
 			auto t_mag2 = allscale::utils::sumOfSquares(t);
 
-			auto s = (2.0 * t) / (1+t_mag2);
+			auto s = (2.0 * t) / (1.0 + t_mag2);
 
 			auto v_minus = velocity + k * E;
 

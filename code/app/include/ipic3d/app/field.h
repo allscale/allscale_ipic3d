@@ -264,6 +264,8 @@ namespace ipic3d {
 
 				// Node coordinates
 				auto location = getCenterOfCell(pos, universeProperties);
+				// TODO: double check this as the field test crashes
+				//auto location = getLocationForFields(pos, universeProperties);
 
 				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::utils::sumOfSquares(location), 2.5);
 				B.x = 3.0 * location.x * location.z * fac1;

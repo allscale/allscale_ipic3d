@@ -63,14 +63,15 @@ namespace ipic3d {
 			const double randMax = std::minstd_rand::max();
 			// TODO: can we use pfor here?
 			// Maxellian random velocity and uniform spatial distribution
+			// To note: this is for one spacy
 			for (unsigned i = 0; i < particlesPerCell; i++) {
 				Particle p;
 
 				Vector3<double> randVals = {(double)randGenerator() / randMax, (double)randGenerator() / randMax, (double)randGenerator() / randMax};
-				// initialize the particle position
+				// initialize particle's position
 				p.position = getCenterOfCell(pos, properties) + allscale::utils::elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
 
-				// initialize the particle speed
+				// initialize particle's speed
 				auto theta = 2.0 * M_PI * randVals;
 				Vector3<double> prob;
 				prob[0] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[0] ) );
@@ -255,8 +256,12 @@ namespace ipic3d {
 			const auto relPos = allscale::utils::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
 
 			// interpolate
+			// TODO: I am not really sure about this part
 			auto E = trilinearInterpolationF2P(Es, relPos, vol);
 			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
+			//utils::Coordinate<3> cur({pos[0]+1,pos[1]+1,pos[2]+1});
+			//auto E = field[cur].E;
+			//auto B = field[cur].B;
 
 			// update velocity
 			p.updateVelocityBorisStyle(E, B, universeProperties.dt);
@@ -264,6 +269,8 @@ namespace ipic3d {
 			// update position
 			p.updatePosition(universeProperties.dt);
 
+			//std::cout << p.position.x << " " << p.position.y << " " << p.position.z << " ";
+			//std::cout << p.velocity.x << " " << p.velocity.y << " " << p.velocity.z << "\n";
 		});
 
 	}
