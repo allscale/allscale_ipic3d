@@ -477,7 +477,7 @@ namespace ipic3d {
 		}
 	}
 
-	// compute the electric field enery
+	// compute the electric field energy
 	double getEenergy(const Field& field, const UniverseProperties& universeProperties){
 		auto fieldSize = field.size();
 		auto fieldStart = utils::Coordinate<3>(1);
@@ -494,7 +494,7 @@ namespace ipic3d {
 		return sum;
 	} 
 
-	// compute the magnetic field enery
+	// compute the magnetic field energy
 	double getBenergy(const Field& field, const UniverseProperties& universeProperties){
 		auto fieldSize = field.size();
 		auto fieldStart = utils::Coordinate<3>(1);
