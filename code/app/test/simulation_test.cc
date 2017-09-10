@@ -41,8 +41,7 @@ namespace ipic3d {
 			Particle p;
 			p.position.x = p.position.y = p.position.z = 0.5;
 			p.velocity.x = p.velocity.y = p.velocity.z = 0.0;
-			p.mass = 1;
-			p.q = 1;
+			p.q = p.qom = 1.0;
 
 			// add test particle to first cell
 			a.particles.push_back(p);
@@ -59,7 +58,7 @@ namespace ipic3d {
 			EXPECT_EQ(0.0, a.particles.front().velocity.y);
 			EXPECT_EQ(0.0, a.particles.front().velocity.z);
 
-			EXPECT_EQ(1.0, a.particles.front().mass);
+			EXPECT_EQ(1.0, a.particles.front().qom);
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// run one simulation step
@@ -77,7 +76,7 @@ namespace ipic3d {
 			EXPECT_EQ(0.0, a.particles.front().velocity.y);
 			EXPECT_EQ(0.0, a.particles.front().velocity.z);
 
-			EXPECT_EQ(1.0, a.particles.front().mass);
+			EXPECT_EQ(1.0, a.particles.front().qom);
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// change velocity and send in x direction
@@ -93,7 +92,7 @@ namespace ipic3d {
 			EXPECT_EQ(0.0, a.particles.front().velocity.y);
 			EXPECT_EQ(0.0, a.particles.front().velocity.z);
 
-			EXPECT_EQ(1.0, a.particles.front().mass);
+			EXPECT_EQ(1.0, a.particles.front().qom);
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// run one simulation step
@@ -171,13 +170,12 @@ namespace ipic3d {
 		// add one particle
 		Particle p;
 		p.position.x = p.position.y = 0.5;
-		p.position.z = 0;
+		p.position.z = 0.0;
 
-		p.velocity.x = p.velocity.y = 0;
-		p.velocity.z = 1;
+		p.velocity.x = p.velocity.y = 0.0;
+		p.velocity.z = 1.0;
 
-		p.q = 1;
-		p.mass = 1;
+		p.q = p.qom = 1.0;
 
 		cell.particles.push_back(p);
 
@@ -230,10 +228,11 @@ namespace ipic3d {
 		p.velocity.y = 1e5;
 
 		p.q = -1.602e-19;
-		p.mass = 9.109e-31;
+		double mass = 9.109e-31;  
+		p.qom = p.q / mass;
 
 		// compute Larmor radius
-		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
+		double rL = mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
 		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
 
 		// re-initialize the x coordinate
@@ -310,10 +309,11 @@ namespace ipic3d {
 		p.velocity.y = 1e5;
 
 		p.q = -1.602e-19;
-		p.mass = 9.109e-31;
+		double mass = 9.109e-31;
+		p.qom = p.q / mass;
 
 		// compute Larmor radius
-		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
+		double rL = mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
 		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
 
 		// re-initialize the x coordinate
@@ -383,8 +383,7 @@ namespace ipic3d {
 		p.velocity.x = 0.5;
 		p.velocity.y = p.velocity.z = 0.0;
 
-		p.q = 1.0;
-		p.mass = 1.0;
+		p.q = p.qom = 1.0;
 
 		// push velocity back in time by 1/2 dt
 		// 		this is purely done to compare against the Matlab version 
@@ -461,8 +460,7 @@ namespace ipic3d {
 		p.position.x = 0.4;
 		p.velocity.z = p.velocity.y = 0.0;
 		p.velocity.x = 1.0;
-		p.q = 1.0;
-		p.mass = 1.0;
+		p.q = p.qom = 1.0;
 
 		// add test particle to first cell
 		a.particles.push_back(p);
@@ -614,8 +612,7 @@ namespace ipic3d {
 		p.position.z = 0.8;
 		p.velocity.x = p.velocity.y = 1.0;
 		p.velocity.z = 0.0;
-		p.q = 1.0;
-		p.mass = 1.0;
+		p.q = p.qom = 1.0;
 
 		// add test particle to first cell
 		a.particles.push_back(p);
@@ -769,16 +766,16 @@ namespace ipic3d {
 		Particle p0, p1, p2, p3, p4, p5, p6, p7;
 		p0.position.x = 0.4; p0.position.y = p0.position.z = 0.4;
 		p0.velocity.x = 0.6; p0.velocity.y = p0.velocity.z = 0.6;
-		p0.q = p0.mass = 1;
+		p0.q = p0.qom = 1.0;
 		p1.position.x = 0.8; p1.position.y = p1.position.z = 0.4;
 		p1.velocity.x = 0.3; p1.velocity.y = p1.velocity.z = 0.3;
-		p1.q = p1.mass = 1;
+		p1.q = p1.qom = 1.0;
 		p2.position.y = 0.8; p2.position.x = p2.position.z = 0.4;
 		p2.velocity.x = 0.1; p2.velocity.y = p2.velocity.z = 0.1;
-		p2.q = p2.mass = 1;
+		p2.q = p2.qom = 1.0;
 		p3.position.x = 0.75; p3.position.y = 0.75; p3.position.z = 0.4;
 		p3.velocity.x = 0.8; p3.velocity.y = p3.velocity.z = 0.8;
-		p3.q = p3.mass = 1;
+		p3.q = p3.qom = 1.0;
 		p4 = p0;
 		p4.position.z = 0.6;
 		p5 = p1;

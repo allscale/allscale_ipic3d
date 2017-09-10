@@ -25,9 +25,12 @@ namespace ipic3d {
 		// magnetic field amplitude
 		Vector3<double> magneticFieldAmplitude;
 
+		// charge density defined on nodes
+		double rhoInit;
+
 		InitProperties(const unsigned numSteps = 1, const std::vector<Vector3<unsigned>>& particlesPerCell = {},
-			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticFieldAmplitude = { 0,0,0 })
-			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticFieldAmplitude(magneticFieldAmplitude) {}
+			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticFieldAmplitude = { 0,0,0 }, const double rhoInit = 1.0)
+			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticFieldAmplitude(magneticFieldAmplitude), rhoInit(rhoInit) {}
 
 		InitProperties(const Parameters& params) {
 
@@ -42,6 +45,8 @@ namespace ipic3d {
 			}
 
 			magneticFieldAmplitude = { params.B0.x, params.B0.y, params.B0.z };
+
+			rhoInit = params.rhoInit[0];
 		}
 
 	    friend std::ostream& operator<<(std::ostream& out, const InitProperties& props) {
@@ -50,6 +55,7 @@ namespace ipic3d {
 			out << "\tNumber of particles per cell: " << props.particlesPerCell << std::endl;
 			out << "\tDrift velocity: " << props.driftVelocity << std::endl;
 			out << "\tMagnetic field amplitude: " << props.magneticFieldAmplitude << std::endl;
+			out << "\tCharge density: " << props.rhoInit << std::endl;
 			return out;
 		}
 

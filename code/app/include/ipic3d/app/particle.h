@@ -13,25 +13,24 @@ namespace ipic3d {
 		Vector3<double> velocity;			// velocity of this particle
 
 		double q;							// charge of this particle
-
-		double mass;						// the mass of this particle
+		double qom;							// charge over mass for this particle
 
 		Vector3<double> velocityStar;  	// auxiliary parameters for the Boris mover
 
 		// user-specified default constructor to ensure proper initialization
-		Particle() : position(), velocity(), q(), mass(), velocityStar() {};
+		Particle() : position(), velocity(), q(), qom(), velocityStar() {};
 
 		void updatePosition(double dt) {
 			position += velocity * dt;
 		}
 
 		void updateVelocity(const Force& force, double dt) {
-			velocity += force * dt / mass;
+			velocity += force * dt * qom;
 		}
 
 		void updateVelocityBorisStyle(const Force& E, const Force& B, double dt) {
 
-			auto k = q / mass * 0.5 * dt;
+			auto k = qom * 0.5 * dt;
 
 			auto t = k * B;
 
@@ -55,7 +54,7 @@ namespace ipic3d {
 			out << "\tVelocity: " << p.velocity << std::endl;
 			out << "\tVelocityStar: " << p.velocityStar << std::endl;
 			out << "\tCharge: " << p.q << std::endl;
-			out << "\tMass: " << p.mass << std::endl;
+			out << "\tCharge over mass: " << p.qom << std::endl;
 			return out;
 		}
 

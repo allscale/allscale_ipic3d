@@ -82,8 +82,8 @@ namespace ipic3d {
 				p.velocity[1] = params.v0[1] + params.vth[1] * ( prob[1] * sin(theta[1]) );
 				p.velocity[2] = params.w0[2] + params.wth[2] * ( prob[2] * cos(theta[2]) );
 				
-				// TODO: compute the value
-				p.q = params.qom[0];
+				p.qom = params.qom[0];
+				p.q = q_factor * params.rhoInit[0];  
 
 				cell.particles.push_back(p);
 			}
@@ -412,5 +412,31 @@ namespace ipic3d {
 		// TODO: this potential should only be used in tests due to the performance reasons
 		VerifyCorrectParticlesPositionInCell(universeProperties, cell, pos);
 	}
+
+	/** 
+ 	 * This function computes particles total kinetic energy
+ 	 */
+	double getParticlesKineticEnergy(Cell& cell) {
+		double local_ke = 0.0;
+
+		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+				local_ke += .5 * ( p.q / p.qom ) * allscale::utils::sumOfSquares( p.velocity );
+		});
+
+		return local_ke;
+	} 
+
+	/** 
+ 	 * This function computes particles total momentum
+ 	 */
+	double getParticlesMomentum(Cell& cell) {
+		double local_mom = 0.0;
+
+		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+				local_mom += ( p.q / p.qom ) * sqrt( allscale::utils::sumOfSquares( p.velocity ) );
+		});
+
+		return local_mom;
+	} 
 
 } // end namespace ipic3d

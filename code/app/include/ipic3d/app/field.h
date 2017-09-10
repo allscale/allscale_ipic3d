@@ -23,6 +23,7 @@ namespace ipic3d {
 
 	struct DensityNode {
 		Vector3<double> J;				// current density
+		double rho;						// charge density
 	};
 
 	struct DensityCell {
@@ -51,14 +52,20 @@ namespace ipic3d {
 		utils::Size<3> fieldSize = universeProperties.size + coordinate_type(3); // two for the two extra boundary cells and one as fields are defined on nodes of the cells
 		utils::Size<3> workingFieldSize = universeProperties.size + coordinate_type(2);
 
-		// the 3-D force fields
+		// the 3D force fields
 		Field fields(fieldSize);
+
+		// the 3D density fields
+		DensityNodes densityNodes(fieldSize);
 
 		auto driftVel = initProperties.driftVelocity;
 		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
 		auto ebc = crossProduct(driftVel[0], initProperties.magneticFieldAmplitude) * -1;
 
 		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+
+			// initialize rhos
+			densityNodes[cur].rho = initProperties.rhoInit / (4.0 * M_PI); 
 
 			// initialize electrical field
 			fields[cur].E = ebc;
