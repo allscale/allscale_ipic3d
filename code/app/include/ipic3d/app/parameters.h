@@ -58,7 +58,7 @@ namespace ipic3d {
 		dvector qom;
 
 		// charge to mass ratio array for different species
-		dvector rhoINIT;
+		dvector rhoInit;
 		// thermal velocity per direction
 		dvector uth;
 		dvector vth;
@@ -309,7 +309,7 @@ namespace ipic3d {
 				if ( str.find("rhoINIT") != std::string::npos ) {
 					std::vector<std::string> vec = split(str);
 					for (auto it = vec.cbegin() + 2; it != vec.cend(); ++it)
-						rhoINIT.push_back( std::stod(*it) );
+						rhoInit.push_back( std::stod(*it) );
 					continue;
 				}
 

@@ -32,7 +32,7 @@ namespace ipic3d {
 	using Cells = allscale::api::user::data::Grid<Cell, 3>; // a 3D grid of cells
 
 
-	Cells initCells(const InitProperties& initProperties, const UniverseProperties& properties) {
+	Cells initCells(const Parameters& params, const InitProperties& initProperties, const UniverseProperties& properties) {
 
 		// -- initialize the grid of cells --
 
@@ -47,6 +47,10 @@ namespace ipic3d {
 
 		const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
 
+		// pre-compute values for computing q
+		double q_factor = params.qom[0] / fabs(params.qom[0]);
+		q_factor = q_factor * (properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z) / particlesPerCell;
+		
 		// TODO: return this as a treeture
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 
@@ -57,18 +61,29 @@ namespace ipic3d {
 			// add the requested number of parameters
 			std::minstd_rand randGenerator((unsigned)(pos[0] * 10000 + pos[1] * 100 + pos[2]));
 			const double randMax = std::minstd_rand::max();
+			// TODO: can we use pfor here?
+			// Maxellian random velocity and uniform spatial distribution
+			// To note: this is for one spacy
 			for (unsigned i = 0; i < particlesPerCell; i++) {
 				Particle p;
 
 				Vector3<double> randVals = {(double)randGenerator() / randMax, (double)randGenerator() / randMax, (double)randGenerator() / randMax};
-				// initialize particle position
+				// initialize particle's position
 				p.position = getCenterOfCell(pos, properties) + allscale::utils::elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
 
-				// TODO: initialize the speed of particles
-				p.velocity = { 0, 0, 0 };
+				// initialize particle's speed
+				auto theta = 2.0 * M_PI * randVals;
+				Vector3<double> prob;
+				prob[0] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[0] ) );
+				prob[1] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[1] ) );
+				prob[2] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[2] ) );
 
-				// TODO: initialize charge
-				p.q = 0.15;
+				p.velocity[0] = params.u0[0] + params.uth[0] * ( prob[0] * cos(theta[0]) );
+				p.velocity[1] = params.v0[1] + params.vth[1] * ( prob[1] * sin(theta[1]) );
+				p.velocity[2] = params.w0[2] + params.wth[2] * ( prob[2] * cos(theta[2]) );
+				
+				p.qom = params.qom[0];
+				p.q = q_factor * params.rhoInit[0];  
 
 				cell.particles.push_back(p);
 			}
@@ -241,6 +256,7 @@ namespace ipic3d {
 			const auto relPos = allscale::utils::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
 
 			// interpolate
+			// TODO: I am not really sure about this part
 			auto E = trilinearInterpolationF2P(Es, relPos, vol);
 			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
@@ -249,7 +265,6 @@ namespace ipic3d {
 
 			// update position
 			p.updatePosition(universeProperties.dt);
-
 		});
 
 	}
@@ -397,5 +412,31 @@ namespace ipic3d {
 		// TODO: this potential should only be used in tests due to the performance reasons
 		VerifyCorrectParticlesPositionInCell(universeProperties, cell, pos);
 	}
+
+	/** 
+ 	 * This function computes particles total kinetic energy
+ 	 */
+	double getParticlesKineticEnergy(Cell& cell) {
+		double local_ke = 0.0;
+
+		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+				local_ke += .5 * ( p.q / p.qom ) * allscale::utils::sumOfSquares( p.velocity );
+		});
+
+		return local_ke;
+	} 
+
+	/** 
+ 	 * This function computes particles total momentum
+ 	 */
+	double getParticlesMomentum(Cell& cell) {
+		double local_mom = 0.0;
+
+		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+				local_mom += ( p.q / p.qom ) * sqrt( allscale::utils::sumOfSquares( p.velocity ) );
+		});
+
+		return local_mom;
+	} 
 
 } // end namespace ipic3d

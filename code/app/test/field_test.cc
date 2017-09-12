@@ -502,6 +502,56 @@ namespace ipic3d {
 	}
 
 
+	TEST(Field, solveFieldForwardTrajectory) {
+		
+		// this test verifies the explicit forward method§§§
+		// for a moment the test as well as the code are empty
+		
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 5,5,5 };
+		properties.cellWidth = { 1.0,1.0,1.0 };
+		properties.dt = 0.1;
+
+		properties.useCase = UseCase::Dipole;
+
+		// initialize field
+		Field field(properties.size + coordinate_type(3));
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.2, 0.2, 0.2 };
+			field[pos].B = { 0.4, 0.4, 0.4 };
+		});
+		// initialize field
+		BcField bcfield(properties.size + coordinate_type(2));
+		allscale::api::user::pfor(zero,bcfield.size(),[&](auto& pos){
+			bcfield[pos].Bc = { 0.8, 0.8, 0.8 };
+		});
+		// initialize density
+		DensityNodes density(properties.size + coordinate_type(3));
+		allscale::api::user::pfor(zero,density.size(),[&](auto& pos){
+			density[pos].J = { 0.6, 0.6, 0.6 };
+		});
+		
+
+	    // apply the field solver and check results
+		unsigned numSteps = 500;
+		utils::Coordinate<3> field_pos{2, 2, 2};
+		for(unsigned i = 0; i < numSteps; ++i) {
+			//solveFieldForward(properties, field_pos, density, field, bcfield);
+			solveFieldStatically(properties, field_pos, field);
+			//auto E = field[field_pos].E;
+			auto B = field[field_pos].B;
+			//auto Bc = bcfield[field_pos].Bc;
+
+			std::cout << i << " " << i * properties.dt << " ";
+			//std::cout << E.x << " " << E.y << " " << E.z << " ";
+			//std::cout << Bc.x << " " << Bc.y << " " << Bc.z << " ";
+			std::cout << B.x << " " << B.y << " " << B.z << "\n";
+		}
+	}
+
+
 	TEST(Field, solveFieldLeapfrog) {
 		
 		// this test verifies the leapfrog algorithm

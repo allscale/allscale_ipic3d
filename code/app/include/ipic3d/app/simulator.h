@@ -50,6 +50,31 @@ namespace ipic3d {
 	//										Definitions
 	// -------------------------------------------------------------------------------------
 
+	// write output depending on the set frequency
+	void writeOutput(int cycle, Universe& universe) {
+		if ( cycle % universe.properties.FieldOutputCycle == 0 ) {
+			std::cout << universe.properties.FieldOutputCycle << ' ';
+	
+			double Eenergy = getEenergy(universe.field, universe.properties);
+			double Benergy = getBenergy(universe.field, universe.properties);
+	
+			// compute total particles kinetic energy
+			double total_ke = 0.0;
+			double total_mom = 0.0;
+			auto zero = utils::Coordinate<3>(0);
+			auto size = universe.cells.size();
+			allscale::api::user::pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
+				total_ke += getParticlesKineticEnergy(universe.cells[pos]);	
+				total_mom += getParticlesMomentum(universe.cells[pos]);	
+			});
+
+			std::cout << total_mom << ' ';
+			std::cout << Eenergy << ' ';
+			std::cout << Benergy << ' ';
+			std::cout << total_ke << '\n';
+		}
+	}
+
 	template<
 		typename ParticleToFieldProjector,
 		typename FieldSolver,
@@ -89,24 +114,25 @@ namespace ipic3d {
 
 			using namespace allscale::api::user;
 
+			// write output to a file: total energy, momentum, E and B total energy
+			writeOutput(i, universe);
+
 			// STEP 1: collect particle contributions
 			// project particles to density field
 			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-				// TODO: this should be improved:
+				// TODO: this can be improved by adding rho
 				// 	J is defined on nodes
-				// 	rho 
 				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
 			});
 
-			// STEP 2: solve field equations
-			// update boundaries
-			updateFieldsOnBoundaries(universe.field, universe.bcfield);
-			
-			// TODO: fieldSolver(universe.field,density,universe.cells);
-			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
-			});
-			// TODO: update cells around the grid for periodic boundary conditions
+//			// STEP 2: solve field equations
+//			// update boundaries
+//			updateFieldsOnBoundaries(universe.field, universe.bcfield);
+//			
+//			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
+//			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+//				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
+//			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
@@ -139,6 +165,7 @@ namespace ipic3d {
 		struct default_field_solver {
 			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) const {
 				solveFieldForward(universeProperties, pos, density, field, bcfield);
+				//solveFieldStatically(universeProperties, pos, field);
 			}
 		};
 

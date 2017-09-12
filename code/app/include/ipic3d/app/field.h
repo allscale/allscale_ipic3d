@@ -1,6 +1,7 @@
 #pragma once
 
 #include "allscale/api/user/data/grid.h"
+#include "allscale/api/user/operator/pfor.h"
 
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
@@ -22,6 +23,7 @@ namespace ipic3d {
 
 	struct DensityNode {
 		Vector3<double> J;				// current density
+		double rho;						// charge density
 	};
 
 	struct DensityCell {
@@ -50,14 +52,20 @@ namespace ipic3d {
 		utils::Size<3> fieldSize = universeProperties.size + coordinate_type(3); // two for the two extra boundary cells and one as fields are defined on nodes of the cells
 		utils::Size<3> workingFieldSize = universeProperties.size + coordinate_type(2);
 
-		// the 3-D force fields
+		// the 3D force fields
 		Field fields(fieldSize);
+
+		// the 3D density fields
+		DensityNodes densityNodes(fieldSize);
 
 		auto driftVel = initProperties.driftVelocity;
 		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
 		auto ebc = crossProduct(driftVel[0], initProperties.magneticFieldAmplitude) * -1;
 
 		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+
+			// initialize rhos
+			densityNodes[cur].rho = initProperties.rhoInit / (4.0 * M_PI); 
 
 			// initialize electrical field
 			fields[cur].E = ebc;
@@ -258,11 +266,12 @@ namespace ipic3d {
 
 			case UseCase::Dipole:
 			{
-				field[pos].E = { 0.0, 0.0, 0.0 };
 				auto B = field[pos].B;
 
 				// Node coordinates
 				auto location = getCenterOfCell(pos, universeProperties);
+				// TODO: double check this as the field test crashes
+				//auto location = getLocationForFields(pos, universeProperties);
 
 				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::utils::sumOfSquares(location), 2.5);
 				B.x = 3.0 * location.x * location.z * fac1;
@@ -319,9 +328,6 @@ namespace ipic3d {
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
 				field[pos].E += (curlB + density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
- 
-				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
-
 
 				// 2. Compute B
 				// 		curl of E
@@ -334,7 +340,7 @@ namespace ipic3d {
 				bcfield[pos].Bc -= curlE * universeProperties.dt;
 
 				//		TODO: Boundary conditions: periodic?
-				//		periodic boundary conditions should be automatically supported as we added an extra row of cells around the grid
+				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
 
 				// 		interpolate B from center to nodes
 				interpC2N(pos, bcfield, field);
@@ -475,6 +481,40 @@ namespace ipic3d {
 				bcfield[posN] = bcfield[pos1];
 			}
 		}
+	}
+
+	// compute the electric field energy
+	double getEenergy(const Field& field, const UniverseProperties& universeProperties){
+		auto fieldSize = field.size();
+		auto fieldStart = utils::Coordinate<3>(1);
+		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		
+		double sum = 0.0;
+		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		double fourPI = 4.0 * M_PI;
+		allscale::api::user::pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+			auto e = field[pos].E;
+			sum += vol * ( e.x * e.x + e.y * e.y + e.z * e.z ) / (fourPI);
+		});
+
+		return sum;
+	} 
+
+	// compute the magnetic field energy
+	double getBenergy(const Field& field, const UniverseProperties& universeProperties){
+		auto fieldSize = field.size();
+		auto fieldStart = utils::Coordinate<3>(1);
+		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		
+		double sum = 0.0;
+		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		double fourPI = 4.0 * M_PI;
+		allscale::api::user::pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+			auto b = field[pos].B;
+			sum += vol * ( b.x * b.x + b.y * b.y + b.z * b.z ) / (fourPI);
+		});
+
+		return sum;
 	} 
 
 } // end namespace ipic3d

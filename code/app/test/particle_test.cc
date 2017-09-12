@@ -52,7 +52,7 @@ namespace ipic3d {
 		p.position.y = 0.0;
 		p.position.z = 0.0;
 
-		p.mass = 0.25;
+		p.qom = 1.0 / 0.25;
 
 		p.velocity.x = 1.0;
 		p.velocity.y = 2.0;
@@ -74,9 +74,9 @@ namespace ipic3d {
 		// apply some force
 		p.updateVelocity({ 1.0, -1.0, 3.0 }, 1);
 
-		EXPECT_EQ(1.0 + ( 1.0 * 1 / p.mass), p.velocity.x);
-		EXPECT_EQ(2.0 + (-1.0 * 1 / p.mass), p.velocity.y);
-		EXPECT_EQ(3.0 + ( 3.0 * 1 / p.mass), p.velocity.z);
+		EXPECT_EQ(1.0 + ( 1.0 * p.qom), p.velocity.x);
+		EXPECT_EQ(2.0 + (-1.0 * p.qom), p.velocity.y);
+		EXPECT_EQ(3.0 + ( 3.0 * p.qom), p.velocity.z);
 
 
 	}

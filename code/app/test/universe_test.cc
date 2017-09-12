@@ -11,23 +11,28 @@ namespace ipic3d {
 	    // Set some universe properties
 		UniverseProperties properties;
 
-		EXPECT_EQ(UseCase::ParticleWave, properties.useCase);
-	    EXPECT_EQ((coordinate_type{1, 1, 1}), properties.size);
-	    EXPECT_EQ((V{1, 1, 1}), properties.cellWidth);
-	    EXPECT_EQ(1, properties.dt);
+		EXPECT_EQ(UseCase::Dipole, properties.useCase);
+	    EXPECT_EQ((coordinate_type{1.0, 1.0, 1.0}), properties.size);
+	    EXPECT_EQ((V{1.0, 1.0, 1.0}), properties.cellWidth);
+	    EXPECT_EQ(1.0, properties.dt);
 	    EXPECT_EQ(0.0, properties.planetRadius);
-	    EXPECT_EQ((V{0, 0, 0}), properties.objectCenter);
-	    EXPECT_EQ((V{0, 0, 0}), properties.magneticField);
+	    EXPECT_EQ((V{0.0, 0.0, 0.0}), properties.objectCenter);
+	    EXPECT_EQ((V{0.0, 0.0, 0.0}), properties.origin);
+	    EXPECT_EQ((V{0.0, 0.0, 0.0}), properties.magneticField);
+	    EXPECT_EQ(1, properties.FieldOutputCycle);
 
-		UniverseProperties properties2(UseCase::Test, { 2,3,4 }, { 0.2,0.3,0.4 }, 5, 42, { 0.7,0.8,0.9 }, {-0.1,-0.2,-0.3});
+
+		UniverseProperties properties2(UseCase::Test, { 2,3,4 }, { 0.2,0.3,0.4 }, 5.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, { -0.1,-0.2,-0.3 }, 100);
 
 		EXPECT_EQ(UseCase::Test, properties2.useCase);
 		EXPECT_EQ((coordinate_type{ 2,3,4 }), properties2.size);
 		EXPECT_EQ((V{ 0.2,0.3,0.4 }), properties2.cellWidth);
-		EXPECT_EQ(5, properties2.dt);
-		EXPECT_EQ(42, properties2.planetRadius);
+		EXPECT_EQ(5.0, properties2.dt);
+		EXPECT_EQ(42.0, properties2.planetRadius);
 		EXPECT_EQ((V{ 0.7,0.8,0.9 }), properties2.objectCenter);
+		EXPECT_EQ((V{ -2.2,-2.5,-3.6 }), properties2.origin);
 		EXPECT_EQ((V{ -0.1,-0.2,-0.3 }), properties2.magneticField);
+	    EXPECT_EQ(100, properties2.FieldOutputCycle);
     }
 
 	TEST(UniverseProperties, Printable) {
@@ -101,6 +106,25 @@ namespace ipic3d {
 
 		EXPECT_TRUE(std::is_move_constructible<Universe>::value);
 
+	}
+
+	TEST(Universe, createUniverseFromParams) {
+
+		// this test checks the createUniverseFromParams() function
+
+		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp";
+		auto params = Parameters(path);
+
+		// initialize initial properties
+		Universe universe = createUniverseFromParams(params);
+
+		// verify the number of particles per cell
+		int particlesPerCell = params.npcelx[0] * params.npcely[0] * params.npcelz[0];
+
+		utils::Coordinate<3> zero = 0;
+		allscale::api::user::pfor(zero, universe.properties.size, [&](const utils::Coordinate<3>& pos) {
+			EXPECT_EQ(particlesPerCell, (int) universe.cells[pos].particles.size());
+		});
 	}
 
 

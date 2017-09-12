@@ -49,8 +49,8 @@ namespace ipic3d {
 		EXPECT_NEAR(params.qom[0], -25.0, 1e-15);
 		EXPECT_NEAR(params.qom[1], 1.0, 1e-15);
 
-		EXPECT_NEAR(params.rhoINIT[0], 1.0, 1e-15);
-		EXPECT_NEAR(params.rhoINIT[1], 1.0, 1e-15);
+		EXPECT_NEAR(params.rhoInit[0], 1.0, 1e-15);
+		EXPECT_NEAR(params.rhoInit[1], 1.0, 1e-15);
 
 		EXPECT_NEAR(params.uth[0], 0.045, 1e-15);
 		EXPECT_NEAR(params.uth[1], 0.0063, 1e-15);

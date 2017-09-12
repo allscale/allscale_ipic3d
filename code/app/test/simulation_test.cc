@@ -41,8 +41,7 @@ namespace ipic3d {
 			Particle p;
 			p.position.x = p.position.y = p.position.z = 0.5;
 			p.velocity.x = p.velocity.y = p.velocity.z = 0.0;
-			p.mass = 1;
-			p.q = 1;
+			p.q = p.qom = 1.0;
 
 			// add test particle to first cell
 			a.particles.push_back(p);
@@ -59,7 +58,7 @@ namespace ipic3d {
 			EXPECT_EQ(0.0, a.particles.front().velocity.y);
 			EXPECT_EQ(0.0, a.particles.front().velocity.z);
 
-			EXPECT_EQ(1.0, a.particles.front().mass);
+			EXPECT_EQ(1.0, a.particles.front().qom);
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// run one simulation step
@@ -77,7 +76,7 @@ namespace ipic3d {
 			EXPECT_EQ(0.0, a.particles.front().velocity.y);
 			EXPECT_EQ(0.0, a.particles.front().velocity.z);
 
-			EXPECT_EQ(1.0, a.particles.front().mass);
+			EXPECT_EQ(1.0, a.particles.front().qom);
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// change velocity and send in x direction
@@ -93,7 +92,7 @@ namespace ipic3d {
 			EXPECT_EQ(0.0, a.particles.front().velocity.y);
 			EXPECT_EQ(0.0, a.particles.front().velocity.z);
 
-			EXPECT_EQ(1.0, a.particles.front().mass);
+			EXPECT_EQ(1.0, a.particles.front().qom);
 			EXPECT_EQ(1.0, a.particles.front().q);
 
 			// run one simulation step
@@ -171,13 +170,12 @@ namespace ipic3d {
 		// add one particle
 		Particle p;
 		p.position.x = p.position.y = 0.5;
-		p.position.z = 0;
+		p.position.z = 0.0;
 
-		p.velocity.x = p.velocity.y = 0;
-		p.velocity.z = 1;
+		p.velocity.x = p.velocity.y = 0.0;
+		p.velocity.z = 1.0;
 
-		p.q = 1;
-		p.mass = 1;
+		p.q = p.qom = 1.0;
 
 		cell.particles.push_back(p);
 
@@ -200,13 +198,12 @@ namespace ipic3d {
 
 		// Set universe properties
 		UniverseProperties properties;
+		properties.useCase = UseCase::Test;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 3e-11;
-		properties.useCase = UseCase::Test;
-
-		// number of steps
-		unsigned niter = 10;
+		properties.origin = { -10.0, -10.0, -10.0 };
+		properties.FieldOutputCycle = 1e6;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -221,6 +218,8 @@ namespace ipic3d {
 			field[pos].B = { 0.0, 0.0, 0.01 };
 		});
 
+		utils::Coordinate<3> field_pos = { 1, 1, 1 };
+
 		// add one particle
 		Particle p;
 		p.position.x = p.position.y = p.position.z = 0.0;
@@ -229,23 +228,110 @@ namespace ipic3d {
 		p.velocity.y = 1e5;
 
 		p.q = -1.602e-19;
-		p.mass = 9.109e-31;
+		double mass = 9.109e-31;  
+		p.qom = p.q / mass;
 
 		// compute Larmor radius
-		double rL = p.mass * p.velocity.y / (fabs(p.q) * field[{0,0,0}].B.z);
+		double rL = mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
 		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
+
+		// re-initialize the x coordinate
 		p.position.x = rL;
 
 		// push velocity back in time by 1/2 dt
-		p.updateVelocityBorisStyle(field[{0,0,0}].E, field[{0,0,0}].B, -0.5*properties.dt);
+		// 		this is purely done to compare against the Matlab version 
+		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
+
+		// number of steps
+		unsigned numSteps = 1000;
+		// run the simulation
+		//simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
+		for(unsigned i = 0; i < numSteps; ++i) {
+			auto E = field[field_pos].E;
+			auto B = field[field_pos].B;
+
+			// update velocity
+			p.updateVelocityBorisStyle(E, B, properties.dt);
+
+			// update position
+			p.updatePosition(properties.dt);
+		}
+		
+
+		// check where particle ended up
+		cell.particles.push_back(p);
+		ASSERT_FALSE(cell.particles.empty());
+
+		// check that the position is close to what is expected
+		// comparing against the matlab code after 10 iterations
+		EXPECT_NEAR( p.position.x, -4.50134e-05, 1e-10);
+		EXPECT_NEAR( p.position.y, 3.47983e-05, 1e-09);
+		EXPECT_NEAR( p.position.z, 0.0,		 1e-10);
+
+		// check that the velocity is close to what is expected
+		EXPECT_NEAR( p.velocity.x, -63242.7, 1e1);
+		EXPECT_NEAR( p.velocity.y, -77462.0, 1e1);
+		EXPECT_NEAR( p.velocity.z, 0.0,     1e-02);
+	}
+
+
+	TEST(Simulation, SingleParticleLarmorRadius) {
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.useCase = UseCase::Test;
+		properties.size = { 1,1,1 };
+		properties.cellWidth = { 1e4,1e4,1e4 };
+		properties.dt = 3e-11;
+		properties.origin = { -10.0, -10.0, -10.0 };
+		properties.FieldOutputCycle = 1e6;
+
+		// Create Universe with these properties
+		Universe universe = Universe(properties);
+
+		Cell& cell = universe.cells[{0, 0, 0}];
+
+		// initialize field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.0, 0.0, 0.0  };
+			field[pos].B = { 0.0, 0.0, 0.01 };
+		});
+
+		utils::Coordinate<3> field_pos = { 1, 1, 1 };
+
+		// add one particle
+		Particle p;
+		p.position.x = p.position.y = p.position.z = 0.0;
+
+		p.velocity.x = p.velocity.z = 0.0;
+		p.velocity.y = 1e5;
+
+		p.q = -1.602e-19;
+		double mass = 9.109e-31;
+		p.qom = p.q / mass;
+
+		// compute Larmor radius
+		double rL = mass * p.velocity.y / (fabs(p.q) * field[field_pos].B.z);
+		EXPECT_NEAR( rL, 5.686e-05, 1e-06 );
+
+		// re-initialize the x coordinate
+		p.position.x = rL;
+
+		// push velocity back in time by 1/2 dt
+		// 		this is purely done to compare against the Matlab version 
+		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
 
 		cell.particles.push_back(p);
 
 		// check particle position
 		EXPECT_FALSE(cell.particles.empty());
 
+		// number of steps
+		unsigned numSteps = 10;
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(numSteps,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
@@ -253,14 +339,90 @@ namespace ipic3d {
 
 		// check that the position is close to what is expected
 		// comparing against the matlab code after 10 iterations
-		EXPECT_NEAR( res.position.x, 5.7652e-05, 1e-06);
-		EXPECT_NEAR( res.position.y, 2.9990e-05, 1e-06);
-		EXPECT_NEAR( res.position.z, 0.0,		 1e-06);
+		EXPECT_NEAR( res.position.x, 5.7651e-05, 1e-09);
+	    EXPECT_NEAR( res.position.y, 2.9990e-05, 1e-09); 
+        EXPECT_NEAR( res.position.z, 0.0, 1e-10);
 
 		// check that the velocity is close to what is expected
-		EXPECT_NEAR( res.velocity.x, 2637.59, 1e2);
-		EXPECT_NEAR( res.velocity.y, 99965.2, 1e2);
-		EXPECT_NEAR( res.velocity.z, 0.0,     1e-2);
+		EXPECT_NEAR( p.velocity.x, 2637.59, 1e1);
+		EXPECT_NEAR( p.velocity.y, 99965.2, 1e1);
+		EXPECT_NEAR( p.velocity.z, 0.0,     1e-02);
+	}
+
+
+	TEST(Simulation, SingleParticleBorisMoverExBdrift) {
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.useCase = UseCase::Test;
+		properties.size = { 1,1,1 };
+		properties.cellWidth = { 1e4,1e4,1e4 };
+		properties.dt = 0.01;
+		properties.origin = { -100.0, -100.0, -100.0 };
+		properties.FieldOutputCycle = 1e6;
+
+		// Create Universe with these properties
+		Universe universe = Universe(properties);
+
+		Cell& cell = universe.cells[{0, 0, 0}];
+
+		// initialize field
+		Field& field = universe.field;
+		decltype(field.size()) zero = 0;
+		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			field[pos].E = { 0.2, 0.0, 0.0 };
+			field[pos].B = { 0.0, 0.0, 1.0 };
+		});
+
+		utils::Coordinate<3> field_pos = { 1, 1, 1 };
+
+		// add one particle
+		Particle p;
+		p.position.x = p.position.y = p.position.z = 0.0;
+
+		p.velocity.x = 0.5;
+		p.velocity.y = p.velocity.z = 0.0;
+
+		p.q = p.qom = 1.0;
+
+		// push velocity back in time by 1/2 dt
+		// 		this is purely done to compare against the Matlab version 
+		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
+
+		// run the simulation
+		// number of steps
+		unsigned numSteps = 5000;
+		//simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(numSteps,universe);
+		for(unsigned i = 0; i < numSteps; ++i) {
+			auto E = field[field_pos].E;
+			auto B = field[field_pos].B;
+
+			// update velocity
+			p.updateVelocityBorisStyle(E, B, properties.dt);
+
+			// update position
+			p.updatePosition(properties.dt);
+
+			//std::cout << i << " " << i * universe.properties.dt << " ";
+			//std::cout << p.position.x << " " << p.position.y << " " << p.position.z << " ";
+			//std::cout << p.velocity.x << " " << p.velocity.y << " " << p.velocity.z << "\n";
+		}
+
+		// check where particle ended up
+		cell.particles.push_back(p);
+		ASSERT_FALSE(cell.particles.empty());
+		Particle res = cell.particles.front();
+
+		// check that the position is close to what is expected
+		// comparing against the matlab code after 10 iterations
+		EXPECT_NEAR( res.position.x, -0.1131, 1e-01 );
+		EXPECT_NEAR( res.position.y, -10.0797,  1e-02 );
+		EXPECT_NEAR( res.position.z, 0.0,	    1e-10 );
+
+		// check that the velocity is close to what is expected
+		EXPECT_NEAR( res.velocity.x, 0.4203, 1e-02 );
+		EXPECT_NEAR( res.velocity.y, 0.1131, 1e-01 );
+		EXPECT_NEAR( res.velocity.z, 0.0,    1e-10 );
 	}
 
 
@@ -298,8 +460,7 @@ namespace ipic3d {
 		p.position.x = 0.4;
 		p.velocity.z = p.velocity.y = 0.0;
 		p.velocity.x = 1.0;
-		p.q = 1.0;
-		p.mass = 1.0;
+		p.q = p.qom = 1.0;
 
 		// add test particle to first cell
 		a.particles.push_back(p);
@@ -451,8 +612,7 @@ namespace ipic3d {
 		p.position.z = 0.8;
 		p.velocity.x = p.velocity.y = 1.0;
 		p.velocity.z = 0.0;
-		p.q = 1.0;
-		p.mass = 1.0;
+		p.q = p.qom = 1.0;
 
 		// add test particle to first cell
 		a.particles.push_back(p);
@@ -606,16 +766,16 @@ namespace ipic3d {
 		Particle p0, p1, p2, p3, p4, p5, p6, p7;
 		p0.position.x = 0.4; p0.position.y = p0.position.z = 0.4;
 		p0.velocity.x = 0.6; p0.velocity.y = p0.velocity.z = 0.6;
-		p0.q = p0.mass = 1;
+		p0.q = p0.qom = 1.0;
 		p1.position.x = 0.8; p1.position.y = p1.position.z = 0.4;
 		p1.velocity.x = 0.3; p1.velocity.y = p1.velocity.z = 0.3;
-		p1.q = p1.mass = 1;
+		p1.q = p1.qom = 1.0;
 		p2.position.y = 0.8; p2.position.x = p2.position.z = 0.4;
 		p2.velocity.x = 0.1; p2.velocity.y = p2.velocity.z = 0.1;
-		p2.q = p2.mass = 1;
+		p2.q = p2.qom = 1.0;
 		p3.position.x = 0.75; p3.position.y = 0.75; p3.position.z = 0.4;
 		p3.velocity.x = 0.8; p3.velocity.y = p3.velocity.z = 0.8;
-		p3.q = p3.mass = 1;
+		p3.q = p3.qom = 1.0;
 		p4 = p0;
 		p4.position.z = 0.6;
 		p5 = p1;

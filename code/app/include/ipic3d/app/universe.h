@@ -58,7 +58,7 @@ namespace ipic3d {
 		std::cout << universeProperties;
 
 		// initialize grid of cells
-		Cells&& cells = initCells(initProperties, universeProperties);
+		Cells&& cells = initCells(params, initProperties, universeProperties);
 
 		// initialize fields on node
 		Field&& field = initFields(initProperties, universeProperties);
