@@ -11,18 +11,23 @@ namespace ipic3d {
 
 	using coordinate_type = allscale::api::user::data::GridPoint<3>;
 
-    static const std::map<UseCase, std::string> useCaseNaming = {{UseCase::Dipole, "Dipole"}, {UseCase::ParticleWave, "ParticleWave"}, {UseCase::Test, "Test"}};
+	namespace {
+		std::string getUseCaseName(const UseCase& useCase) {
+			switch(useCase) {
+			case UseCase::Dipole: return "Dipole";
+			case UseCase::ParticleWave: return "ParticleWave";
+			case UseCase::Test: return "Test";
+			}
+			// adhere to fallback policy in parameter parsing
+			return "ParticleWave";
+		}
+	}
 
     /**
 	* Printing support for the use case enum.
 	*/
 	std::ostream& operator<<(std::ostream& out, const UseCase& useCase) {
-		if(useCaseNaming.find(useCase) != useCaseNaming.end()) {
-			return out << useCaseNaming.at(useCase);
-		} else {
-			// adhere to fallback policy in parameter parsing
-			return out << "ParticleWave";
-		}
+		return out << getUseCaseName(useCase);
 	}
 
 	// TODO: these defaults should not be externally visible
