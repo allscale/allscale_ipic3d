@@ -203,7 +203,7 @@ namespace ipic3d {
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 3e-11;
 		properties.origin = { -10.0, -10.0, -10.0 };
-		properties.FieldOutputCycle = 1e6;
+		properties.FieldOutputCycle = (int)1e6;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -284,7 +284,7 @@ namespace ipic3d {
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 3e-11;
 		properties.origin = { -10.0, -10.0, -10.0 };
-		properties.FieldOutputCycle = 1e6;
+		properties.FieldOutputCycle = (int)1e6;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);
@@ -359,7 +359,7 @@ namespace ipic3d {
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 0.01;
 		properties.origin = { -100.0, -100.0, -100.0 };
-		properties.FieldOutputCycle = 1e6;
+		properties.FieldOutputCycle = (int)1e6;
 
 		// Create Universe with these properties
 		Universe universe = Universe(properties);

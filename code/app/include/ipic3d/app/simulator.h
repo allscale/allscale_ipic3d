@@ -84,7 +84,7 @@ namespace ipic3d {
 
 		// instantiate operators
 		auto particletoFieldProjector = ParticleToFieldProjector();
-		auto fieldSolver = FieldSolver();
+//		auto fieldSolver = FieldSolver();
 		auto particleMover = ParticleMover();
 
 		// -- setup simulation --
@@ -93,9 +93,9 @@ namespace ipic3d {
 		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
 		auto densitySize = size + utils::Coordinate<3>(1); // J is defined on nodes
-		auto fieldSize = universe.field.size();
-		auto fieldStart = utils::Coordinate<3>(1);
-		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+//		auto fieldSize = universe.field.size();
+//		auto fieldStart = utils::Coordinate<3>(1);
+//		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 
 
 		// -- auxiliary structures for communication --
