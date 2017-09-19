@@ -79,8 +79,8 @@ namespace ipic3d {
 				prob[2] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[2] ) );
 
 				p.velocity[0] = params.u0[0] + params.uth[0] * ( prob[0] * cos(theta[0]) );
-				p.velocity[1] = params.v0[1] + params.vth[1] * ( prob[1] * sin(theta[1]) );
-				p.velocity[2] = params.w0[2] + params.wth[2] * ( prob[2] * cos(theta[2]) );
+				p.velocity[1] = params.v0[0] + params.vth[0] * ( prob[1] * sin(theta[1]) );
+				p.velocity[2] = params.w0[0] + params.wth[0] * ( prob[2] * cos(theta[2]) );
 				
 				p.qom = params.qom[0];
 				p.q = q_factor * params.rhoInit[0];  
