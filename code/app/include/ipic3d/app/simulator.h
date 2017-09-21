@@ -51,9 +51,9 @@ namespace ipic3d {
 	// -------------------------------------------------------------------------------------
 
 	// write output depending on the set frequency
-	void writeOutput(int cycle, Universe& universe) {
-		if ( cycle % universe.properties.FieldOutputCycle == 0 ) {
-			std::cout << universe.properties.FieldOutputCycle << ' ';
+	void writeOutput(const int cycle, const int numSteps, Universe& universe) {
+		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
+			std::cout << cycle << ' ';
 	
 			double Eenergy = getEenergy(universe.field, universe.properties);
 			double Benergy = getBenergy(universe.field, universe.properties);
@@ -115,15 +115,15 @@ namespace ipic3d {
 			using namespace allscale::api::user;
 
 			// write output to a file: total energy, momentum, E and B total energy
-			writeOutput(i, universe);
+			writeOutput(i, numSteps, universe);
 
 			// STEP 1: collect particle contributions
 			// project particles to density field
-			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-				// TODO: this can be improved by adding rho
-				// 	J is defined on nodes
-				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
-			});
+//			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
+//				// TODO: this can be improved by adding rho
+//				// 	J is defined on nodes
+//				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
+//			});
 
 //			// STEP 2: solve field equations
 //			// update boundaries
