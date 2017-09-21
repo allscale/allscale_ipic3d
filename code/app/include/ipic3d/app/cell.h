@@ -119,7 +119,7 @@ namespace ipic3d {
 				for(int j = 0; j < 2; ++j) {
 					for(int k = 0; k < 2; ++k) {
 						utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-						auto cornerPos = getLocationForCells(cur, universeProperties); 
+						auto cornerPos = getOriginOfCell(cur, universeProperties); 
 						auto fac = (i == 0 ? (1 - cornerPos.x) : cornerPos.x) * (j == 0 ? (1 - cornerPos.y) : cornerPos.y) * (k == 0 ? (1 - cornerPos.z) : cornerPos.z);
 						Js[i][j][k] += p.q * p.velocity * fac;
 					}
@@ -243,7 +243,8 @@ namespace ipic3d {
 			}
 		}
 
-		const auto cellCenter = getCenterOfCell(pos, universeProperties);
+		//const auto cellCenter = getCenterOfCell(pos, universeProperties);
+		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
 
         double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 
@@ -252,8 +253,11 @@ namespace ipic3d {
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
-			// get relative position of particle within cell
-			const auto relPos = allscale::utils::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
+			// get relative position of a particle within a cell
+			//const auto relPos = allscale::utils::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
+
+			// get the fractional distance of the particle from the cell origin
+			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
 
 			// interpolate
 			// TODO: I am not really sure about this part

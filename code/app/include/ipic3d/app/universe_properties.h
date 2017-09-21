@@ -109,7 +109,7 @@ namespace ipic3d {
 
 	};
 
-	Vector3<double> getLocationForCells(const coordinate_type& pos, const UniverseProperties& properties) {
+	Vector3<double> getOriginOfCell(const coordinate_type& pos, const UniverseProperties& properties) {
 		// do not check for strict domination, as pos could also refer to a field position
 		assert_true(pos.dominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
 		Vector3<double> tempPos{ (double)pos.x, (double)pos.y, (double)pos.z };
@@ -125,7 +125,7 @@ namespace ipic3d {
 
 	Vector3<double> getCenterOfCell(const coordinate_type& pos, const UniverseProperties& properties) {
 		assert_true(pos.strictlyDominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
-		return properties.origin + getLocationForCells(pos, properties) + properties.cellWidth / 2;
+		return properties.origin + getOriginOfCell(pos, properties) + properties.cellWidth / 2;
 	}
 
 }
