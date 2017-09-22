@@ -84,7 +84,7 @@ namespace ipic3d {
 
 		// instantiate operators
 		auto particletoFieldProjector = ParticleToFieldProjector();
-//		auto fieldSolver = FieldSolver();
+		auto fieldSolver = FieldSolver();
 		auto particleMover = ParticleMover();
 
 		// -- setup simulation --
@@ -93,9 +93,9 @@ namespace ipic3d {
 		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
 		auto densitySize = size + utils::Coordinate<3>(1); // J is defined on nodes
-//		auto fieldSize = universe.field.size();
-//		auto fieldStart = utils::Coordinate<3>(1);
-//		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		auto fieldSize = universe.field.size();
+		auto fieldStart = utils::Coordinate<3>(1);
+		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 
 
 		// -- auxiliary structures for communication --
@@ -119,20 +119,20 @@ namespace ipic3d {
 
 			// STEP 1: collect particle contributions
 			// project particles to density field
-//			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-//				// TODO: this can be improved by adding rho
-//				// 	J is defined on nodes
-//				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
-//			});
+			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
+				// TODO: this can be improved by adding rho
+				// 	J is defined on nodes
+				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
+			});
 
-//			// STEP 2: solve field equations
-//			// update boundaries
-//			updateFieldsOnBoundaries(universe.field, universe.bcfield);
-//			
-//			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
-//			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-//				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
-//			});
+			// STEP 2: solve field equations
+			// update boundaries
+			updateFieldsOnBoundaries(universe.field, universe.bcfield);
+			
+			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
+			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
+			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
@@ -164,8 +164,8 @@ namespace ipic3d {
 
 		struct default_field_solver {
 			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) const {
-				solveFieldForward(universeProperties, pos, density, field, bcfield);
-				//solveFieldStatically(universeProperties, pos, field);
+				//solveFieldForward(universeProperties, pos, density, field, bcfield);
+				solveFieldStatically(universeProperties, pos, field);
 			}
 		};
 

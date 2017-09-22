@@ -87,6 +87,7 @@ namespace ipic3d {
 
 					// Node coordinates
 					// TODO: double check cur - start
+					// pos-start due to the fact that we have a ghost field
 					auto location = getLocationForFields(cur-start, universeProperties);
 
 					auto diff = location - objectCenter;
@@ -94,7 +95,6 @@ namespace ipic3d {
 					double r2 = allscale::utils::sumOfSquares(diff);
 
 					// Compute dipolar field B_ext
-
 					if (r2 > a*a) {
 						auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
 						fields[cur].Bext.x = 3.0 * diff.x * diff.z * fac1;
@@ -103,6 +103,9 @@ namespace ipic3d {
 					} else { // no field inside the planet
 						fields[cur].Bext = { 0.0, 0.0, 0.0 };
 					}
+
+					// TODO: investigate this (commented out in the original code)
+					fields[cur].B += fields[cur].Bext;
 
 				});
 
@@ -266,19 +269,8 @@ namespace ipic3d {
 
 			case UseCase::Dipole:
 			{
-				auto B = field[pos].B;
-
-				// Node coordinates
-				auto location = getCenterOfCell(pos, universeProperties);
-				// TODO: double check this as the field test crashes
-				//auto location = getLocationForFields(pos, universeProperties);
-
-				double fac1 = -B0 * pow(Re, 3.0) / pow(allscale::utils::sumOfSquares(location), 2.5);
-				B.x = 3.0 * location.x * location.z * fac1;
-				B.y = 3.0 * location.y * location.z * fac1;
-				B.z = (2.0 * location.z * location.z - location.x * location.x - location.y * location.y) * fac1;
-
-				field[pos].B = B;
+				// no need to update as Bext is computed only once during the initialization
+				// the same holds for E and B
 
 				break;
 			}
