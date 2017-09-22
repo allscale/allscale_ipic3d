@@ -58,34 +58,36 @@ namespace ipic3d {
 		// the 3D density fields
 		DensityNodes densityNodes(fieldSize);
 
-		auto driftVel = initProperties.driftVelocity;
-		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
-		auto ebc = crossProduct(driftVel[0], initProperties.magneticFieldAmplitude) * -1;
+		switch(universeProperties.useCase) {
 
-		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+			case UseCase::Dipole: {
 
-			// initialize rhos
-			densityNodes[cur].rho = initProperties.rhoInit / (4.0 * M_PI); 
+				auto driftVel = initProperties.driftVelocity;
+				assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
+				auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
 
-			// initialize electrical field
-			fields[cur].E = ebc;
+				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
 
-			// initialize magnetic field
-			fields[cur].B = initProperties.magneticFieldAmplitude;
+					// initialize rhos
+					densityNodes[cur].rho = initProperties.rhoInit / (4.0 * M_PI); 
 
-			// -- add earth model --
+					// initialize electrical field
+					fields[cur].E = ebc;
 
-			switch(universeProperties.useCase) {
+					// initialize magnetic field
+					fields[cur].B = initProperties.magneticFieldAmplitude;
 
-				case UseCase::Dipole: {
+					// -- add earth model --
 
 					// radius of the planet
 					double a = universeProperties.planetRadius;
 
 					// Dipole's Center
 					auto objectCenter = universeProperties.objectCenter;
+
 					// Node coordinates
-					auto location = getLocationForFields(cur, universeProperties);
+					// TODO: double check cur - start
+					auto location = getLocationForFields(cur-start, universeProperties);
 
 					auto diff = location - objectCenter;
 
@@ -102,22 +104,20 @@ namespace ipic3d {
 						fields[cur].Bext = { 0.0, 0.0, 0.0 };
 					}
 
-					break;
-				}
+				});
 
-				case UseCase::ParticleWave: {
-
-					fields[cur].Bext = { 0, 0, 0 };
-
-					break;
-				}
-
-				default:
-						assert_not_implemented()
-							<< "The specified use case is not supported yet!";
+				break;
 			}
 
-		});
+			case UseCase::ParticleWave: {
+
+				break;
+			}
+
+			default:
+					assert_not_implemented()
+						<< "The specified use case is not supported yet!";
+		}
 
 		// return the produced field
 		return fields;
