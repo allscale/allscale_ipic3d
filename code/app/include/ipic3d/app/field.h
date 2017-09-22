@@ -66,6 +66,12 @@ namespace ipic3d {
 				assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
 				auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
 
+				// radius of the planet
+				double a = universeProperties.planetRadius;
+
+				// Dipole's Center
+				auto objectCenter = universeProperties.objectCenter;
+
 				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
 
 					// initialize rhos
@@ -78,12 +84,6 @@ namespace ipic3d {
 					fields[cur].B = initProperties.magneticFieldAmplitude;
 
 					// -- add earth model --
-
-					// radius of the planet
-					double a = universeProperties.planetRadius;
-
-					// Dipole's Center
-					auto objectCenter = universeProperties.objectCenter;
 
 					// Node coordinates
 					// TODO: double check cur - start

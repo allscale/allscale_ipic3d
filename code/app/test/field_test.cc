@@ -25,9 +25,9 @@ namespace ipic3d {
 		universeProperties.planetRadius = 1000; 
 		Field fields = initFields(initProperties, universeProperties);
 
-		utils::Coordinate<3> start = 1;
-		utils::Coordinate<3> workingFieldSize = universeProperties.size + coordinate_type(2);
-		allscale::api::user::pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+		auto start = utils::Coordinate<3>(1);
+		auto end = universeProperties.size + coordinate_type(2);
+		allscale::api::user::pfor(start, end, [&](const utils::Coordinate<3>& cur) {
 			EXPECT_NEAR(fields[cur].Bext.x, 0.0, 1e-15);
 			EXPECT_NEAR(fields[cur].Bext.y, 0.0, 1e-15);
 			EXPECT_NEAR(fields[cur].Bext.z, 0.0, 1e-15);
@@ -38,7 +38,7 @@ namespace ipic3d {
 		universeProperties.useCase = UseCase::ParticleWave;
 		Field fields2 = initFields(initProperties, universeProperties);
 
-		allscale::api::user::pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+		allscale::api::user::pfor(start, end, [&](const utils::Coordinate<3>& cur) {
 			EXPECT_NEAR(fields2[cur].Bext.x, 0.0, 1e-15);
 			EXPECT_NEAR(fields2[cur].Bext.y, 0.0, 1e-15);
 			EXPECT_NEAR(fields2[cur].Bext.z, 0.0, 1e-15);
@@ -278,52 +278,46 @@ namespace ipic3d {
 
 
 	TEST(Field, FieldSolverStatic) {
-		// Set universe properties
-		UniverseProperties properties;
-		properties.size = { 1,1,1 };
-		properties.cellWidth = { 1,1,1 };
-		properties.useCase = UseCase::Dipole;
 
-		utils::Coordinate<3> pos{0, 0, 0};
+		// this test verifies E and B fields
+		std::string path = std::string(PATH_TO_INPUTS) + "/tiny.inp";
+		auto params = Parameters(path);
+
+		// initialize initial properties
+		InitProperties initProperties = InitProperties(params);
+
+		// initialize universe properties
+		UniverseProperties universeProperties = UniverseProperties(params);
 
 		// initialize field
-		Field field(properties.size + coordinate_type(1));
-		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
-			field[pos].E = { 0.0, 0.0, 0.0 };
-			field[pos].B = { 0.0, 0.0, 0.0 };
-		});
+		Field fields = initFields(initProperties, universeProperties);
+		auto zero = utils::Coordinate<3>(0);
+		auto start = utils::Coordinate<3>(1);
+		auto end = universeProperties.size + coordinate_type(2);
 
 	    // apply static field solver and check results
-		solveFieldStatically(properties, pos, field);
-		auto E = field[pos].E;
-		EXPECT_NEAR( E.x, 0.0, 1e-06 );
-		EXPECT_NEAR( E.y, 0.0, 1e-06 );
-		EXPECT_NEAR( E.z, 0.0, 1e-06 );
+		allscale::api::user::pfor(start, end, [&](const utils::Coordinate<3>& pos) {
+			solveFieldStatically(universeProperties, pos, fields);
+		});
 
-		auto B = field[pos].B;
-		EXPECT_NEAR( B.x, -1.226388334605022e+16, 1e+02 );
-		EXPECT_NEAR( B.y, -1.226388334605022e+16, 1e+02 );
-		EXPECT_NEAR( B.z, 0.0, 1e-06 );
+		// verify for the Dipole case
+		utils::Coordinate<3> pos{1, 2, 4};
 
+		EXPECT_NEAR(fields[pos].Bext.x, -1.46873e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.y, -9.17957e-09, 1e-11);
+		EXPECT_NEAR(fields[pos].Bext.z, 3.06394e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].B.x, -1.46873e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].B.y, -9.17957e-09, 1e-11);
+		EXPECT_NEAR(fields[pos].B.z, 0.000100031, 1e-09);
 
-	    // change target position and re-evaluate
-		properties.size = { 11,6,2 };
-	    pos = {10, 5, 1};
-		Field field2(properties.size + coordinate_type(1));
-		solveFieldStatically(properties, pos, field2);
-		E = field2[pos].E;
-		EXPECT_NEAR( E.x, 0.0, 1e-06 );
-		EXPECT_NEAR( E.y, 0.0, 1e-06 );
-		EXPECT_NEAR( E.z, 0.0, 1e-06 );
+		allscale::api::user::pfor(start, end, [&](const utils::Coordinate<3>& cur) {
+			EXPECT_NEAR(fields[cur].E.x, -0.0, 1e-06);
+			EXPECT_NEAR(fields[cur].E.y, 2.0e-06, 1e-08);
+			EXPECT_NEAR(fields[cur].E.z, -0.0, 1e-06);
+		});
 
-		B = field2[pos].B;
-		EXPECT_NEAR( B.x, -1545900104359.654, 1e-02 );
-		EXPECT_NEAR( B.y, -809757197521.7235, 1e-02 );
-		EXPECT_NEAR( B.z,  4449574903553.713, 1e-02 );
-
-
-        // verify particle wave test case
+        // verify for the wave test case
+        UniverseProperties properties;
 		properties.useCase = UseCase::ParticleWave;
 		properties.size = { 10,10,15 };
 	    pos = {7, 9, 13};
@@ -334,18 +328,18 @@ namespace ipic3d {
 		});
 		solveFieldStatically(properties, pos, field3);
 
-		E = field3[pos].E;
+		auto E = field3[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-06 );
 		EXPECT_NEAR( E.y, 0.0, 1e-06 );
 		EXPECT_NEAR( E.z, 0.0, 1e-06 );
 
-		B = field3[pos].B;
+		auto B = field3[pos].B;
 		EXPECT_NEAR( B.x, 0.0, 1e-06 );
 		EXPECT_NEAR( B.y, 0.0, 1e-06 );
 		EXPECT_NEAR( B.z, 0.0, 1e-06 );
 
 
-        // verify test case
+        // verify for the test case
 		properties.useCase = UseCase::Test;
 		properties.size = { 11,11,21 };
 	    pos = {10, 10, 20};
