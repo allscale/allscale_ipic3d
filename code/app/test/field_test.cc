@@ -455,9 +455,9 @@ namespace ipic3d {
 	    // apply leapfrog field solver and check results
 		solveFieldForward(properties, pos, density, field, bcfield);
 		auto E = field[pos].E;
-		EXPECT_NEAR( E.x, 0.8, 1e-15 );
-		EXPECT_NEAR( E.y, 0.8, 1e-15 );
-		EXPECT_NEAR( E.z, 0.8, 1e-15 );
+		EXPECT_NEAR( E.x, -0.4, 1e-15 );
+		EXPECT_NEAR( E.y, -0.4, 1e-15 );
+		EXPECT_NEAR( E.z, -0.4, 1e-15 );
 
 		auto Bc = bcfield[pos].Bc;
 		EXPECT_NEAR( Bc.x, 0.8, 1e-15 );

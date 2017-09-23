@@ -20,7 +20,7 @@ namespace ipic3d {
 
 		struct default_particle_to_field_projector;
 
-		struct default_field_solver;
+		struct forward_field_solver;
 
 		struct boris_mover;
 	}
@@ -28,7 +28,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::default_field_solver,
+		typename FieldSolver 				= detail::forward_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
 	void simulateSteps(unsigned numSteps, Universe& universe);
@@ -36,7 +36,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::default_field_solver,
+		typename FieldSolver 				= detail::forward_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
 	void simulateStep(Universe& universe) {
@@ -83,7 +83,7 @@ namespace ipic3d {
 	void simulateSteps(unsigned numSteps, Universe& universe) {
 
 		// instantiate operators
-		auto particletoFieldProjector = ParticleToFieldProjector();
+		auto particleToFieldProjector = ParticleToFieldProjector();
 		auto fieldSolver = FieldSolver();
 		auto particleMover = ParticleMover();
 
@@ -122,7 +122,7 @@ namespace ipic3d {
 			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
 				// TODO: this can be improved by adding rho
 				// 	J is defined on nodes
-				particletoFieldProjector(universe.properties, universe.cells[pos], pos, density);
+				particleToFieldProjector(universe.properties, universe.cells[pos], pos, density);
 			});
 
 			// STEP 2: solve field equations

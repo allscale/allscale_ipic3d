@@ -319,7 +319,7 @@ namespace ipic3d {
 				// 		sum curl B and Jh
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
-				field[pos].E += (curlB + density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
+				field[pos].E += (universeProperties.speedOfLight * curlB - density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
 
 				// 2. Compute B
 				// 		curl of E
@@ -329,7 +329,7 @@ namespace ipic3d {
 				//		scale curl by -c*dt
 				//		TODO: check the speed of light
 				//		update B_{n+1} on the center with the computed value
-				bcfield[pos].Bc -= curlE * universeProperties.dt;
+				bcfield[pos].Bc -= universeProperties.speedOfLight * curlE * universeProperties.dt;
 
 				//		TODO: Boundary conditions: periodic?
 				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid

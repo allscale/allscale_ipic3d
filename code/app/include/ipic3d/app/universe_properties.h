@@ -60,6 +60,8 @@ namespace ipic3d {
 		Vector3<double> cellWidth;
 		// The timestep
 		double dt;
+		// Speed of light
+		double speedOfLight;
 		// planet radius
 		double planetRadius;
 		// object center
@@ -72,12 +74,13 @@ namespace ipic3d {
 		int FieldOutputCycle;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::Dipole, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1.0, 1.0, 1.0},
-			const double dt = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, 
+			const double dt = 1.0, const double speedOfLight = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, 
 			const Vector3<double>& magneticField = {0.0, 0.0, 0.0}, const int FieldOutputCycle = 1)
-	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), magneticField(magneticField), FieldOutputCycle(FieldOutputCycle) {
+	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), magneticField(magneticField), FieldOutputCycle(FieldOutputCycle) {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
 		    assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
+		    assert_lt(0, speedOfLight) << "Expected positive non-zero speed of light, but got " << speedOfLight;
 		    assert_le(0, planetRadius) << "Expected positive or zero object radius, but got " << planetRadius;
 	    }
 
@@ -86,6 +89,7 @@ namespace ipic3d {
 			size({ params.ncells.x, params.ncells.y, params.ncells.z }),
 			cellWidth({ params.dspace.x, params.dspace.y, params.dspace.z }),
 			dt( params.dt ),
+			speedOfLight( params.c ),
 			planetRadius( params.planetRadius ),
 			objectCenter({ params.objectCenter.x, params.objectCenter.y, params.objectCenter.z }),
 			origin( {0.0, 0.0, 0.0} ),
@@ -98,7 +102,8 @@ namespace ipic3d {
 			out << "\tUse Case: " << props.useCase << std::endl;
 			out << "\tSize: " << props.size << std::endl;
 			out << "\tCell width: " << props.cellWidth << std::endl;
-			out << "\tTimestep: " << props.dt<< std::endl;
+			out << "\tTimestep: " << props.dt << std::endl;
+			out << "\tSpeed of light: " << props.speedOfLight << std::endl;
 			out << "\tPlanet radius: " << props.planetRadius << std::endl;
 			out << "\tObject center: " << props.objectCenter << std::endl;
 			out << "\tOrigin of the domain: " << props.origin << std::endl;
