@@ -320,6 +320,9 @@ namespace ipic3d {
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
 				field[pos].E += (universeProperties.speedOfLight * curlB - density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
+//				field[pos].E.x += (universeProperties.speedOfLight * curlB.z - density[pos - utils::Coordinate<3>(1)].J.x) * universeProperties.dt;
+//				field[pos].E.y += (universeProperties.speedOfLight * curlB.z - density[pos - utils::Coordinate<3>(1)].J.y) * universeProperties.dt;
+//				field[pos].E.y += (universeProperties.speedOfLight * (curlB.y - curlB.x) - density[pos - utils::Coordinate<3>(1)].J.z) * universeProperties.dt;
 
 				// 2. Compute B
 				// 		curl of E
@@ -327,11 +330,12 @@ namespace ipic3d {
 				computeCurlE(universeProperties, pos, field, curlE);
 
 				//		scale curl by -c*dt
-				//		TODO: check the speed of light
 				//		update B_{n+1} on the center with the computed value
 				bcfield[pos].Bc -= universeProperties.speedOfLight * curlE * universeProperties.dt;
+//				field[pos].B.x -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
+//				field[pos].B.y -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
+//				field[pos].B.z -= universeProperties.speedOfLight * (curlE.y - curlB.x) * universeProperties.dt;
 
-				//		TODO: Boundary conditions: periodic?
 				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
 
 				// 		interpolate B from center to nodes
@@ -360,7 +364,7 @@ namespace ipic3d {
 	/**
 	* Explicit Field Solver: Fields are computed using leapfrog algorithm
 	*/
-	void solveFieldLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) {
+	void solveFieldLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
@@ -375,7 +379,30 @@ namespace ipic3d {
 
 			case UseCase::Dipole:
 			{
-				// TODO
+				// 1. Compute E
+				// 		curl of B
+				Vector3<double> curlB;
+				computeCurlB(universeProperties, pos, bcfield, curlB);
+
+				// 		scale Jh by -4PI/c
+				// 		sum curl B and Jh
+				// 		scale the sum by dt
+				// 		update E_{n+1} with the computed value
+				field[pos].E += (universeProperties.speedOfLight * curlB - density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
+
+				// 2. Compute B
+				// 		curl of E
+				Vector3<double> curlE;
+				computeCurlE(universeProperties, pos, field, curlE);
+
+				//		scale curl by -c*dt
+				//		update B_{n+1} on the center with the computed value
+				bcfield[pos].Bc -= universeProperties.speedOfLight * curlE * universeProperties.dt;
+
+				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
+
+				// 		interpolate B from center to nodes
+				interpC2N(pos, bcfield, field);
 				break;
 			}
 

@@ -175,8 +175,8 @@ namespace ipic3d {
 		};
 
 		struct leapfrog_field_solver {
-			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, Field& field) const {
-				solveFieldLeapfrog(universeProperties, pos, field);
+			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) const {
+				solveFieldLeapfrog(universeProperties, pos, density, field, bcfield);
 			}
 		};
 

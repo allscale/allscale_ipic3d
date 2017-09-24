@@ -498,7 +498,7 @@ namespace ipic3d {
 
 	TEST(Field, solveFieldForwardTrajectory) {
 		
-		// this test verifies the explicit forward method§§§
+		// this test verifies the explicit forward method
 		// for a moment the test as well as the code are empty
 		
 		// Set universe properties
@@ -516,7 +516,7 @@ namespace ipic3d {
 			field[pos].E = { 0.2, 0.2, 0.2 };
 			field[pos].B = { 0.4, 0.4, 0.4 };
 		});
-		// initialize field
+		// initialize bcfield
 		BcField bcfield(properties.size + coordinate_type(2));
 		allscale::api::user::pfor(zero,bcfield.size(),[&](auto& pos){
 			bcfield[pos].Bc = { 0.8, 0.8, 0.8 };
@@ -529,18 +529,17 @@ namespace ipic3d {
 		
 
 	    // apply the field solver and check results
-		unsigned numSteps = 500;
+		unsigned numSteps = 20;
 		utils::Coordinate<3> field_pos{2, 2, 2};
 		for(unsigned i = 0; i < numSteps; ++i) {
-			//solveFieldForward(properties, field_pos, density, field, bcfield);
-			solveFieldStatically(properties, field_pos, field);
-			//auto E = field[field_pos].E;
+			solveFieldForward(properties, field_pos, density, field, bcfield);
+			auto E = field[field_pos].E;
 			auto B = field[field_pos].B;
-			//auto Bc = bcfield[field_pos].Bc;
+			auto Bc = bcfield[field_pos].Bc;
 
 			std::cout << i << " " << i * properties.dt << " ";
-			//std::cout << E.x << " " << E.y << " " << E.z << " ";
-			//std::cout << Bc.x << " " << Bc.y << " " << Bc.z << " ";
+			std::cout << E.x << " " << E.y << " " << E.z << " ";
+			std::cout << Bc.x << " " << Bc.y << " " << Bc.z << " ";
 			std::cout << B.x << " " << B.y << " " << B.z << "\n";
 		}
 	}
@@ -566,9 +565,19 @@ namespace ipic3d {
 			field[pos].E = { 0.0, 0.0, 0.0 };
 			field[pos].B = { 0.0, 0.0, 0.0 };
 		});
+		// initialize bcfield
+		BcField bcfield(properties.size + coordinate_type(2));
+		allscale::api::user::pfor(zero,bcfield.size(),[&](auto& pos){
+			bcfield[pos].Bc = { 0.0, 0.0, 0.0 };
+		});
+		// initialize density
+		DensityNodes density(properties.size + coordinate_type(3));
+		allscale::api::user::pfor(zero,density.size(),[&](auto& pos){
+			density[pos].J = { 0.0, 0.0, 0.0 };
+		});
 
 	    // apply leapfrog field solver and check results
-		solveFieldLeapfrog(properties, pos, field);
+		solveFieldLeapfrog(properties, pos, density, field, bcfield);
 		auto E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-15 );
 		EXPECT_NEAR( E.y, 0.0, 1e-15 );
@@ -583,7 +592,7 @@ namespace ipic3d {
 		// for the particle wave case
 		properties.useCase = UseCase::ParticleWave;
 		pos = {1, 2, 3};
-		solveFieldLeapfrog(properties, pos, field);
+		solveFieldLeapfrog(properties, pos, density, field, bcfield);
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-15 );
 		EXPECT_NEAR( E.y, 0.0, 1e-15 );
@@ -598,7 +607,7 @@ namespace ipic3d {
 		// for the test case	
 		properties.useCase = UseCase::Test;
 		pos = {3, 4, 5};
-		solveFieldLeapfrog(properties, pos, field);
+		solveFieldLeapfrog(properties, pos, density, field, bcfield);
 		E = field[pos].E;
 		EXPECT_NEAR( E.x, 0.0, 1e-15 );
 		EXPECT_NEAR( E.y, 0.0, 1e-15 );
