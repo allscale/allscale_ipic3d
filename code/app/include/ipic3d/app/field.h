@@ -368,41 +368,32 @@ namespace ipic3d {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
-		// 1. Compute current density J as sum of particles density times particles velocity
+		// compute electric field E using leapfrog with the time step delta t
 
-		// 2. Compute electric field E using leapfrog with the time step delta t
-
-		// 3. Compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
-		//    Compute also magnetic field B on the center of each cell as average of all nodes
+		// compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
+		// compute also magnetic field B on the center of each cell as average of all nodes
 
 		switch(universeProperties.useCase) {
 
 			case UseCase::Dipole:
 			{
-				// 1. Compute E
-				// 		curl of B
-				Vector3<double> curlB;
-				computeCurlB(universeProperties, pos, bcfield, curlB);
+				//	Compute transverse magnetic (TM) sets
+				bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
 
-				// 		scale Jh by -4PI/c
-				// 		sum curl B and Jh
-				// 		scale the sum by dt
-				// 		update E_{n+1} with the computed value
-				field[pos].E += (universeProperties.speedOfLight * curlB - density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
+				field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos].J.x; 
 
-				// 2. Compute B
-				// 		curl of E
-				Vector3<double> curlE;
-				computeCurlE(universeProperties, pos, field, curlE);
+				field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos].J.y; 
 
-				//		scale curl by -c*dt
-				//		update B_{n+1} on the center with the computed value
-				bcfield[pos].Bc -= universeProperties.speedOfLight * curlE * universeProperties.dt;
 
-				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
+				//	Compute transverse electric (TE) sets
+				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos].J.z );
 
-				// 		interpolate B from center to nodes
-				interpC2N(pos, bcfield, field);
+				bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({0,-1,0})].E.z) / universeProperties.cellWidth.y; 
+
+				bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({-1,0,0})].E.z) / universeProperties.cellWidth.x; 
+
+				//	Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
+
 				break;
 			}
 
