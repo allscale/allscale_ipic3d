@@ -132,7 +132,6 @@ namespace ipic3d {
 		Universe universe = Universe(properties);
 
 		// configure the cell
-		Cell& a = universe.cells[{0, 0, 0}];
 		Cell& b = universe.cells[{1, 0, 0}];
 		Cell& c = universe.cells[{0, 1, 0}];
 		Cell& d = universe.cells[{1, 1, 0}];
