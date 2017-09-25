@@ -110,7 +110,7 @@ namespace ipic3d {
 		if(cell.particles.empty()) return;		// nothing to contribute
 
 		// init aggregated densities of neighboring cells
-		Vector3<double> Js[2][2][2] = { 0.0 };
+		Vector3<double> Js[2][2][2] = { { { Vector3<double>(0.0) } } };
 
 		// aggregate charge density from particles
 		// TODO: use pfor here
