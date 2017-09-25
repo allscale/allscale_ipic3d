@@ -45,7 +45,7 @@ namespace ipic3d {
 
 	};
 
-	Universe createUniverseFromParams(const Parameters& params) {
+	Universe createUniverseFromParams(const Parameters& params, const std::string& baseName) {
 
 		// initialize initial properties
 		InitProperties initProperties = InitProperties(params);
@@ -54,6 +54,7 @@ namespace ipic3d {
 
 		// initialize universe properties
 		UniverseProperties universeProperties = UniverseProperties(params);
+		universeProperties.outputFileBaseName = baseName;
 
 		std::cout << universeProperties;
 
