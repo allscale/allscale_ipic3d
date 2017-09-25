@@ -163,7 +163,7 @@ namespace ipic3d {
 		};
 
 		struct default_field_solver {
-			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density __attribute__ ((unused)), Field& field, BcField& bcfield __attribute__ ((unused))) const {
+			void operator()(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& /*density*/, Field& field, BcField& /*bcfield*/) const {
 				solveFieldStatically(universeProperties, pos, field);
 			}
 		};
