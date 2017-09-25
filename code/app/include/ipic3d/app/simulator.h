@@ -20,8 +20,7 @@ namespace ipic3d {
 
 		struct default_particle_to_field_projector;
 
-		//struct forward_field_solver;
-		struct leapfrog_field_solver;
+		struct default_field_solver;
 
 		struct boris_mover;
 	}
@@ -29,7 +28,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::leapfrog_field_solver,
+		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
 	void simulateSteps(unsigned numSteps, Universe& universe);
@@ -37,7 +36,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::leapfrog_field_solver,
+		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::boris_mover
 	>
 	void simulateStep(Universe& universe) {
