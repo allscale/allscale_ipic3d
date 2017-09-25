@@ -30,7 +30,7 @@ namespace ipic3d {
 
 	TEST(Cell, VerifyCorrectParticlesPositionInCell) {
 	
-		// this test checkes the correct placement of particles within cells
+		// this test checks the correct placement of particles within cells
 
 		// Set universe properties
 		UniverseProperties properties;
@@ -115,6 +115,55 @@ namespace ipic3d {
 		ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, g, {0,1,1}) );
 		ASSERT_FALSE( VerifyCorrectParticlesPositionInCell(properties, h, {1,1,1}) );
 		
+	}
+	
+	TEST(Cell, TestCellOutput) {
+
+		// this test checks the output of the number of particles per cell
+
+		// Set universe properties
+		UniverseProperties properties;
+		properties.size = { 2,2,2 };
+		properties.cellWidth = { .5,.5,.5 };
+		properties.dt = 0.1;
+		properties.useCase = UseCase::Test;
+
+		// Create a universe with these properties
+		Universe universe = Universe(properties);
+
+		// configure the cell
+		Cell& a = universe.cells[{0, 0, 0}];
+		Cell& b = universe.cells[{1, 0, 0}];
+		Cell& c = universe.cells[{0, 1, 0}];
+		Cell& d = universe.cells[{1, 1, 0}];
+		Cell& e = universe.cells[{0, 0, 1}];
+		Cell& f = universe.cells[{1, 0, 1}];
+		Cell& g = universe.cells[{0, 1, 1}];
+		Cell& h = universe.cells[{1, 1, 1}];
+
+		// create dummy particle
+		Particle p;
+
+		// add dummy particle to cells for counting only
+		b.particles.push_back(p);
+		c.particles.push_back(p);
+		c.particles.push_back(p);
+		d.particles.push_back(p);
+		d.particles.push_back(p);
+		d.particles.push_back(p);
+		e.particles.push_back(p);
+		f.particles.push_back(p);
+		g.particles.push_back(p);
+		h.particles.push_back(p);
+		h.particles.push_back(p);
+		h.particles.push_back(p);
+		h.particles.push_back(p);
+
+		// verify the proper particles count output
+		std::stringstream ss;
+		outputNumberOfParticlesPerCell(universe.cells, ss);
+		EXPECT_EQ("[2,2,2]\n0 1 2 1 1 1 3 4 \n", ss.str());
+
 	}
 
 }

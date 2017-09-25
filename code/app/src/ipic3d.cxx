@@ -23,9 +23,11 @@ int main(int argc, char** argv) {
 		return EXIT_FAILURE;
 	}
 
+	std::string inputFilename = argv[1];
+
 	// load input configuration
-	std::cout << "Loading configuration file \"" << argv[1] << "\" ..." << std::endl;
-	auto params = Parameters(argv[1]);
+	std::cout << "Loading configuration file \"" << inputFilename << "\" ..." << std::endl;
+	auto params = Parameters(inputFilename);
 
 	// ----- initialize simulation environment ------
 
@@ -51,6 +53,12 @@ int main(int argc, char** argv) {
 	// get the number of particles in all cells at the end of the simulation for error checking
 	assert_decl(int end_particles = countParticlesInDomain(universe));
 	assert_eq(start_particles, end_particles) << "[Error]: Periodic boundary conditions on particles were not preserved!";
+
+	// remove preceeding path from filename and file suffix, keep only file name itself
+	const auto sepPos = inputFilename.find_last_of("/\\");
+	std::string baseName = inputFilename.substr(sepPos + 1, inputFilename.find_last_of('.') - sepPos - 1);
+	std::string outputFilename = baseName + ".out";
+	outputNumberOfParticlesPerCell(universe.cells, outputFilename);
 
 	// be done
 	std::cout << "Simulation finished successfully!" << std::endl;

@@ -3,6 +3,7 @@
 #include <vector>
 #include <random>
 
+#include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
 #include "allscale/utils/static_grid.h"
@@ -447,6 +448,38 @@ namespace ipic3d {
 		});
 
 		return local_mom;
-	} 
+	}
+
+	/**
+	* This function outputs the number of particles per cell
+	*/
+	template<typename StreamObject>
+	void outputNumberOfParticlesPerCell(const Cells& cells, StreamObject& streamObject) {
+		// TODO: implement output facilities for large problems
+		assert_le(cells.size(), (coordinate_type{ 16,16,16 })) << "Unable to dump data for such a large universe at this time";
+
+		// output dimensions
+		streamObject << cells.size() << "\n";
+
+		// output particles per cell
+		cells.forEach([&](const auto& cell) {
+			streamObject << cell.particles.size() << " ";
+		});
+
+		streamObject << "\n";
+	}
+
+	/**
+	* This function outputs the number of particles per cell using AllScale IO
+	*/
+	void outputNumberOfParticlesPerCell(const Cells& cells, std::string& filename) {
+		auto& manager = allscale::api::core::FileIOManager::getInstance();
+		auto text = manager.createEntry(filename);
+		auto out = manager.openOutputStream(text);
+		outputNumberOfParticlesPerCell(cells, out);
+		manager.close(out);
+	}
+
+
 
 } // end namespace ipic3d
