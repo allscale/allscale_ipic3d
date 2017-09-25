@@ -13,14 +13,13 @@
 
 using namespace ipic3d;
 
-
 int main(int argc, char** argv) {
 
 	// ----- load and parse simulation parameters ------
 
 	// check the passed arguments
-	if (argc < 2) {
-		std::cout << "Usage: " << argv[0] << " <config-file>" << std::endl;
+	if (argc != 2 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+		std::cout << "Usage: ./ipic3d <config-file>" << std::endl;
 		return EXIT_FAILURE;
 	}
 
@@ -36,9 +35,8 @@ int main(int argc, char** argv) {
 	// initialize universe
 	auto universe = createUniverseFromParams(params);
 
-	// get the number of particles in all cells before the simulation begins
-	// TODO: disable it for performance runs
-	int start_particles = countParticlesInDomain(universe);
+	// get the number of particles in all cells before the simulation begins for error checking
+	assert_decl(int start_particles = countParticlesInDomain(universe));
 
 	// ----- run the simulation ------
 
@@ -50,12 +48,9 @@ int main(int argc, char** argv) {
 
 	// ----- finish ------
 
-	// get the number of particles in all cells at the end of the simulation
-	// TODO: disable it for performance runs
-	int end_particles = countParticlesInDomain(universe);
-	if (start_particles != end_particles) {
-		std::cout << "[Error]: Periodic boundary conditions on particles were not preserved!\n";
-	}
+	// get the number of particles in all cells at the end of the simulation for error checking
+	assert_decl(int end_particles = countParticlesInDomain(universe));
+	assert_eq(start_particles, end_particles) << "[Error]: Periodic boundary conditions on particles were not preserved!";
 
 	// be done
 	std::cout << "Simulation finished successfully!" << std::endl;

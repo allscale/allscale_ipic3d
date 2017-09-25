@@ -145,10 +145,7 @@ namespace ipic3d {
 		Parameters(std::string inputfile) {
 			// open the config file and read all the inputs one by one
 			std::ifstream in(inputfile);
-			if (!in) {
-				std::cout << "File not found: " << inputfile << '\n';
-				return;
-			}
+			assert_true(in) << "File not found: " << inputfile;
 
 			// read the input file line by line and parse parameters	
 			std::string str;

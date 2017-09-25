@@ -113,6 +113,10 @@ namespace ipic3d {
 			}
 
 			case UseCase::ParticleWave: {
+				// TODO: check if ParticleWave use case is still required, otherwise remove all occurrences from code base
+				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+					fields[cur].Bext = { 0, 0, 0 };
+				});
 
 				break;
 			}

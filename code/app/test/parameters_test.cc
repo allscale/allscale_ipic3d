@@ -3,18 +3,18 @@
 #include "ipic3d/app/parameters.h"
 
 namespace ipic3d {
+
+	TEST(Parameters, IncorrectFilePath) {
+		// test wrong file name
+		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp1";
+		EXPECT_DEATH_IF_SUPPORTED(auto params = Parameters(path), ".*File not found.*");
+	}
 	
 	TEST(Parameters, Parser) {
 
-		// this test verifies the parser
-
-		// test wrong file name
-		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp1";
-		auto params = Parameters(path);
-
 		// test with the correct path
-		path = std::string(PATH_TO_INPUTS) + "/test.inp";
-		params = Parameters(path);
+		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp";
+		auto params = Parameters(path);
 
 		EXPECT_NEAR(params.c, 1.0, 1e-15);
 		EXPECT_NEAR(params.dt, 0.15, 1e-15);

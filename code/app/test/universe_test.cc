@@ -12,7 +12,7 @@ namespace ipic3d {
 		UniverseProperties properties;
 
 		EXPECT_EQ(UseCase::Dipole, properties.useCase);
-	    EXPECT_EQ((coordinate_type{1.0, 1.0, 1.0}), properties.size);
+	    EXPECT_EQ((coordinate_type{1, 1, 1}), properties.size);
 	    EXPECT_EQ((V{1.0, 1.0, 1.0}), properties.cellWidth);
 	    EXPECT_EQ(1.0, properties.dt);
 	    EXPECT_EQ(1.0, properties.speedOfLight);
