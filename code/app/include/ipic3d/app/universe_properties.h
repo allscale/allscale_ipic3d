@@ -72,6 +72,7 @@ namespace ipic3d {
 		// magnetic field
 		Vector3<double> magneticField;
 		int FieldOutputCycle;
+		std::string outputFileBaseName;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::Dipole, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1.0, 1.0, 1.0},
 			const double dt = 1.0, const double speedOfLight = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, 
@@ -92,10 +93,13 @@ namespace ipic3d {
 			speedOfLight( params.c ),
 			planetRadius( params.planetRadius ),
 			objectCenter({ params.objectCenter.x, params.objectCenter.y, params.objectCenter.z }),
-			origin( {0.0, 0.0, 0.0} ),
 			magneticField({ params.B0.x, params.B0.y, params.B0.z }),
 			FieldOutputCycle ( params.FieldOutputCycle ) 
-		{}
+		{
+			origin.x = params.objectCenter.x - params.ncells.x * params.dspace.x / 2.0;
+			origin.y = params.objectCenter.y - params.ncells.y * params.dspace.y / 2.0;
+			origin.z = params.objectCenter.z - params.ncells.z * params.dspace.z / 2.0;
+		}
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
 			out << "Universe properties:" << std::endl;

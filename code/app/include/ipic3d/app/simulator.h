@@ -1,5 +1,7 @@
 #pragma once
 
+#include "allscale/api/core/io.h"
+
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/field.h"
 #include "ipic3d/app/universe.h"
@@ -50,11 +52,16 @@ namespace ipic3d {
 	//										Definitions
 	// -------------------------------------------------------------------------------------
 
-	// write output depending on the set frequency
-	void writeOutput(const int cycle, const int numSteps, Universe& universe) {
-		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
-			std::cout << cycle << ' ';
+	// write the output header
+	template<typename StreamObject>
+	void writeOutputHeader(StreamObject& streamObject) {
+		streamObject << "Cycle \t Total Moment \t E energy \t B energy \t Total KE \n";
+	}
 	
+	// write output depending on the set frequency
+	template<typename StreamObject>
+	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
+		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
 			double Eenergy = getEenergy(universe.field, universe.properties);
 			double Benergy = getBenergy(universe.field, universe.properties);
 	
@@ -68,10 +75,7 @@ namespace ipic3d {
 				total_mom += getParticlesMomentum(universe.cells[pos]);	
 			});
 
-			std::cout << total_mom << ' ';
-			std::cout << Eenergy << ' ';
-			std::cout << Benergy << ' ';
-			std::cout << total_ke << '\n';
+			streamObject << cycle << "\t" << total_mom << "\t" << Eenergy << "\t" << Benergy << "\t" << total_ke << "\n";
 		}
 	}
 
@@ -105,7 +109,15 @@ namespace ipic3d {
 
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
-
+		
+		// create the output file
+		auto& manager = allscale::api::core::FileIOManager::getInstance();
+		// define the output file name
+		std::string outputFilename = universe.properties.outputFileBaseName + "ConservedQuantities.out";
+		// create the result file
+		auto logFile = manager.createEntry(outputFilename);
+		auto outtxt = manager.openOutputStream(logFile);
+		writeOutputHeader(outtxt);
 
 		// -- run the simulation --
 
@@ -115,7 +127,7 @@ namespace ipic3d {
 			using namespace allscale::api::user;
 
 			// write output to a file: total energy, momentum, E and B total energy
-			writeOutput(i, numSteps, universe);
+			writeOutputData(i, numSteps, universe, outtxt);
 
 			// STEP 1: collect particle contributions
 			// project particles to density field
@@ -151,6 +163,9 @@ namespace ipic3d {
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 		}
+
+		// close the IO manager 
+		manager.close(outtxt);
 
 	}
 

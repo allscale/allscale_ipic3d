@@ -119,7 +119,7 @@ namespace ipic3d {
 		auto params = Parameters(path);
 
 		// initialize initial properties
-		Universe universe = createUniverseFromParams(params);
+		Universe universe = createUniverseFromParams(params, "test");
 
 		// verify the number of particles per cell
 		int particlesPerCell = params.npcelx[0] * params.npcely[0] * params.npcelz[0];
