@@ -1,0 +1,32 @@
+#/bin/bash
+
+# check whether correct results are computed by ipic3d
+# return 0 if results match reference data, return 1 if results are incorrect
+
+# stop on any error
+set -e
+
+# default to "test" problem case if no other case was specified
+CASE="test"
+if [ "$#" -eq 1 ]; then
+	CASE="$1"
+fi
+
+echo "RESULT CHECK: Checking for problem case \"${CASE}\""
+
+# run application
+@PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp
+
+# compare output
+diff ${CASE}.out @PROJECT_SOURCE_DIR@/../outputs/${CASE}.out
+RETVAL=$?
+
+echo -n "RESULT CHECK: "
+if [ ${RETVAL} -eq 0 ] ; then
+	echo "Computed solution matches reference for problem case \"${CASE}\""
+else
+	echo "Computed solution does not match reference for problem case \"${CASE}\"!"
+fi
+
+# exit with corresponding exit code
+exit ${RETVAL}

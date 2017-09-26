@@ -19,3 +19,5 @@ foreach(test ${app_tests})
 endforeach(test)
 
 add_definitions( -DPATH_TO_INPUTS="${PROJECT_SOURCE_DIR}/../inputs" )
+
+configure_file(../../scripts/check.sh.in ${PROJECT_BINARY_DIR}/check.sh @ONLY IMMEDIATE)
