@@ -506,7 +506,7 @@ namespace ipic3d {
 		double sum = 0.0;
 		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 		double fourPI = 4.0 * M_PI;
-		allscale::api::user::pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+		allscale::api::user::detail::forEach(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
 			auto e = field[pos].E;
 			sum += vol * ( e.x * e.x + e.y * e.y + e.z * e.z ) / (fourPI);
 		});
@@ -523,7 +523,7 @@ namespace ipic3d {
 		double sum = 0.0;
 		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 		double fourPI = 4.0 * M_PI;
-		allscale::api::user::pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+		allscale::api::user::detail::forEach(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
 			auto b = field[pos].B;
 			sum += vol * ( b.x * b.x + b.y * b.y + b.z * b.z ) / (fourPI);
 		});

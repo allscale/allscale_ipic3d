@@ -70,7 +70,7 @@ namespace ipic3d {
 			double total_mom = 0.0;
 			auto zero = utils::Coordinate<3>(0);
 			auto size = universe.cells.size();
-			allscale::api::user::pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
+			allscale::api::user::detail::forEach(zero, size, [&](const utils::Coordinate<3>& pos) {
 				total_ke += getParticlesKineticEnergy(universe.cells[pos]);	
 				total_mom += getParticlesMomentum(universe.cells[pos]);	
 			});
