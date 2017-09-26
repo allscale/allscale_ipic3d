@@ -20,4 +20,4 @@ endforeach(test)
 
 add_definitions( -DPATH_TO_INPUTS="${PROJECT_SOURCE_DIR}/../inputs" )
 
-configure_file(../../scripts/check.sh.in ${PROJECT_BINARY_DIR}/check.sh @ONLY IMMEDIATE)
+configure_file(../../scripts/verify_output.sh.in ${PROJECT_BINARY_DIR}/verify_output.sh @ONLY IMMEDIATE)
