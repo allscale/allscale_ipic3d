@@ -303,12 +303,12 @@ namespace ipic3d {
 		// verify for the Dipole case
 		utils::Coordinate<3> pos{1, 2, 4};
 
-		EXPECT_NEAR(fields[pos].Bext.x, -1.46873e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].Bext.y, -9.17957e-09, 1e-11);
-		EXPECT_NEAR(fields[pos].Bext.z, 3.06394e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].B.x, -1.46873e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].B.y, -9.17957e-09, 1e-11);
-		EXPECT_NEAR(fields[pos].B.z, 0.000100031, 1e-09);
+		EXPECT_NEAR(fields[pos].Bext.x, -2.22806e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.y, -1.67105e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.z, 4.27046e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].B.x, -2.22806e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].B.y, -1.67105e-08, 1e-10);
+		EXPECT_NEAR(fields[pos].B.z, 0.000100042, 1e-09);
 
 		allscale::api::user::pfor(start, end, [&](const utils::Coordinate<3>& cur) {
 			EXPECT_NEAR(fields[cur].E.x, -0.0, 1e-06);

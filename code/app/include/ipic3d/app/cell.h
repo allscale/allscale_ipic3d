@@ -38,7 +38,6 @@ namespace ipic3d {
 		// -- initialize the grid of cells --
 
 		// the 3-D grid of cells
-		//Grid<Cell> cells(properties.size);								// the grid of cells containing the particles
 		Cells cells(properties.size);
 
 		// -- initialize the state of each individual cell --
@@ -376,6 +375,10 @@ namespace ipic3d {
 			auto halfWidth = universeProperties.cellWidth / 2;
 			if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 				++incorrectlyPlacedParticles;
+				std::cout << getOriginOfCell(pos, universeProperties);
+				std::cout << getCenterOfCell(pos, universeProperties);
+				std::cout << relPos.x << " " << relPos.y << " " << relPos.z << "\n";
+				//exit(13); 
 			}
 		}
 		
