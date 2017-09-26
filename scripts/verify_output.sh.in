@@ -18,14 +18,16 @@ echo "RESULT CHECK: Checking for problem case \"${CASE}\""
 @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp
 
 # compare output
-diff ${CASE}.out @PROJECT_SOURCE_DIR@/../outputs/${CASE}.out
+set +e
+bash -c "diff <(sort ${CASE}.out) <(sort @PROJECT_SOURCE_DIR@/../outputs/${CASE}.out)"
 RETVAL=$?
+set -e
 
 echo -n "RESULT CHECK: "
 if [ ${RETVAL} -eq 0 ] ; then
-	echo "Computed solution matches reference for problem case \"${CASE}\""
+	echo "[  OK  ] Computed solution matches reference for problem case \"${CASE}\""
 else
-	echo "Computed solution does not match reference for problem case \"${CASE}\"!"
+	echo "[FAILED] Computed solution does not match reference for problem case \"${CASE}\"!"
 fi
 
 # exit with corresponding exit code
