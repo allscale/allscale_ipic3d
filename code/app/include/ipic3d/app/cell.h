@@ -459,14 +459,16 @@ namespace ipic3d {
 	template<typename StreamObject>
 	void outputNumberOfParticlesPerCell(const Cells& cells, StreamObject& streamObject) {
 		// TODO: implement output facilities for large problems
-		assert_le(cells.size(), (coordinate_type{ 16,16,16 })) << "Unable to dump data for such a large universe at this time";
+		assert_le(cells.size(), (coordinate_type{ 16,16,16 })) << "Unable to dump data for such a large cell grid at this time";
 
 		// output dimensions
 		streamObject << cells.size() << "\n";
 
 		// output particles per cell
-		cells.forEach([&](const auto& cell) {
-			streamObject << cell.particles.size() << " ";
+		allscale::api::user::pfor(cells.size(), [&](const auto& index) {
+			streamObject.atomic([&](auto& out) { 
+				out << index.x << "," << index.y << "," << index.z << ":";
+				out << cells[index].particles.size() << "\n"; });
 		});
 
 		streamObject << "\n";
@@ -482,7 +484,5 @@ namespace ipic3d {
 		outputNumberOfParticlesPerCell(cells, out);
 		manager.close(out);
 	}
-
-
 
 } // end namespace ipic3d

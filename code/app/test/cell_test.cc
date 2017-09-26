@@ -3,6 +3,8 @@
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/universe.h"
 
+#include "allscale/api/core/io.h"
+
 namespace ipic3d {
 
 	TEST(Cell, initCells) {
@@ -159,9 +161,43 @@ namespace ipic3d {
 		h.particles.push_back(p);
 
 		// verify the proper particles count output
-		std::stringstream ss;
-		outputNumberOfParticlesPerCell(universe.cells, ss);
-		EXPECT_EQ("[2,2,2]\n0 1 2 1 1 1 3 4 \n", ss.str());
+		allscale::api::core::BufferIOManager manager;
+		auto text = manager.createEntry("text");
+		auto out = manager.openOutputStream(text);
+		outputNumberOfParticlesPerCell(universe.cells, out);
+		manager.close(out);
+
+		auto in = manager.openInputStream(text);
+		coordinate_type size;
+		char separator;
+
+		// read size
+		EXPECT_TRUE(in >> separator);
+		EXPECT_TRUE(in >> size.x);
+		EXPECT_TRUE(in >> separator);
+		EXPECT_TRUE(in >> size.y);
+		EXPECT_TRUE(in >> separator);
+		EXPECT_TRUE(in >> size.z);
+		EXPECT_TRUE(in >> separator);
+
+		EXPECT_EQ((coordinate_type{ 2,2,2 }), size);
+
+		// read payload
+		for(int i = 0; i < size.x * size.y * size.z; ++i) {
+			// read index
+			coordinate_type index;
+			EXPECT_TRUE(in >> index.x) << "Trying to read packet " << i;
+			EXPECT_TRUE(in >> separator) << "Trying to read packet " << i;
+			EXPECT_TRUE(in >> index.y) << "Trying to read packet " << i;
+			EXPECT_TRUE(in >> separator) << "Trying to read packet " << i;
+			EXPECT_TRUE(in >> index.z) << "Trying to read packet " << i;
+			EXPECT_TRUE(in >> separator) << "Trying to read packet " << i;
+
+			// read and verify data
+			std::size_t particleCount;
+			EXPECT_TRUE(in >> particleCount) << "Trying to read packet " << i;
+			EXPECT_EQ(particleCount, universe.cells[index].particles.size());
+		}
 
 	}
 

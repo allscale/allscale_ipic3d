@@ -4,6 +4,7 @@
 #include "allscale/utils/vector.h"
 
 #include "ipic3d/app/cell.h"
+#include "ipic3d/app/field.h"
 #include "ipic3d/app/parameters.h"
 #include "ipic3d/app/simulator.h"
 #include "ipic3d/app/universe.h"
@@ -58,11 +59,16 @@ int main(int argc, char** argv) {
 	assert_decl(int end_particles = countParticlesInDomain(universe));
 	assert_eq(start_particles, end_particles) << "[Error]: Periodic boundary conditions on particles were not preserved!";
 
+	std::cout << "Simulation finished successfully, producing output data..." << std::endl;
+
 	std::string outputFilename = baseName + ".out";
-	outputNumberOfParticlesPerCell(universe.cells, outputFilename);
+	auto& manager = allscale::api::core::FileIOManager::getInstance();
+	auto text = manager.createEntry(outputFilename);
+	auto out = manager.openOutputStream(text);
+	outputNumberOfParticlesPerCell(universe.cells, out);
+	outputFieldGrids(universe.field, universe.bcfield, out);
 
 	// be done
-	std::cout << "Simulation finished successfully!" << std::endl;
 	return EXIT_SUCCESS;
 }
 
