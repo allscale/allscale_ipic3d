@@ -7,7 +7,7 @@ namespace ipic3d {
 	TEST(Parameters, IncorrectFilePath) {
 		// test wrong file name
 		std::string path = std::string(PATH_TO_INPUTS) + "/test.inp1";
-		EXPECT_DEATH_IF_SUPPORTED(auto params = Parameters(path), ".*File not found.*");
+		EXPECT_DEATH_IF_SUPPORTED(auto params = Parameters(path), ".*");
 	}
 	
 	TEST(Parameters, Parser) {

@@ -69,23 +69,23 @@ namespace ipic3d {
 			double Benergy = getEnergy(universe.field, universe.properties, getB);
 			
 			// compute total particles kinetic energy
-			class TotalParticleEnergies {
+			struct TotalParticleEnergies {
 				double total_ke = 0.0;
 				double total_mom = 0.0;
 			};
 
 			// TODO: use more convenient reduction operators once they are available in the API
 			auto map = [&](const coordinate_type& index, TotalParticleEnergies& sum) {
-				sum.total_ke += getParticlesKineticEnergy(universe.cells[pos]);
-				sum.total_mom += getParticlesMomentum(universe.cells[pos]);
+				sum.total_ke += getParticlesKineticEnergy(universe.cells[index]);
+				sum.total_mom += getParticlesMomentum(universe.cells[index]);
 			};
 
 			auto reduce = [&](const TotalParticleEnergies& a, const TotalParticleEnergies& b) { 
 				return TotalParticleEnergies{a.total_ke + b.total_ke, a.total_mom + b.total_mom};
 			};
-			auto init = []() { return 0.0; };
+			auto init = []() { return TotalParticleEnergies{0.0,0.0}; };
 
-			auto totalParticleEnergies = allscale::api::user::preduce(zero, universe.cells.size(), map, reduce, init);
+			auto totalParticleEnergies = allscale::api::user::preduce(coordinate_type(0), universe.cells.size(), map, reduce, init);
 
 			streamObject 
 				<< cycle << "\t" 
