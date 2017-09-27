@@ -17,6 +17,9 @@ Simply execute the following commands to build the project and run all tests.
     $ make -j8
     $ ctest -j8
 
+Run the pilot from the build dir as follows
+	./app/ipic3d <PATH_TO_INPUT_DIR>/test.inp
+
 ## Advanced Options
 
 ### Configuration
