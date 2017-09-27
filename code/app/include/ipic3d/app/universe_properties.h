@@ -134,7 +134,7 @@ namespace ipic3d {
 
 	Vector3<double> getCenterOfCell(const coordinate_type& pos, const UniverseProperties& properties) {
 		assert_true(pos.strictlyDominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
-		return properties.origin + getOriginOfCell(pos, properties) + properties.cellWidth / 2;
+		return getOriginOfCell(pos, properties) + properties.cellWidth / 2.0;
 	}
 
 }

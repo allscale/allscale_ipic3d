@@ -56,17 +56,17 @@ namespace ipic3d {
 
 		// add particles: one per cells in the subdomain {2,2,2}
 		Particle p0, p1, p2, p3, p4, p5, p6, p7;
-		p0.position.x = 0.4; p0.position.y = p0.position.z = 0.4;
-		p0.velocity.x = 0.6; p0.velocity.y = p0.velocity.z = 0.6;
+		p0.position.x = p0.position.y = p0.position.z = 0.4;
+		p0.velocity.x = p0.velocity.y = p0.velocity.z = 0.6;
 		p0.q = p0.qom = 1.0;
 		p1.position.x = 0.8; p1.position.y = p1.position.z = 0.4;
-		p1.velocity.x = 0.3; p1.velocity.y = p1.velocity.z = 0.3;
+		p1.velocity.x = p1.velocity.y = p1.velocity.z = 0.3;
 		p1.q = p1.qom = 1.0;
 		p2.position.y = 0.8; p2.position.x = p2.position.z = 0.4;
-		p2.velocity.x = 0.1; p2.velocity.y = p2.velocity.z = 0.1;
+		p2.velocity.x = p2.velocity.y = p2.velocity.z = 0.1;
 		p2.q = p2.qom = 1.0;
-		p3.position.x = 0.75; p3.position.y = 0.75; p3.position.z = 0.4;
-		p3.velocity.x = 0.8; p3.velocity.y = p3.velocity.z = 0.8;
+		p3.position.x = p3.position.y = 0.75; p3.position.z = 0.4;
+		p3.velocity.x = p3.velocity.y = p3.velocity.z = 0.8;
 		p3.q = p3.qom = 1.0;
 		p4 = p0;
 		p4.position.z = 0.6;
