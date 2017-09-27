@@ -313,10 +313,6 @@ namespace ipic3d {
 			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
 			auto halfWidth = universeProperties.cellWidth / 2.0;
 			if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
-				std::cout << "New particle\n";
-				std::cout << pos << '\n';
-				std::cout << p.position << '\n';
-				std::cout << relPos << '\n';
 
 				// compute corresponding neighbor cell
 				// cover the inner cells as well as the boundary cells on positions 0 and N-1
@@ -326,29 +322,28 @@ namespace ipic3d {
 
 				// adjust particle's position in case it exits the domain
 				auto adjustPosition = [&](const int i) {
-					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.origin[i] + universeProperties.size[i] * universeProperties.cellWidth[i] - fabs(p.position[i])) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - (universeProperties.origin[i] + universeProperties.size[i] * universeProperties.cellWidth[i]) : p.position[i]);
+					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.origin[i] + universeProperties.size[i] * universeProperties.cellWidth[i] - fabs(p.position[i])) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
 				};
 
 				int i = (int)computeCell(0);
 				int j = (int)computeCell(1);
 				int k = (int)computeCell(2);
-				std::cout << i << '\t';
-				std::cout << j << '\t';
-				std::cout << k << '\n';
 
 				p.position[0] = adjustPosition(0);
 				p.position[1] = adjustPosition(1);
 				p.position[2] = adjustPosition(2);
-//				std::cout << p.position << '\n';
-//				std::cout << "Position\n";
 
 				// send to neighbor cell
 				auto target = neighbors[{i,j,k}];
 				// to place particles that exit the domain into the proper buffers
 				if ( ((relPos.x < -halfWidth.x) && (pos.x == 0)) || ((relPos.y < -halfWidth.y) && (pos.y == 0)) || ((relPos.z < -halfWidth.z) && (pos.z == 0)) || ((relPos.x > halfWidth.x) && (pos.x == universeProperties.size.x - 1)) || ((relPos.y > halfWidth.y) && (pos.y == universeProperties.size.y - 1)) || ((relPos.z > halfWidth.z) && (pos.z == universeProperties.size.z - 1)) ) {
-					i = ( (i == 0) || (i == (int)size.x - 1) ) ? i : ( (int)pos.x + (i - 1) ) * 3 + 1;
-					j = ( (j == 0) || (j == (int)size.y - 1) ) ? j : ( (int)pos.y + (j - 1) ) * 3 + 1;
-					k = ( (k == 0) || (k == (int)size.z - 1) ) ? k : ( (int)pos.z + (k - 1) ) * 3 + 1;
+
+					i = ( ((relPos.x > halfWidth.x) && (pos.x == universeProperties.size.x - 1) && (i == 0)) || ((i == (int)size.x - 1) && (relPos.x < -halfWidth.x) && (pos.x == 0)) ) ? i : ( (int)pos.x + (i - 1) ) * 3 + 1;
+
+					j = ( ((relPos.y > halfWidth.y) && (pos.y == universeProperties.size.y - 1) && (j == 0)) || ((j == (int)size.y - 1) && (relPos.y < -halfWidth.y) && (pos.y == 0)) ) ? j : ( (int)pos.y + (j - 1) ) * 3 + 1;
+
+					k = ( ((relPos.z > halfWidth.z) && (pos.z == universeProperties.size.z - 1) && (k == 0)) || ((k == (int)size.z - 1) && (relPos.z < -halfWidth.z) && (pos.z == 0)) ) ? k : ( (int)pos.z + (k - 1) ) * 3 + 1;
+
 					target = &transfers[{i,j,k}];
 				}
 				if (target) target->push_back(p);
@@ -379,11 +374,6 @@ namespace ipic3d {
 			auto halfWidth = universeProperties.cellWidth / 2.0;
 			if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 				++incorrectlyPlacedParticles;
-				std::cout << "Error \n";
-				std::cout << pos << '\n';
-				std::cout << getOriginOfCell(pos, universeProperties) << '\n';
-				std::cout << p.position << '\n';
-                exit(13);	
             }
 		}
 		

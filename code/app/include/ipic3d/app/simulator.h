@@ -123,29 +123,28 @@ namespace ipic3d {
 
 		// run time loop for the simulation
 		for(unsigned i = 0; i < numSteps; ++i) {
-			std::cout << i << '\n';
 
 			using namespace allscale::api::user;
 
 			// write output to a file: total energy, momentum, E and B total energy
-//			writeOutputData(i, numSteps, universe, outtxt);
+			writeOutputData(i, numSteps, universe, outtxt);
 
-//			// STEP 1: collect particle contributions
-//			// project particles to density field
-//			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-//				// TODO: this can be improved by adding rho
-//				// 	J is defined on nodes
-//				particleToFieldProjector(universe.properties, universe.cells[pos], pos, density);
-//			});
+			// STEP 1: collect particle contributions
+			// project particles to density field
+			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
+				// TODO: this can be improved by adding rho
+				// 	J is defined on nodes
+				particleToFieldProjector(universe.properties, universe.cells[pos], pos, density);
+			});
 
-//			// STEP 2: solve field equations
-//			// update boundaries
-//			updateFieldsOnBoundaries(universe.field, universe.bcfield);
-//			
-//			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
-//			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-//				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
-//			});
+			// STEP 2: solve field equations
+			// update boundaries
+			updateFieldsOnBoundaries(universe.field, universe.bcfield);
+			
+			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
+			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+				fieldSolver(universe.properties, pos, density, universe.field, universe.bcfield);
+			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
