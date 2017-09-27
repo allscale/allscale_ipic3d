@@ -17,7 +17,7 @@ Simply execute the following commands to build the project and run all tests.
     $ make -j8
     $ ctest -j8
 
-## Application Usage
+## Application Usage and Output Verification
 
 The main executable takes as a single argument the path to an input 
 configuration file.

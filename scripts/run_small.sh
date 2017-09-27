@@ -2,7 +2,7 @@
 # The -l above is required to get the full environment with modules
 
 export INPUT=../inputs/small.inp
-export CMD="/usr/bin/time ./../build/app/ipic3d"
+export CMD='/usr/bin/time --format="%e" ./../build/app/ipic3d'
 
 # Run the executable named myexe 
 export NUM_WORKERS=48
