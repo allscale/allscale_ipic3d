@@ -23,10 +23,10 @@ namespace ipic3d {
 	    EXPECT_EQ(1, properties.FieldOutputCycle);
 
 
-		UniverseProperties properties2(UseCase::Test, { 2,3,4 }, { 0.2,0.3,0.4 }, 5.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, { -0.1,-0.2,-0.3 }, 100);
+		UniverseProperties properties2(UseCase::Test, { 3,3,3 }, { 0.2,0.3,0.4 }, 5.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, { -0.1,-0.2,-0.3 }, 100);
 
 		EXPECT_EQ(UseCase::Test, properties2.useCase);
-		EXPECT_EQ((coordinate_type{ 2,3,4 }), properties2.size);
+		EXPECT_EQ((coordinate_type{ 3,3,3 }), properties2.size);
 		EXPECT_EQ((V{ 0.2,0.3,0.4 }), properties2.cellWidth);
 		EXPECT_EQ(5.0, properties2.dt);
 		EXPECT_EQ(13.0, properties2.speedOfLight);
@@ -72,14 +72,14 @@ namespace ipic3d {
 
 		// Set some universe properties
 		UniverseProperties properties;
-		properties.size = { 1,2,3 };
+		properties.size = { 4,4,4 };
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
 
-		EXPECT_EQ(1, universe.properties.size.x);
-		EXPECT_EQ(2, universe.properties.size.y);
-		EXPECT_EQ(3, universe.properties.size.z);
+		EXPECT_EQ(4, universe.properties.size.x);
+		EXPECT_EQ(4, universe.properties.size.y);
+		EXPECT_EQ(4, universe.properties.size.z);
 
 		// Check the properties of the universe
 		EXPECT_EQ(1, universe.properties.cellWidth.x);
@@ -94,9 +94,9 @@ namespace ipic3d {
 	    Field& field = universe.field;
 
 		// Check its dimensions for cells and field
-	    ASSERT_EQ(coordinate_type({1, 2, 3}), cells.size());
+	    ASSERT_EQ(coordinate_type({4, 4, 4}), cells.size());
 		// field grid should be 1 larger than cell grid in every dimension
-	    ASSERT_EQ(coordinate_type({4, 5, 6}), field.size());
+	    ASSERT_EQ(coordinate_type({7, 7, 7}), field.size());
 
 		// check a few cell positions
 	    using Point = Vector3<double>;
