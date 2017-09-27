@@ -17,6 +17,30 @@ Simply execute the following commands to build the project and run all tests.
     $ make -j8
     $ ctest -j8
 
+## Application Usage
+
+The main executable takes as a single argument the path to an input 
+configuration file.
+
+    $ app/ipic3d ../inputs/test.inp
+
+Several example configuration files with varying problem sizes are provided in
+the `inputs` directory. The executable will then parse the configuration file, 
+print the simulation parameters and commence the simulation. During the 
+simulation, a number of output files (`*.out`) are generated, together with a 
+final output file (`test.out` in case of the example above) at the end of the 
+simulation.
+
+For the provided example configuration files the simulation can be verified by
+comparing the final output file with reference output provided in the `outputs`
+directory. Due to the parallelism involved, the data is written out-of-order
+and sorting is required before comparison. To facilitate such checks, a bash 
+script `verify_output.sh` is provided. It takes the problem case as an optional
+parameter (the default is `test`), runs the main executable with the 
+corresponding input configuration, sorts the produced output data and compares 
+it to the reference output. At the end, the script will report on whether a 
+simulation run was correct or not.
+
 ## Advanced Options
 
 ### Configuration
