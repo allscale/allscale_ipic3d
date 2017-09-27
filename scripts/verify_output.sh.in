@@ -6,9 +6,16 @@
 # stop on any error
 set -e
 
-# default to "test" problem case if no other case was specified
+# default to "test" problem case if no other case was specified, print usage if requested
 CASE="test"
 if [ "$#" -eq 1 ]; then
+	case "$1" in 
+		"-h"|"-help"|"--help")
+			# find all available input problem cases and print them separated by "|", drop the file extension, remove trailing "|"
+			echo "Usage: $0 <`find @PROJECT_SOURCE_DIR@/../inputs/*.inp  -printf '%f|' | sed 's/\.inp//g' | sed 's/.$//'`>"
+			exit 1
+			;;
+	esac
 	CASE="$1"
 fi
 
