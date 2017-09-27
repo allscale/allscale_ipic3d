@@ -371,7 +371,7 @@ namespace ipic3d {
  	* @param cell the current cell
 	* @param pos the coordinates of this cell in the grid
  	*/
-	bool VerifyCorrectParticlesPositionInCell(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos) {
+	bool verifyCorrectParticlesPositionInCell(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos) {
 		int incorrectlyPlacedParticles = 0;
 
 		for(auto& p : cell.particles) {
@@ -430,8 +430,7 @@ namespace ipic3d {
 		}
 
 		// verify correct placement of the particles
-		// TODO: this potential should only be used in tests due to the performance reasons
-		VerifyCorrectParticlesPositionInCell(universeProperties, cell, pos);
+		assert_true(verifyCorrectParticlesPositionInCell(universeProperties, cell, pos));
 	}
 
 	/** 
