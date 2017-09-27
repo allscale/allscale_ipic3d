@@ -439,9 +439,10 @@ namespace ipic3d {
 	double getParticlesKineticEnergy(Cell& cell) {
 		double local_ke = 0.0;
 
-		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+		// TODO: replace with proper parallel reduction
+		for(Particle& p : cell.particles) {
 				local_ke += .5 * ( p.q / p.qom ) * allscale::utils::sumOfSquares( p.velocity );
-		});
+		}
 
 		return local_ke;
 	} 
@@ -452,9 +453,10 @@ namespace ipic3d {
 	double getParticlesMomentum(Cell& cell) {
 		double local_mom = 0.0;
 
-		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+		// TODO: replace with proper parallel reduction
+		for(Particle& p : cell.particles) {
 				local_mom += ( p.q / p.qom ) * sqrt( allscale::utils::sumOfSquares( p.velocity ) );
-		});
+		}
 
 		return local_mom;
 	}
