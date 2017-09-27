@@ -108,14 +108,14 @@ namespace ipic3d {
 		h.particles.push_back(p72);
 
 		// verify the proper placement of particles 
-		ASSERT_FALSE( VerifyCorrectParticlesPositionInCell(properties, a, {0,0,0}) );
-		ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, b, {1,0,0}) );
-		ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, c, {0,1,0}) );
-		ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, d, {1,1,0}) );
-		ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, e, {0,0,1}) );
-		ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, f, {1,0,1}) );
-		ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, g, {0,1,1}) );
-		ASSERT_FALSE( VerifyCorrectParticlesPositionInCell(properties, h, {1,1,1}) );
+		ASSERT_FALSE( verifyCorrectParticlesPositionInCell(properties, a, {0,0,0}) );
+		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, b, {1,0,0}) );
+		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, c, {0,1,0}) );
+		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, d, {1,1,0}) );
+		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, e, {0,0,1}) );
+		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, f, {1,0,1}) );
+		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, g, {0,1,1}) );
+		ASSERT_FALSE( verifyCorrectParticlesPositionInCell(properties, h, {1,1,1}) );
 		
 	}
 	

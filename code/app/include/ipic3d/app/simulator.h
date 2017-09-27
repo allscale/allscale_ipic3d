@@ -62,20 +62,38 @@ namespace ipic3d {
 	template<typename StreamObject>
 	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
 		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
-			double Eenergy = getEenergy(universe.field, universe.properties);
-			double Benergy = getBenergy(universe.field, universe.properties);
-	
-			// compute total particles kinetic energy
-			double total_ke = 0.0;
-			double total_mom = 0.0;
-			auto zero = utils::Coordinate<3>(0);
-			auto size = universe.cells.size();
-			allscale::api::user::detail::forEach(zero, size, [&](const utils::Coordinate<3>& pos) {
-				total_ke += getParticlesKineticEnergy(universe.cells[pos]);	
-				total_mom += getParticlesMomentum(universe.cells[pos]);	
-			});
+			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
+			auto getB = [](const auto& field, const auto& index) { return field[index].B; };
 
-			streamObject << cycle << "\t" << total_mom << "\t" << Eenergy << "\t" << Benergy << "\t" << total_ke << "\n";
+			double Eenergy = getEnergy(universe.field, universe.properties, getE);
+			double Benergy = getEnergy(universe.field, universe.properties, getB);
+			
+			// compute total particles kinetic energy
+			struct TotalParticleEnergies {
+				double total_ke = 0.0;
+				double total_mom = 0.0;
+			};
+
+			// TODO: use more convenient reduction operators once they are available in the API
+			auto map = [&](const coordinate_type& index, TotalParticleEnergies& sum) {
+				sum.total_ke += getParticlesKineticEnergy(universe.cells[index]);
+				sum.total_mom += getParticlesMomentum(universe.cells[index]);
+			};
+
+			auto reduce = [&](const TotalParticleEnergies& a, const TotalParticleEnergies& b) { 
+				return TotalParticleEnergies{a.total_ke + b.total_ke, a.total_mom + b.total_mom};
+			};
+			auto init = []() { return TotalParticleEnergies{0.0,0.0}; };
+
+			auto totalParticleEnergies = allscale::api::user::preduce(coordinate_type(0), universe.cells.size(), map, reduce, init);
+
+			streamObject 
+				<< cycle << "\t" 
+				<< totalParticleEnergies.total_mom << "\t" 
+				<< Eenergy << "\t" 
+				<< Benergy << "\t" 
+				<< totalParticleEnergies.total_ke 
+				<< "\n";
 		}
 	}
 

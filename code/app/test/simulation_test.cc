@@ -495,7 +495,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
 
@@ -522,7 +522,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 	
 
@@ -549,7 +549,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
 
@@ -647,7 +647,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
 
@@ -674,7 +674,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 	
 
@@ -701,7 +701,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
 
@@ -802,7 +802,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
 		// run the simulation
@@ -816,7 +816,7 @@ namespace ipic3d {
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
-			ASSERT_TRUE( VerifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
+			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 	}
 

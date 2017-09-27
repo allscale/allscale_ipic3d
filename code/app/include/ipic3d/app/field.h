@@ -2,6 +2,7 @@
 
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
+#include "allscale/api/user/operator/ops.h"
 
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
@@ -422,114 +423,59 @@ namespace ipic3d {
  	* Populate and update fields values on boundaries
  	*/
 	void updateFieldsOnBoundaries(Field& field, BcField& bcfield) {
-		// update on the x = 0 and x = N face
-		int fieldSize = (int)field.size().y;
-		int bcfieldSize = (int)bcfield.size().y;
-		for (int i = 1; i < fieldSize - 1; i++) { // for y
-			for (int j = 1; j < fieldSize - 1; j++) { // for z
-				utils::Coordinate<3> pos0{0, i, j};
-				utils::Coordinate<3> pos1{1, i, j};
-				utils::Coordinate<3> posN1{fieldSize-2, i, j};
-				utils::Coordinate<3> posN{fieldSize-1, i, j};
-				
-				field[pos0] = field[posN1];
-				field[posN] = field[pos1];
-			}
-		}
-		for (int i = 1; i < bcfieldSize - 1; i++) { // for y
-			for (int j = 1; j < bcfieldSize - 1; j++) { // for z
-				utils::Coordinate<3> pos0{0, i, j};
-				utils::Coordinate<3> pos1{1, i, j};
-				utils::Coordinate<3> posN1{bcfieldSize-2, i, j};
-				utils::Coordinate<3> posN{bcfieldSize-1, i, j};
 
-				bcfield[pos0] = bcfield[posN1];
-				bcfield[posN] = bcfield[pos1];
-			}
-		}
+		auto update = [](const auto& index, const auto& size, auto& field) {
+			// update on the x = 0 face
+			field[{ 0, index.x, index.y }] = field[{ size - 2, index.x, index.y }];
+			field[{ size - 1, index.x, index.y }] = field[{ 1, index.x, index.y }];
 
-		// update on the y = 0 face
-		for (int i = 1; i < fieldSize - 1; i++) { // for x
-			for (int j = 1; j < fieldSize - 1; j++) { // for z
-				utils::Coordinate<3> pos0{i, 0, j};
-				utils::Coordinate<3> pos1{i, 1, j};
-				utils::Coordinate<3> posN1{i, fieldSize-2, j};
-				utils::Coordinate<3> posN{i, fieldSize-1, j};
-				
-				field[pos0] = field[posN1];
-				field[posN] = field[pos1];
-			}
-		}
-		for (int i = 1; i < bcfieldSize - 1; i++) { // for y
-			for (int j = 1; j < bcfieldSize - 1; j++) { // for z
-				utils::Coordinate<3> pos0{i, 0, j};
-				utils::Coordinate<3> pos1{i, 1, j};
-				utils::Coordinate<3> posN1{i, bcfieldSize-2, j};
-				utils::Coordinate<3> posN{i, bcfieldSize-1, j};
+			// update on the y = 0 face
+			field[{ index.x, 0, index.y }] = field[{ index.x, size - 2, index.y }];
+			field[{ index.x, size - 1, index.y }] = field[{ index.x, 1, index.y }];
 
-				bcfield[pos0] = bcfield[posN1];
-				bcfield[posN] = bcfield[pos1];
-			}
-		}
+			// update on the z = 0 face
+			field[{ index.x, index.y, 0 }] = field[{ index.x, index.y, size - 2 }];
+			field[{ index.x, index.y, size - 1 }] = field[{ index.x, index.y, 1 }];
+		};
 
-		// update on the z = 0 face
-		for (int i = 1; i < fieldSize - 1; i++) { // for y
-			for (int j = 1; j < fieldSize - 1; j++) { // for z
-				utils::Coordinate<3> pos0{i, j, 0};
-				utils::Coordinate<3> pos1{i, j, 1};
-				utils::Coordinate<3> posN1{i, j, fieldSize-2};
-				utils::Coordinate<3> posN{i, j, fieldSize-1};
-				
-				field[pos0] = field[posN1];
-				field[posN] = field[pos1];
-			}
-		}
-		for (int i = 1; i < bcfieldSize - 1; i++) { // for y
-			for (int j = 1; j < bcfieldSize - 1; j++) { // for z
-				utils::Coordinate<3> pos0{i, j, 0};
-				utils::Coordinate<3> pos1{i, j, 1};
-				utils::Coordinate<3> posN1{i, j, bcfieldSize-2};
-				utils::Coordinate<3> posN{i, j, bcfieldSize-1};
+		// Note: Assumes that the field sizes are equal in each dimension
+		int fieldSize = (int)field.size().x;
+		int bcfieldSize = (int)bcfield.size().x;
+		allscale::utils::Vector<int, 2> fullField(fieldSize - 1);
+		allscale::utils::Vector<int, 2> fullBcField(bcfieldSize - 1);
 
-				bcfield[pos0] = bcfield[posN1];
-				bcfield[posN] = bcfield[pos1];
-			}
-		}
+		auto fieldRef = allscale::api::user::pfor(fullField, [&](const auto& index) {
+			update(index, fieldSize, field);
+		});
+
+		auto bcfieldRef = allscale::api::user::pfor(fullBcField, [&](const auto& index) {
+			update(index, bcfieldSize, bcfield);
+		});
+
+		fieldRef.wait();
+		bcfieldRef.wait();
+
 	}
 
 	// compute the electric field energy
-	double getEenergy(const Field& field, const UniverseProperties& universeProperties){
-		auto fieldSize = field.size();
+	template<typename Accessor>
+	double getEnergy(const Field& field, const UniverseProperties& universeProperties, const Accessor& accessor){
 		auto fieldStart = utils::Coordinate<3>(1);
-		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		auto fieldEnd = field.size() - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 		
-		double sum = 0.0;
-		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		double fourPI = 4.0 * M_PI;
-		allscale::api::user::detail::forEach(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-			auto e = field[pos].E;
-			sum += vol * ( e.x * e.x + e.y * e.y + e.z * e.z ) / (fourPI);
-		});
+		const double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		const double fourPI = 4.0 * M_PI;
 
-		return sum;
+		// TODO: use more convenient reduction operators once they are available in the API
+		auto map = [&](const coordinate_type& index, double& res) {
+			res += vol * allscale::utils::sumOfSquares(accessor(field, index)) / (fourPI);
+		};
+
+		auto reduce = [&](const double& a, const double& b) { return a + b; };
+		auto init = []() { return 0.0; };
+
+		return allscale::api::user::preduce(fieldStart, fieldEnd, map, reduce, init);
 	} 
-
-	// compute the magnetic field energy
-	double getBenergy(const Field& field, const UniverseProperties& universeProperties){
-		auto fieldSize = field.size();
-		auto fieldStart = utils::Coordinate<3>(1);
-		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
-		
-		double sum = 0.0;
-		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		double fourPI = 4.0 * M_PI;
-		allscale::api::user::detail::forEach(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-			auto b = field[pos].B;
-			sum += vol * ( b.x * b.x + b.y * b.y + b.z * b.z ) / (fourPI);
-		});
-
-		return sum;
-	}
 
 	/**
 	* This function outputs all field values
@@ -537,7 +483,7 @@ namespace ipic3d {
 	template<typename StreamObject>
 	void outputFieldGrids(const Field& field, const BcField& bcField, StreamObject& streamObject) {
 		// TODO: implement output facilities for large problems
-		assert_le(field.size(), (coordinate_type{ 16,16,16 })) << "Unable to dump data for such a large field at this time";
+		assert_le(field.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large field at this time";
 
 		// output dimensions
 		streamObject << field.size() << "\n";

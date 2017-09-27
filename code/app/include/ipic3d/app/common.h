@@ -2,18 +2,27 @@
 
 #include "ipic3d/app/universe.h"
 
+#include "allscale/api/user/operator/ops.h"
+
 namespace ipic3d{
 
 	int countParticlesInDomain(Universe& universe) {
 
 		// get the number of particles in all cells before the simulation begins
-		std::atomic<int> particles = ATOMIC_VAR_INIT(0);;
-		decltype(universe.field.size()) zero = 0;
-		allscale::api::user::pfor(zero,universe.properties.size,[&](auto& pos){
-			std::atomic_fetch_add( &particles, (int) universe.cells[pos].particles.size() );
-		});
+		
+		// TODO: use more convenient reduction operators once they are available in the API
+		auto map = [&](const coordinate_type& index, int& res) {
+			res += (int)universe.cells[index].particles.size();
+		};
 
-		return particles;
+		auto reduce = [&](const int& a, const int& b) { return a + b; };
+		auto init = []() { return 0; };
+
+		coordinate_type zero(0);
+		coordinate_type full(universe.cells.size());
+
+		return allscale::api::user::preduce(zero, full, map, reduce, init);
+
 	}
 
 }

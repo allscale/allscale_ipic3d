@@ -6,6 +6,7 @@
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
+#include "allscale/api/user/operator/ops.h"
 #include "allscale/utils/static_grid.h"
 
 #include "ipic3d/app/vector.h"
@@ -365,7 +366,7 @@ namespace ipic3d {
  	* @param cell the current cell
 	* @param pos the coordinates of this cell in the grid
  	*/
-	bool VerifyCorrectParticlesPositionInCell(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos) {
+	bool verifyCorrectParticlesPositionInCell(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos) {
 		int incorrectlyPlacedParticles = 0;
 
 		for(auto& p : cell.particles) {
@@ -419,34 +420,37 @@ namespace ipic3d {
 		}
 
 		// verify correct placement of the particles
-		// TODO: this potential should only be used in tests due to the performance reasons
-		VerifyCorrectParticlesPositionInCell(universeProperties, cell, pos);
+		assert_true(verifyCorrectParticlesPositionInCell(universeProperties, cell, pos));
 	}
 
 	/** 
  	 * This function computes particles total kinetic energy
  	 */
 	double getParticlesKineticEnergy(Cell& cell) {
-		double local_ke = 0.0;
+		// TODO: use more convenient reduction operators once they are available in the API
+		auto map = [](const Particle& p, double& res) {
+			res += 0.5 * (p.q / p.qom) * allscale::utils::sumOfSquares(p.velocity);
+		};
 
-		allscale::api::user::pfor(cell.particles, [&](Particle& p){
-				local_ke += .5 * ( p.q / p.qom ) * allscale::utils::sumOfSquares( p.velocity );
-		});
+		auto reduce = [&](const double& a, const double& b) { return a + b; };
+		auto init = []() { return 0.0; };
 
-		return local_ke;
+		return allscale::api::user::preduce(cell.particles, map, reduce, init);
 	} 
 
 	/** 
  	 * This function computes particles total momentum
  	 */
 	double getParticlesMomentum(Cell& cell) {
-		double local_mom = 0.0;
+		// TODO: use more convenient reduction operators once they are available in the API
+		auto map = [](const Particle& p, double& res) {
+			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity)); 
+		};
 
-		allscale::api::user::pfor(cell.particles, [&](Particle& p){
-				local_mom += ( p.q / p.qom ) * sqrt( allscale::utils::sumOfSquares( p.velocity ) );
-		});
+		auto reduce = [&](const double& a, const double& b) { return a + b; };
+		auto init = []() { return 0.0; };
 
-		return local_mom;
+		return allscale::api::user::preduce(cell.particles, map, reduce, init);
 	}
 
 	/**
@@ -455,7 +459,7 @@ namespace ipic3d {
 	template<typename StreamObject>
 	void outputNumberOfParticlesPerCell(const Cells& cells, StreamObject& streamObject) {
 		// TODO: implement output facilities for large problems
-		assert_le(cells.size(), (coordinate_type{ 16,16,16 })) << "Unable to dump data for such a large cell grid at this time";
+		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
 		// output dimensions
 		streamObject << cells.size() << "\n";
