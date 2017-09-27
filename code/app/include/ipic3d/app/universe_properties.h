@@ -79,6 +79,7 @@ namespace ipic3d {
 			const Vector3<double>& magneticField = {0.0, 0.0, 0.0}, const int FieldOutputCycle = 1)
 	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), magneticField(magneticField), FieldOutputCycle(FieldOutputCycle) {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
+			assert_true(size.x == size.y && size.y == size.z) << "Expected sizes of universe to be equal (=cubic universe), but got " << size.x << ", " << size.y << ", " << size.z;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
 		    assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
 		    assert_lt(0, speedOfLight) << "Expected positive non-zero speed of light, but got " << speedOfLight;
