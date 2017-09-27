@@ -249,7 +249,6 @@ namespace ipic3d {
 			}
 		}
 
-		//const auto cellCenter = getCenterOfCell(pos, universeProperties);
 		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
 
         double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
@@ -259,14 +258,10 @@ namespace ipic3d {
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
-			// get relative position of a particle within a cell
-			//const auto relPos = allscale::utils::elementwiseDivision((p.position - (cellCenter - universeProperties.cellWidth*0.5)), (universeProperties.cellWidth));
-
 			// get the fractional distance of the particle from the cell origin
 			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
 
 			// interpolate
-			// TODO: I am not really sure about this part
 			auto E = trilinearInterpolationF2P(Es, relPos, vol);
 			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
@@ -316,8 +311,12 @@ namespace ipic3d {
 		for(auto& p : cell.particles) {
 			// compute relative position
 			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
-			auto halfWidth = universeProperties.cellWidth / 2;
+			auto halfWidth = universeProperties.cellWidth / 2.0;
 			if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
+				std::cout << "New particle\n";
+				std::cout << pos << '\n';
+				std::cout << p.position << '\n';
+				std::cout << relPos << '\n';
 
 				// compute corresponding neighbor cell
 				// cover the inner cells as well as the boundary cells on positions 0 and N-1
@@ -327,16 +326,21 @@ namespace ipic3d {
 
 				// adjust particle's position in case it exits the domain
 				auto adjustPosition = [&](const int i) {
-					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.size[i] * universeProperties.cellWidth[i] - fabs(p.position[i])) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
+					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.origin[i] + universeProperties.size[i] * universeProperties.cellWidth[i] - fabs(p.position[i])) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - (universeProperties.origin[i] + universeProperties.size[i] * universeProperties.cellWidth[i]) : p.position[i]);
 				};
 
 				int i = (int)computeCell(0);
 				int j = (int)computeCell(1);
 				int k = (int)computeCell(2);
+				std::cout << i << '\t';
+				std::cout << j << '\t';
+				std::cout << k << '\n';
 
 				p.position[0] = adjustPosition(0);
 				p.position[1] = adjustPosition(1);
 				p.position[2] = adjustPosition(2);
+//				std::cout << p.position << '\n';
+//				std::cout << "Position\n";
 
 				// send to neighbor cell
 				auto target = neighbors[{i,j,k}];
@@ -372,18 +376,20 @@ namespace ipic3d {
 		for(auto& p : cell.particles) {
 			// compute relative position
 			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
-			auto halfWidth = universeProperties.cellWidth / 2;
+			auto halfWidth = universeProperties.cellWidth / 2.0;
 			if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 				++incorrectlyPlacedParticles;
-				std::cout << getOriginOfCell(pos, universeProperties);
-				std::cout << getCenterOfCell(pos, universeProperties);
-				std::cout << relPos.x << " " << relPos.y << " " << relPos.z << "\n";
-				//exit(13); 
-			}
+				std::cout << "Error \n";
+				std::cout << pos << '\n';
+				std::cout << getOriginOfCell(pos, universeProperties) << '\n';
+				std::cout << p.position << '\n';
+                exit(13);	
+            }
 		}
 		
 		if (incorrectlyPlacedParticles) {
 			std::cout << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
+			incorrectlyPlacedParticles = 0;
 			return false;
 		}
 
