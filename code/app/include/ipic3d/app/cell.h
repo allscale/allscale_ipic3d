@@ -6,6 +6,7 @@
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
+#include "allscale/api/user/operator/ops.h"
 #include "allscale/utils/static_grid.h"
 
 #include "ipic3d/app/vector.h"
@@ -437,28 +438,30 @@ namespace ipic3d {
  	 * This function computes particles total kinetic energy
  	 */
 	double getParticlesKineticEnergy(Cell& cell) {
-		double local_ke = 0.0;
+		// TODO: use more convenient reduction operators once they are available in the API
+		auto map = [](const Particle& p, double& res) {
+			res += 0.5 * (p.q / p.qom) * allscale::utils::sumOfSquares(p.velocity);
+		};
 
-		// TODO: replace with proper parallel reduction
-		for(Particle& p : cell.particles) {
-				local_ke += .5 * ( p.q / p.qom ) * allscale::utils::sumOfSquares( p.velocity );
-		}
+		auto reduce = [&](const double& a, const double& b) { return a + b; };
+		auto init = []() { return 0.0; };
 
-		return local_ke;
+		return allscale::api::user::preduce(cell.particles, map, reduce, init);
 	} 
 
 	/** 
  	 * This function computes particles total momentum
  	 */
 	double getParticlesMomentum(Cell& cell) {
-		double local_mom = 0.0;
+		// TODO: use more convenient reduction operators once they are available in the API
+		auto map = [](const Particle& p, double& res) {
+			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity)); 
+		};
 
-		// TODO: replace with proper parallel reduction
-		for(Particle& p : cell.particles) {
-				local_mom += ( p.q / p.qom ) * sqrt( allscale::utils::sumOfSquares( p.velocity ) );
-		}
+		auto reduce = [&](const double& a, const double& b) { return a + b; };
+		auto init = []() { return 0.0; };
 
-		return local_mom;
+		return allscale::api::user::preduce(cell.particles, map, reduce, init);
 	}
 
 	/**

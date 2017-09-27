@@ -2,6 +2,7 @@
 
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
+#include "allscale/api/user/operator/ops.h"
 
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
@@ -457,38 +458,24 @@ namespace ipic3d {
 	}
 
 	// compute the electric field energy
-	double getEenergy(const Field& field, const UniverseProperties& universeProperties){
-		auto fieldSize = field.size();
+	template<typename Accessor>
+	double getEnergy(const Field& field, const UniverseProperties& universeProperties, const Accessor& accessor){
 		auto fieldStart = utils::Coordinate<3>(1);
-		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		auto fieldEnd = field.size() - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 		
-		double sum = 0.0;
-		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		double fourPI = 4.0 * M_PI;
-		allscale::api::user::detail::forEach(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-			auto e = field[pos].E;
-			sum += vol * ( e.x * e.x + e.y * e.y + e.z * e.z ) / (fourPI);
-		});
+		const double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		const double fourPI = 4.0 * M_PI;
 
-		return sum;
+		// TODO: use more convenient reduction operators once they are available in the API
+		auto map = [&](const coordinate_type& index, double& res) {
+			res += vol * allscale::utils::sumOfSquares(accessor(field, index)) / (fourPI);
+		};
+
+		auto reduce = [&](const double& a, const double& b) { return a + b; };
+		auto init = []() { return 0.0; };
+
+		return allscale::api::user::preduce(fieldStart, fieldEnd, map, reduce, init);
 	} 
-
-	// compute the magnetic field energy
-	double getBenergy(const Field& field, const UniverseProperties& universeProperties){
-		auto fieldSize = field.size();
-		auto fieldStart = utils::Coordinate<3>(1);
-		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
-		
-		double sum = 0.0;
-		double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		double fourPI = 4.0 * M_PI;
-		allscale::api::user::detail::forEach(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-			auto b = field[pos].B;
-			sum += vol * ( b.x * b.x + b.y * b.y + b.z * b.z ) / (fourPI);
-		});
-
-		return sum;
-	}
 
 	/**
 	* This function outputs all field values

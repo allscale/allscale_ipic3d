@@ -62,9 +62,12 @@ namespace ipic3d {
 	template<typename StreamObject>
 	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
 		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
-			double Eenergy = getEenergy(universe.field, universe.properties);
-			double Benergy = getBenergy(universe.field, universe.properties);
-	
+			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
+			auto getB = [](const auto& field, const auto& index) { return field[index].B; };
+
+			double Eenergy = getEnergy(universe.field, universe.properties, getE);
+			double Benergy = getEnergy(universe.field, universe.properties, getB);
+			
 			// compute total particles kinetic energy
 			double total_ke = 0.0;
 			double total_mom = 0.0;
