@@ -537,7 +537,7 @@ namespace ipic3d {
 	template<typename StreamObject>
 	void outputFieldGrids(const Field& field, const BcField& bcField, StreamObject& streamObject) {
 		// TODO: implement output facilities for large problems
-		assert_le(field.size(), (coordinate_type{ 16,16,16 })) << "Unable to dump data for such a large field at this time";
+		assert_le(field.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large field at this time";
 
 		// output dimensions
 		streamObject << field.size() << "\n";

@@ -459,7 +459,7 @@ namespace ipic3d {
 	template<typename StreamObject>
 	void outputNumberOfParticlesPerCell(const Cells& cells, StreamObject& streamObject) {
 		// TODO: implement output facilities for large problems
-		assert_le(cells.size(), (coordinate_type{ 16,16,16 })) << "Unable to dump data for such a large cell grid at this time";
+		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
 		// output dimensions
 		streamObject << cells.size() << "\n";
