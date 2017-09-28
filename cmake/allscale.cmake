@@ -46,7 +46,7 @@ if(NOT TARGET allscale)
 		ExternalProject_Add(
 			allscale
 			GIT_REPOSITORY https://github.com/allscale/allscale_api
-			GIT_TAG c81015dc5339a9af834c5d760fe3ca18636bbf5c
+			GIT_TAG f4763c7d55385cbd8931c80dea9213189759020d
 			CONFIGURE_COMMAND ""
 			BUILD_COMMAND ""
 			INSTALL_COMMAND ""
