@@ -6,7 +6,7 @@
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
-#include "allscale/api/user/operator/ops.h"
+#include "allscale/api/user/operator/preduce.h"
 #include "allscale/utils/static_grid.h"
 
 #include "ipic3d/app/vector.h"
@@ -435,7 +435,7 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::preduce(cell.particles, map, reduce, init);
+		return allscale::api::user::preduce(cell.particles, map, reduce, init).get();
 	} 
 
 	/** 
@@ -450,7 +450,7 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::preduce(cell.particles, map, reduce, init);
+		return allscale::api::user::preduce(cell.particles, map, reduce, init).get();
 	}
 
 	/**

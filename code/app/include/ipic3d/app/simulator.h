@@ -85,7 +85,7 @@ namespace ipic3d {
 			};
 			auto init = []() { return TotalParticleEnergies{0.0,0.0}; };
 
-			auto totalParticleEnergies = allscale::api::user::preduce(coordinate_type(0), universe.cells.size(), map, reduce, init);
+			auto totalParticleEnergies = allscale::api::user::preduce(coordinate_type(0), universe.cells.size(), map, reduce, init).get();
 
 			streamObject 
 				<< cycle << "\t" 

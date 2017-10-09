@@ -2,7 +2,7 @@
 
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/operator/pfor.h"
-#include "allscale/api/user/operator/ops.h"
+#include "allscale/api/user/operator/preduce.h"
 
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
@@ -474,7 +474,7 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::preduce(fieldStart, fieldEnd, map, reduce, init);
+		return allscale::api::user::preduce(fieldStart, fieldEnd, map, reduce, init).get();
 	} 
 
 	/**

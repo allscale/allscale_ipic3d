@@ -2,7 +2,7 @@
 
 #include "ipic3d/app/universe.h"
 
-#include "allscale/api/user/operator/ops.h"
+#include "allscale/api/user/operator/preduce.h"
 
 namespace ipic3d{
 
@@ -21,7 +21,7 @@ namespace ipic3d{
 		coordinate_type zero(0);
 		coordinate_type full(universe.cells.size());
 
-		return allscale::api::user::preduce(zero, full, map, reduce, init);
+		return allscale::api::user::preduce(zero, full, map, reduce, init).get();
 
 	}
 
