@@ -427,7 +427,6 @@ namespace ipic3d {
  	 * This function computes particles total kinetic energy
  	 */
 	double getParticlesKineticEnergy(Cell& cell) {
-		// TODO: use more convenient reduction operators once they are available in the API
 		auto map = [](const Particle& p, double& res) {
 			res += 0.5 * (p.q / p.qom) * allscale::utils::sumOfSquares(p.velocity);
 		};
@@ -442,7 +441,6 @@ namespace ipic3d {
  	 * This function computes particles total momentum
  	 */
 	double getParticlesMomentum(Cell& cell) {
-		// TODO: use more convenient reduction operators once they are available in the API
 		auto map = [](const Particle& p, double& res) {
 			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity)); 
 		};

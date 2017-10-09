@@ -466,7 +466,6 @@ namespace ipic3d {
 		const double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 		const double fourPI = 4.0 * M_PI;
 
-		// TODO: use more convenient reduction operators once they are available in the API
 		auto map = [&](const coordinate_type& index, double& res) {
 			res += vol * allscale::utils::sumOfSquares(accessor(field, index)) / (fourPI);
 		};

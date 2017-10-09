@@ -74,7 +74,6 @@ namespace ipic3d {
 				double total_mom = 0.0;
 			};
 
-			// TODO: use more convenient reduction operators once they are available in the API
 			auto map = [&](const coordinate_type& index, TotalParticleEnergies& sum) {
 				sum.total_ke += getParticlesKineticEnergy(universe.cells[index]);
 				sum.total_mom += getParticlesMomentum(universe.cells[index]);
