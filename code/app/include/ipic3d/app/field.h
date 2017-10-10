@@ -459,14 +459,13 @@ namespace ipic3d {
 
 	// compute the electric field energy
 	template<typename Accessor>
-	double getEnergy(const Field& field, const UniverseProperties& universeProperties, const Accessor& accessor){
+	double getFieldEnergy(const Field& field, const UniverseProperties& universeProperties, const Accessor& accessor){
 		auto fieldStart = utils::Coordinate<3>(1);
 		auto fieldEnd = field.size() - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 		
 		const double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 		const double fourPI = 4.0 * M_PI;
 
-		// TODO: use more convenient reduction operators once they are available in the API
 		auto map = [&](const coordinate_type& index, double& res) {
 			res += vol * allscale::utils::sumOfSquares(accessor(field, index)) / (fourPI);
 		};

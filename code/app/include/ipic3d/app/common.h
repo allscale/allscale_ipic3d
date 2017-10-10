@@ -6,11 +6,9 @@
 
 namespace ipic3d{
 
+	// count the number of particles in all cells
 	int countParticlesInDomain(Universe& universe) {
-
-		// get the number of particles in all cells before the simulation begins
 		
-		// TODO: use more convenient reduction operators once they are available in the API
 		auto map = [&](const coordinate_type& index, int& res) {
 			res += (int)universe.cells[index].particles.size();
 		};
@@ -22,7 +20,6 @@ namespace ipic3d{
 		coordinate_type full(universe.cells.size());
 
 		return allscale::api::user::algorithm::preduce(zero, full, map, reduce, init).get();
-
 	}
 
 }
