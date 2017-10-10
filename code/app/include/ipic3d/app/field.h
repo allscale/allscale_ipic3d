@@ -1,8 +1,8 @@
 #pragma once
 
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/operator/pfor.h"
-#include "allscale/api/user/operator/ops.h"
+#include "allscale/api/user/algorithm/pfor.h"
+#include "allscale/api/user/algorithm/preduce.h"
 
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
@@ -46,7 +46,7 @@ namespace ipic3d {
 	// definition
 	Field initFields(const InitProperties& initProperties, const UniverseProperties& universeProperties) {
 
-		using namespace allscale::api::user;
+		using namespace allscale::api::user::algorithm;
 
 		utils::Size<3> start = 1;
 		// determine the field size (grid size + 1 in each dimension)
@@ -133,7 +133,7 @@ namespace ipic3d {
 
 	BcField initBcFields(const UniverseProperties& universeProperties, const Field& field) {
 
-		using namespace allscale::api::user;
+		using namespace allscale::api::user::algorithm;
 
 		utils::Size<3> start = 1;
 		utils::Size<3> fieldSize = universeProperties.size + coordinate_type(2); // two extra boundary cells
@@ -444,11 +444,11 @@ namespace ipic3d {
 		allscale::utils::Vector<int, 2> fullField(fieldSize - 1);
 		allscale::utils::Vector<int, 2> fullBcField(bcfieldSize - 1);
 
-		auto fieldRef = allscale::api::user::pfor(fullField, [&](const auto& index) {
+		auto fieldRef = allscale::api::user::algorithm::pfor(fullField, [&](const auto& index) {
 			update(index, fieldSize, field);
 		});
 
-		auto bcfieldRef = allscale::api::user::pfor(fullBcField, [&](const auto& index) {
+		auto bcfieldRef = allscale::api::user::algorithm::pfor(fullBcField, [&](const auto& index) {
 			update(index, bcfieldSize, bcfield);
 		});
 
@@ -474,7 +474,7 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::preduce(fieldStart, fieldEnd, map, reduce, init);
+		return allscale::api::user::algorithm::preduce(fieldStart, fieldEnd, map, reduce, init).get();
 	} 
 
 	/**
@@ -489,7 +489,7 @@ namespace ipic3d {
 		streamObject << field.size() << "\n";
 
 		// output field values
-		allscale::api::user::pfor(field.size(), [&](const auto& index) {
+		allscale::api::user::algorithm::pfor(field.size(), [&](const auto& index) {
 			streamObject.atomic([&](auto& out) {
 				// write index
 				out << index.x << "," << index.y << "," << index.z << ":";
@@ -504,7 +504,7 @@ namespace ipic3d {
 		streamObject << bcField.size() << "\n";
 
 		// output bc field values
-		allscale::api::user::pfor(bcField.size(), [&](const auto& index) {
+		allscale::api::user::algorithm::pfor(bcField.size(), [&](const auto& index) {
 			streamObject.atomic([&](auto& out) {
 				// write index
 				out << index.x << "," << index.y << "," << index.z << ":";

@@ -5,8 +5,8 @@
 
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/operator/pfor.h"
-#include "allscale/api/user/operator/ops.h"
+#include "allscale/api/user/algorithm/pfor.h"
+#include "allscale/api/user/algorithm/preduce.h"
 #include "allscale/utils/static_grid.h"
 
 #include "ipic3d/app/vector.h"
@@ -53,7 +53,7 @@ namespace ipic3d {
 		q_factor = q_factor * (properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z) / particlesPerCell;
 		
 		// TODO: return this as a treeture
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 
 			Cell& cell = cells[pos];
 
@@ -175,7 +175,7 @@ namespace ipic3d {
 		}
 
 		// update particles
-		allscale::api::user::pfor(cell.particles, [&](Particle& p) {
+		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p) {
 
 			// update position
 			p.updatePosition(universeProperties.dt);
@@ -255,7 +255,7 @@ namespace ipic3d {
         double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 
 		// update particles
-		allscale::api::user::pfor(cell.particles, [&](Particle& p){
+		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
@@ -435,7 +435,7 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::preduce(cell.particles, map, reduce, init);
+		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
 	} 
 
 	/** 
@@ -450,7 +450,7 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::preduce(cell.particles, map, reduce, init);
+		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
 	}
 
 	/**
@@ -465,7 +465,7 @@ namespace ipic3d {
 		streamObject << cells.size() << "\n";
 
 		// output particles per cell
-		allscale::api::user::pfor(cells.size(), [&](const auto& index) {
+		allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
 			streamObject.atomic([&](auto& out) { 
 				out << index.x << "," << index.y << "," << index.z << ":";
 				out << cells[index].particles.size() << "\n"; });

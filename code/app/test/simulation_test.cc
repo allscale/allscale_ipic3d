@@ -4,7 +4,7 @@
 #include "ipic3d/app/universe.h"
 #include "ipic3d/app/common.h"
 
-#include "allscale/api/user/operator/pfor.h"
+#include "allscale/api/user/algorithm/pfor.h"
 
 namespace ipic3d {
 
@@ -29,7 +29,7 @@ namespace ipic3d {
 
 			Field& field = universe.field;
 			decltype(field.size()) zero = 0;
-			allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+			allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 				field[pos].E = { 0, 0, 0 };
 				field[pos].B = { 0, 0, 0 };
 			});
@@ -162,7 +162,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.2, 0.0, 0.0 };
 			field[pos].B = { 0.2, 0.0, 0.0 };
 		});
@@ -213,7 +213,7 @@ namespace ipic3d {
 		// initialize field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.0, 0.0, 0.0  };
 			field[pos].B = { 0.0, 0.0, 0.01 };
 		});
@@ -294,7 +294,7 @@ namespace ipic3d {
 		// initialize field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.0, 0.0, 0.0  };
 			field[pos].B = { 0.0, 0.0, 0.01 };
 		});
@@ -369,7 +369,7 @@ namespace ipic3d {
 		// initialize field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.2, 0.0, 0.0 };
 			field[pos].B = { 0.0, 0.0, 1.0 };
 		});
@@ -449,7 +449,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.2, 0.0, 0.0 };
 			field[pos].B = { 0.2, 0.0, 0.0 };
 		});
@@ -494,7 +494,7 @@ namespace ipic3d {
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
@@ -521,7 +521,7 @@ namespace ipic3d {
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 	
@@ -548,7 +548,7 @@ namespace ipic3d {
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
@@ -601,7 +601,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.2, 0.2, 0.0 };
 			field[pos].B = { 0.2, 0.2, 0.0 };
 		});
@@ -646,7 +646,7 @@ namespace ipic3d {
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
@@ -673,7 +673,7 @@ namespace ipic3d {
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 	
@@ -700,7 +700,7 @@ namespace ipic3d {
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
@@ -757,7 +757,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
 			field[pos].E = { 0.2, 0.2, 0.2 };
 			field[pos].B = { 0.2, 0.2, 0.2 };
 		});
@@ -801,7 +801,7 @@ namespace ipic3d {
 		EXPECT_EQ(8, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
@@ -815,7 +815,7 @@ namespace ipic3d {
 		EXPECT_EQ(8, total_particles);
 	   
 		// verify the proper placement of particles 
-		allscale::api::user::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 	}

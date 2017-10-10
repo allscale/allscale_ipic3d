@@ -24,7 +24,7 @@ namespace ipic3d {
 		int particlesPerCell = initProperties.particlesPerCell[0].x * initProperties.particlesPerCell[0].y * initProperties.particlesPerCell[0].z;
 
 		utils::Coordinate<3> zero = 0;
-		allscale::api::user::pfor(zero, universeProperties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, universeProperties.size, [&](const utils::Coordinate<3>& pos) {
 			EXPECT_EQ(particlesPerCell, (int) cells[pos].particles.size());
 		});
 	}

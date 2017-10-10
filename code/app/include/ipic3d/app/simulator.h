@@ -85,7 +85,7 @@ namespace ipic3d {
 			};
 			auto init = []() { return TotalParticleEnergies{0.0,0.0}; };
 
-			auto totalParticleEnergies = allscale::api::user::preduce(coordinate_type(0), universe.cells.size(), map, reduce, init);
+			auto totalParticleEnergies = allscale::api::user::algorithm::preduce(coordinate_type(0), universe.cells.size(), map, reduce, init).get();
 
 			streamObject 
 				<< cycle << "\t" 
@@ -142,7 +142,7 @@ namespace ipic3d {
 		// run time loop for the simulation
 		for(unsigned i = 0; i < numSteps; ++i) {
 
-			using namespace allscale::api::user;
+			using namespace allscale::api::user::algorithm;
 
 			// write output to a file: total energy, momentum, E and B total energy
 			writeOutputData(i, numSteps, universe, outtxt);
