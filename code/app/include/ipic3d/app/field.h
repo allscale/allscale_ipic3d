@@ -459,7 +459,7 @@ namespace ipic3d {
 
 	// compute the electric field energy
 	template<typename Accessor>
-	double getEnergy(const Field& field, const UniverseProperties& universeProperties, const Accessor& accessor){
+	double getFieldEnergy(const Field& field, const UniverseProperties& universeProperties, const Accessor& accessor){
 		auto fieldStart = utils::Coordinate<3>(1);
 		auto fieldEnd = field.size() - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 		

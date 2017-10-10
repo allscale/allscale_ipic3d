@@ -65,33 +65,18 @@ namespace ipic3d {
 			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
 			auto getB = [](const auto& field, const auto& index) { return field[index].B; };
 
-			double Eenergy = getEnergy(universe.field, universe.properties, getE);
-			double Benergy = getEnergy(universe.field, universe.properties, getB);
-			
-			// compute total particles kinetic energy
-			struct TotalParticleEnergies {
-				double total_ke = 0.0;
-				double total_mom = 0.0;
-			};
+			double Eenergy = getFieldEnergy(universe.field, universe.properties, getE);
+			double Benergy = getFieldEnergy(universe.field, universe.properties, getB);
 
-			auto map = [&](const coordinate_type& index, TotalParticleEnergies& sum) {
-				sum.total_ke += getParticlesKineticEnergy(universe.cells[index]);
-				sum.total_mom += getParticlesMomentum(universe.cells[index]);
-			};
-
-			auto reduce = [&](const TotalParticleEnergies& a, const TotalParticleEnergies& b) { 
-				return TotalParticleEnergies{a.total_ke + b.total_ke, a.total_mom + b.total_mom};
-			};
-			auto init = []() { return TotalParticleEnergies{0.0,0.0}; };
-
-			auto totalParticleEnergies = allscale::api::user::preduce(coordinate_type(0), universe.cells.size(), map, reduce, init).get();
+			double totalParticlesMomentum = getTotalParticlesEnergy(universe.cells, getParticlesMomentum);
+			double totalParticlesKineticEnergy = getTotalParticlesEnergy(universe.cells, getParticlesKineticEnergy);
 
 			streamObject 
 				<< cycle << "\t" 
-				<< totalParticleEnergies.total_mom << "\t" 
+				<< totalParticlesMomentum << "\t" 
 				<< Eenergy << "\t" 
 				<< Benergy << "\t" 
-				<< totalParticleEnergies.total_ke 
+				<< totalParticlesKineticEnergy 
 				<< "\n";
 		}
 	}

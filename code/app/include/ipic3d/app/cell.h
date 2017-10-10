@@ -424,9 +424,9 @@ namespace ipic3d {
 	}
 
 	/** 
- 	 * This function computes particles total kinetic energy
+ 	 * This function computes particles total kinetic energy in a cell
  	 */
-	double getParticlesKineticEnergy(Cell& cell) {
+	double getParticlesKineticEnergy(const Cell& cell) {
 		auto map = [](const Particle& p, double& res) {
 			res += 0.5 * (p.q / p.qom) * allscale::utils::sumOfSquares(p.velocity);
 		};
@@ -438,9 +438,9 @@ namespace ipic3d {
 	} 
 
 	/** 
- 	 * This function computes particles total momentum
+ 	 * This function computes particles total momentum in a cell
  	 */
-	double getParticlesMomentum(Cell& cell) {
+	double getParticlesMomentum(const Cell& cell) {
 		auto map = [](const Particle& p, double& res) {
 			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity)); 
 		};
@@ -450,6 +450,23 @@ namespace ipic3d {
 
 		return allscale::api::user::preduce(cell.particles, map, reduce, init).get();
 	}
+
+	/**
+ 	 * This functions computes total particles energy.
+ 	 * 	This is the second reduction among values computed on the cells level
+ 	 * 	The first reduction is the computation of particles energies on the cells level
+ 	 */
+	template<class T>
+	double getTotalParticlesEnergy(const Cells& cells, T func){
+		auto map = [&](const coordinate_type& index, double& res) {
+			res += func(cells[index]);
+		};
+
+		auto reduce = [&](const double& a, const double& b) { return a + b; };
+		auto init = []() { return 0.0; };
+
+		return allscale::api::user::preduce(coordinate_type(0), cells.size(), map, reduce, init).get();
+	} 
 
 	/**
 	* This function outputs the number of particles per cell
