@@ -63,7 +63,7 @@ namespace ipic3d {
 	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
 		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
 			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
-			auto getB = [](const auto& field, const auto& index) { return field[index].B; };
+			auto getB = [](const auto& field, const auto& index) { return (field[index].B + field[index].Bext); };
 
 			double Eenergy = getFieldEnergy(universe.field, universe.properties, getE);
 			double Benergy = getFieldEnergy(universe.field, universe.properties, getB);

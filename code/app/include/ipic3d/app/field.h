@@ -72,11 +72,12 @@ namespace ipic3d {
 
 				// Dipole's Center
 				auto objectCenter = universeProperties.objectCenter;
+				const double fourPI = 16.0 * atan(1.0);
 
 				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
 
 					// initialize rhos
-					densityNodes[cur].rho = initProperties.rhoInit / (4.0 * M_PI); 
+					densityNodes[cur].rho = initProperties.rhoInit / (fourPI); 
 
 					// initialize electrical field
 					fields[cur].E = ebc;
@@ -87,7 +88,6 @@ namespace ipic3d {
 					// -- add earth model --
 
 					// Node coordinates
-					// TODO: double check cur - start
 					// pos-start due to the fact that we have a ghost field
 					auto location = getLocationForFields(cur-start, universeProperties);
 
@@ -104,9 +104,6 @@ namespace ipic3d {
 					} else { // no field inside the planet
 						fields[cur].Bext = { 0.0, 0.0, 0.0 };
 					}
-
-					// TODO: investigate this (commented out in the original code)
-					fields[cur].B += fields[cur].Bext;
 
 				});
 
@@ -304,13 +301,6 @@ namespace ipic3d {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
-		// 1. Compute current density J as sum of particles density times particles velocity
-
-		// 2. Compute electric field E using leapfrog with the time step delta t
-
-		// 3. Compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
-		//    Compute also magnetic field B on the center of each cell as average of all nodes
-
 		switch(universeProperties.useCase) {
 
 			case UseCase::Dipole:
@@ -373,10 +363,10 @@ namespace ipic3d {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
-		// compute electric field E using leapfrog with the time step delta t
+		// 1. Compute electric field E using leapfrog with the time step delta t
 
-		// compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
-		// compute also magnetic field B on the center of each cell as average of all nodes
+		// 2. Compute magnetic field B using leapfrog with the time step delta t, but starts on delta t / 2
+		//    Compute also magnetic field B on the center of each cell as average of all nodes
 
 		switch(universeProperties.useCase) {
 
@@ -464,7 +454,7 @@ namespace ipic3d {
 		auto fieldEnd = field.size() - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 		
 		const double vol = 0.5 * universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		const double fourPI = 4.0 * M_PI;
+		const double fourPI = 16.0 * atan(1.0);
 
 		auto map = [&](const coordinate_type& index, double& res) {
 			res += vol * allscale::utils::sumOfSquares(accessor(field, index)) / (fourPI);

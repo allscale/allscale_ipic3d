@@ -306,9 +306,9 @@ namespace ipic3d {
 		EXPECT_NEAR(fields[pos].Bext.x, -2.74633e-08, 1e-10);
 		EXPECT_NEAR(fields[pos].Bext.y, -2.40304e-08, 1e-10);
 		EXPECT_NEAR(fields[pos].Bext.z, 1.44183e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].B.x, -2.74633e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].B.y, -2.40304e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].B.z, 0.00010001441, 1e-10);
+		EXPECT_NEAR(fields[pos].B.x, 0.0, 1e-10);
+		EXPECT_NEAR(fields[pos].B.y, 0.0, 1e-10);
+		EXPECT_NEAR(fields[pos].B.z, 0.0001, 1e-10);
 
 		allscale::api::user::algorithm::pfor(start, end, [&](const utils::Coordinate<3>& cur) {
 			EXPECT_NEAR(fields[cur].E.x, -0.0, 1e-06);

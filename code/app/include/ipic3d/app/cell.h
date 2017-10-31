@@ -97,7 +97,7 @@ namespace ipic3d {
 
 	/**
 	* This function projects the effect of the particles contained in the specified cell
-	* to the given density contributions grid.
+	* to the given density contributions defined on the grid
 	*
 	* @param universeProperties the properties of this universe
 	* @param cell the cell whose particles are considered in the density contributions computation
