@@ -1,4 +1,5 @@
-if(USE_ALLSCALECC)
+if(DEFINED ALLSCALECC)
+	message("Using ${ALLSCALECC} as compiler")
 	set(CMAKE_C_COMPILER ${ALLSCALECC})
 	set(CMAKE_CXX_COMPILER ${ALLSCALECC})
 endif()
