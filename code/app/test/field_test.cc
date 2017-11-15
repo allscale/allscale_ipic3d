@@ -58,7 +58,7 @@ namespace ipic3d {
 		// initialize field
 		BcField bcfields(properties.size + coordinate_type(1));
 		decltype(bcfields.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,bcfields.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,bcfields.size(),[&](const auto& pos){
 			bcfields[pos].Bc = { 0.0, 0.0, 0.0 };
 		});
 
@@ -108,7 +108,7 @@ namespace ipic3d {
 		// initialize field
 		Field fields(properties.size + coordinate_type(1));
 		decltype(fields.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,fields.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,fields.size(),[&](const auto& pos){
 			fields[pos].E = { 0.0, 0.0, 0.0 };
 		});
 
@@ -157,7 +157,7 @@ namespace ipic3d {
 		// initialize field
 		BcField bcfields(properties.size + coordinate_type(1));
 		decltype(bcfields.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,bcfields.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,bcfields.size(),[&](const auto& pos){
 			bcfields[pos].Bc = { 1.0, 1.0, 1.0 };
 		});
 
@@ -201,7 +201,7 @@ namespace ipic3d {
 		// initialize field
 		Field fields(properties.size + coordinate_type(1));
 		decltype(fields.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,fields.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,fields.size(),[&](const auto& pos){
 			fields[pos].B = { 1.0, 1.0, 1.0 };
 		});
 
@@ -322,7 +322,7 @@ namespace ipic3d {
 		properties.size = { 10,10,15 };
 	    pos = {7, 9, 13};
 		Field field3(properties.size + coordinate_type(1));
-		allscale::api::user::algorithm::pfor(zero,field3.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field3.size(),[&](const auto& pos){
 			field3[pos].E = { 0.0, 0.0, 0.0 };
 			field3[pos].B = { 0.0, 0.0, 0.0 };
 		});
@@ -344,7 +344,7 @@ namespace ipic3d {
 		properties.size = { 11,11,21 };
 	    pos = {10, 10, 20};
 		Field field4(properties.size + coordinate_type(1));
-		allscale::api::user::algorithm::pfor(zero,field4.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field4.size(),[&](const auto& pos){
 			field4[pos].E = { 0.0, 0.0, 0.0 };
 			field4[pos].B = { 0.0, 0.0, 0.0 };
 		});
@@ -374,12 +374,12 @@ namespace ipic3d {
 		// initialize field
 		Field field(properties.size + coordinate_type(3));
 		decltype(field.size()) start = 1;
-		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](auto& pos){
+		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](const auto& pos){
 			field[pos].E = { 1.0, 1.0, 1.0 };
 			field[pos].B = { 2.0, 2.0, 2.0 };
 		});
 		BcField bcfield(properties.size + coordinate_type(2));
-		allscale::api::user::algorithm::pfor(start, bcfield.size() - coordinate_type(1), [&](auto& pos){
+		allscale::api::user::algorithm::pfor(start, bcfield.size() - coordinate_type(1), [&](const auto& pos){
 			bcfield[pos].Bc = { 3.0, 3.0, 3.0 };
 		});
 
@@ -400,7 +400,7 @@ namespace ipic3d {
 		EXPECT_NEAR( Bc.y, 3.0, 1e-06 );
 		EXPECT_NEAR( Bc.z, 3.0, 1e-06 );
 
-		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](auto& pos){
+		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](const auto& pos){
 			field[pos].E = { (double) pos[0], (double) pos[1], (double) pos[2] };
 			field[pos].B = { 2.0 * pos[0], 2.0 * pos[1], 2.0 * pos[2]};
 		});
@@ -436,18 +436,18 @@ namespace ipic3d {
 		// initialize field
 		Field field(properties.size + coordinate_type(3));
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.2, 0.2, 0.2 };
 			field[pos].B = { 0.4, 0.4, 0.4 };
 		});
 		// initialize field
 		BcField bcfield(properties.size + coordinate_type(2));
-		allscale::api::user::algorithm::pfor(zero,bcfield.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,bcfield.size(),[&](const auto& pos){
 			bcfield[pos].Bc = { 0.8, 0.8, 0.8 };
 		});
 		// initialize density
 		DensityNodes density(properties.size + coordinate_type(3));
-		allscale::api::user::algorithm::pfor(zero,density.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,density.size(),[&](const auto& pos){
 			density[pos].J = { 0.6, 0.6, 0.6 };
 		});
 		
@@ -512,18 +512,18 @@ namespace ipic3d {
 		// initialize field
 		Field field(properties.size + coordinate_type(3));
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.2, 0.2, 0.2 };
 			field[pos].B = { 0.4, 0.4, 0.4 };
 		});
 		// initialize bcfield
 		BcField bcfield(properties.size + coordinate_type(2));
-		allscale::api::user::algorithm::pfor(zero,bcfield.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,bcfield.size(),[&](const auto& pos){
 			bcfield[pos].Bc = { 0.8, 0.8, 0.8 };
 		});
 		// initialize density
 		DensityNodes density(properties.size + coordinate_type(3));
-		allscale::api::user::algorithm::pfor(zero,density.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,density.size(),[&](const auto& pos){
 			density[pos].J = { 0.6, 0.6, 0.6 };
 		});
 		
@@ -561,18 +561,18 @@ namespace ipic3d {
 		// initialize field
 		Field field(properties.size + coordinate_type(1));
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.0, 0.0, 0.0 };
 			field[pos].B = { 0.0, 0.0, 0.0 };
 		});
 		// initialize bcfield
 		BcField bcfield(properties.size + coordinate_type(2));
-		allscale::api::user::algorithm::pfor(zero,bcfield.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,bcfield.size(),[&](const auto& pos){
 			bcfield[pos].Bc = { 0.0, 0.0, 0.0 };
 		});
 		// initialize density
 		DensityNodes density(properties.size + coordinate_type(3));
-		allscale::api::user::algorithm::pfor(zero,density.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,density.size(),[&](const auto& pos){
 			density[pos].J = { 0.0, 0.0, 0.0 };
 		});
 

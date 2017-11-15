@@ -29,7 +29,7 @@ namespace ipic3d {
 
 			Field& field = universe.field;
 			decltype(field.size()) zero = 0;
-			allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+			allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 				field[pos].E = { 0, 0, 0 };
 				field[pos].B = { 0, 0, 0 };
 			});
@@ -162,7 +162,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.2, 0.0, 0.0 };
 			field[pos].B = { 0.2, 0.0, 0.0 };
 		});
@@ -213,7 +213,7 @@ namespace ipic3d {
 		// initialize field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.0, 0.0, 0.0  };
 			field[pos].B = { 0.0, 0.0, 0.01 };
 		});
@@ -294,7 +294,7 @@ namespace ipic3d {
 		// initialize field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.0, 0.0, 0.0  };
 			field[pos].B = { 0.0, 0.0, 0.01 };
 		});
@@ -369,7 +369,7 @@ namespace ipic3d {
 		// initialize field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.2, 0.0, 0.0 };
 			field[pos].B = { 0.0, 0.0, 1.0 };
 		});
@@ -449,7 +449,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.2, 0.0, 0.0 };
 			field[pos].B = { 0.2, 0.0, 0.0 };
 		});
@@ -601,7 +601,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.2, 0.2, 0.0 };
 			field[pos].B = { 0.2, 0.2, 0.0 };
 		});
@@ -757,7 +757,7 @@ namespace ipic3d {
 		// initialize the field
 		Field& field = universe.field;
 		decltype(field.size()) zero = 0;
-		allscale::api::user::algorithm::pfor(zero,field.size(),[&](auto& pos){
+		allscale::api::user::algorithm::pfor(zero,field.size(),[&](const auto& pos){
 			field[pos].E = { 0.2, 0.2, 0.2 };
 			field[pos].B = { 0.2, 0.2, 0.2 };
 		});
