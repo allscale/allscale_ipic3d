@@ -7,8 +7,8 @@ field. These physical processes may effect people and technology in space and on
 
 ## Quickstart
 
-Ensure you have GCC 5 (or 6) installed and set as your default C/C++ compiler.
-Furthermore CMake 3.5 (or later) is required for the build and testing process.
+Ensure you have GCC 6 (or 7) installed and set as your default C/C++ compiler.
+Furthermore CMake 3.6 (or later) is required for the build and testing process.
 Simply execute the following commands to build the project and run all tests.
 
     $ mkdir build
@@ -47,18 +47,19 @@ simulation run was correct or not.
 
 Following options can be supplied to CMake
 
-| Option              | Values          |
-| ------------------- | --------------- |
-| -DCMAKE_BUILD_TYPE  | Release / Debug |
-| -DBUILD_SHARED_LIBS | ON / OFF        |
-| -DBUILD_TESTS       | ON / OFF        |
-| -DBUILD_DOCS        | ON / OFF        |
-| -DBUILD_COVERAGE    | ON / OFF        |
-| -DUSE_ASSERT        | ON / OFF        |
-| -DUSE_VALGRIND      | ON / OFF        |
-| -DUSE_ALLSCALECC    | ON / OFF        |
-| -DENABLE_PROFILING  | ON / OFF        |
-| -DTHIRD_PARTY_DIR   | \<path\>        |
+| Option                  | Values          |
+| ----------------------- | --------------- |
+| -DCMAKE_BUILD_TYPE      | Release / Debug |
+| -DBUILD_SHARED_LIBS     | ON / OFF        |
+| -DBUILD_TESTS           | ON / OFF        |
+| -DBUILD_DOCS            | ON / OFF        |
+| -DBUILD_COVERAGE        | ON / OFF        |
+| -DUSE_ASSERT            | ON / OFF        |
+| -DALLSCALE_CHECK_BOUNDS | ON / OFF        |
+| -DUSE_VALGRIND          | ON / OFF        |
+| -DUSE_ALLSCALECC        | ON / OFF        |
+| -DENABLE_PROFILING      | ON / OFF        |
+| -DTHIRD_PARTY_DIR       | \<path\>        |
 
 The files `cmake/build_settings.cmake` and `code/CMakeLists.txt` state their
 default value.
@@ -73,8 +74,10 @@ following commands assume you are using Ubuntu 16.04 LTS -- adjust the lines if
 you are using a different distribution.
 
     $ sudo apt update
-    $ sudo apt install bison flex m4 pkg-config ruby
-    $ scripts/dependencies/installer
+    $ sudo apt install bison build-essential cmake flex git groff-base \
+      libcpufreq-dev libgmp10 libhwloc-dev libluajit-5.1-dev libpapi-dev m4 \
+      pkg-config python ruby time wget zlib1g
+    $ scripts/dependencies/installer llvm boost cudd gmp zlib ghc cabal
 
 To build this project using the AllScale compiler, simply set the corresponding
 CMake option. You may want to use a separate build directory to easily switch

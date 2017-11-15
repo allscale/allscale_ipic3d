@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.6)
 project(ipic3d LANGUAGES C CXX)
 
 # -- Module Path

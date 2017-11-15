@@ -3,7 +3,7 @@ if(NOT TARGET allscale)
 
 	if(USE_ALLSCALECC AND NOT DEFINED OVERRIDE_ALLSCALECC)
 		if(NOT EXISTS ${THIRD_PARTY_DIR})
-			message(STATUS
+			message(
 				"====================================================================\n"
 				"No third_party directory found, will set it up for you in 5 seconds:\n"
 				"====================================================================\n"
@@ -22,11 +22,7 @@ if(NOT TARGET allscale)
 		ExternalProject_Add(
 			allscale
 			GIT_REPOSITORY https://github.com/allscale/allscale_compiler
-			GIT_TAG 219cc794efbeaf9363148aa2dc21efa688feaed2
-			CMAKE_COMMAND
-				${CMAKE_COMMAND} -E env
-				"INSIEME_LIBS_HOME=${THIRD_PARTY_DIR}"
-				${CMAKE_COMMAND}
+			GIT_TAG 320f12eb5f0208e309c142b51a267de0930cca70
 			CMAKE_ARGS
 				${CMAKE_EXTERNALPROJECT_FORWARDS}
 				-DINSIEME_C_BACKEND_COMPILER=${CMAKE_C_COMPILER}
@@ -46,7 +42,7 @@ if(NOT TARGET allscale)
 		ExternalProject_Add(
 			allscale
 			GIT_REPOSITORY https://github.com/allscale/allscale_api
-			GIT_TAG 9b65bf7d4854b684293fe36e406898fa4ad54080
+			GIT_TAG a4c2e9c747bfbed3075fd5fe92b8ecbabe6918a6
 			CONFIGURE_COMMAND ""
 			BUILD_COMMAND ""
 			INSTALL_COMMAND ""
