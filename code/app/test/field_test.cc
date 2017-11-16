@@ -49,14 +49,14 @@ namespace ipic3d {
 	TEST(Field, curlB) {
 		// Set universe properties
 		UniverseProperties properties;
-		properties.size = { 1, 1, 1 };
+		properties.size = { 2, 2, 2 };
 		properties.cellWidth = { 1.0, 1.0, 1.0 };
 		properties.useCase = UseCase::Dipole;
 
 		utils::Coordinate<3> pos{1, 1, 1};
 
-		// initialize field
-		BcField bcfields(properties.size + coordinate_type(1));
+		// initialize field: no ghost cells here
+		BcField bcfields(properties.size);
 		decltype(bcfields.size()) zero = 0;
 		allscale::api::user::algorithm::pfor(zero,bcfields.size(),[&](const auto& pos){
 			bcfields[pos].Bc = { 0.0, 0.0, 0.0 };
@@ -149,19 +149,19 @@ namespace ipic3d {
 	TEST(Field, interpC2N) {
 		// Set universe properties
 		UniverseProperties properties;
-		properties.size = { 1, 1, 1 };
+		properties.size = { 2, 2, 2 };
 
 	    // use center position
 		utils::Coordinate<3> pos{1, 1, 1};
 
 		// initialize field
-		BcField bcfields(properties.size + coordinate_type(1));
+		BcField bcfields(properties.size);
 		decltype(bcfields.size()) zero = 0;
 		allscale::api::user::algorithm::pfor(zero,bcfields.size(),[&](const auto& pos){
 			bcfields[pos].Bc = { 1.0, 1.0, 1.0 };
 		});
 
-		Field fields(properties.size);
+		Field fields(properties.size + coordinate_type(1));
 		fields[pos].B = { 0.0, 0.0, 0.0};
 
 		
