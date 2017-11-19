@@ -39,7 +39,7 @@ namespace ipic3d {
 		properties.size = {4,4,4};
 		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
-		properties.useCase = UseCase::Test;
+		properties.useCase = UseCase::Dipole;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
@@ -128,7 +128,7 @@ namespace ipic3d {
 		properties.size = { 2,2,2 };
 		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
-		properties.useCase = UseCase::Test;
+		properties.useCase = UseCase::Dipole;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);

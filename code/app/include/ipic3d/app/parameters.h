@@ -18,7 +18,7 @@ namespace ipic3d {
 	/**
 	* An enumeration of use cases.
 	*/
-    enum class UseCase { ParticleWave, Dipole, Test };
+    enum class UseCase { Dipole, Test };
 
 	struct Parameters {
 

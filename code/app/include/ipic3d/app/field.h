@@ -110,15 +110,6 @@ namespace ipic3d {
 				break;
 			}
 
-			case UseCase::ParticleWave: {
-				// TODO: check if ParticleWave use case is still required, otherwise remove all occurrences from code base
-				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
-					fields[cur].Bext = { 0, 0, 0 };
-				});
-
-				break;
-			}
-
 			default:
 					assert_not_implemented()
 						<< "The specified use case is not supported yet!";
@@ -140,7 +131,6 @@ namespace ipic3d {
 		BcField bcfield(fieldSize);
 
 		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
-
 			// init magnetic field at centers
 			interpN2C(cur, field, bcfield);
 		});
@@ -277,18 +267,6 @@ namespace ipic3d {
 				break;
 			}
 
-			case UseCase::ParticleWave:
-			{
-				// TODO: to provide
-				break;
-			}
-
-			case UseCase::Test:
-			{
-				// TODO: to provide
-				break;
-			}
-
 			default:
 				assert_not_implemented() << "The specified use case is not supported yet!";
 		}
@@ -319,35 +297,27 @@ namespace ipic3d {
 //				field[pos].E.y += (universeProperties.speedOfLight * curlB.z - density[pos - utils::Coordinate<3>(1)].J.y) * universeProperties.dt;
 //				field[pos].E.y += (universeProperties.speedOfLight * (curlB.y - curlB.x) - density[pos - utils::Coordinate<3>(1)].J.z) * universeProperties.dt;
 
-				// 2. Compute B
-				// 		curl of E
-				Vector3<double> curlE;
-				computeCurlE(universeProperties, pos, field, curlE);
+				// do this check to not-udpate the ghost cells here
+				// TODO: a better idea to avoid this check
+				if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
+					// 2. Compute B
+					// 		curl of E
+					Vector3<double> curlE;
+					computeCurlE(universeProperties, pos, field, curlE);
 
-				//		scale curl by -c*dt
-				//		update B_{n+1} on the center with the computed value
-				bcfield[pos].Bc -= universeProperties.speedOfLight * curlE * universeProperties.dt;
-//				field[pos].B.x -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
-//				field[pos].B.y -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
-//				field[pos].B.z -= universeProperties.speedOfLight * (curlE.y - curlB.x) * universeProperties.dt;
+					//		scale curl by -c*dt
+					//		update B_{n+1} on the center with the computed value
+					bcfield[pos].Bc -= universeProperties.speedOfLight * curlE * universeProperties.dt;
+	//				field[pos].B.x -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
+	//				field[pos].B.y -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
+	//				field[pos].B.z -= universeProperties.speedOfLight * (curlE.y - curlB.x) * universeProperties.dt;
+				}
 
 				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
 
 				// 		interpolate B from center to nodes
 				interpC2N(pos, bcfield, field);
 
-				break;
-			}
-
-			case UseCase::ParticleWave:
-			{
-				// TODO: to provide
-				break;
-			}
-
-			case UseCase::Test:
-			{
-				// TODO: to provide
 				break;
 			}
 
@@ -371,6 +341,7 @@ namespace ipic3d {
 		switch(universeProperties.useCase) {
 
 			case UseCase::Dipole:
+			// new approach to appear here
 			{
 				//	Compute transverse magnetic (TM) sets
 				bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
@@ -391,18 +362,26 @@ namespace ipic3d {
 
 				break;
 			}
-
-			case UseCase::ParticleWave:
-			{
-				// TODO: to provide
-				break;
-			}
-
-			case UseCase::Test:
-			{
-				// TODO: to provide
-				break;
-			}
+//			{
+//				//	Compute transverse magnetic (TM) sets
+//				bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
+//
+//				field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos].J.x; 
+//
+//				field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos].J.y; 
+//
+//
+//				//	Compute transverse electric (TE) sets
+//				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos].J.z );
+//
+//				bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({0,-1,0})].E.z) / universeProperties.cellWidth.y; 
+//
+//				bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({-1,0,0})].E.z) / universeProperties.cellWidth.x; 
+//
+//				//	Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
+//
+//				break;
+//			}
 
 			default:
 				assert_not_implemented() << "The specified use case is not supported yet!";

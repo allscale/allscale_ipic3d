@@ -14,12 +14,11 @@ namespace ipic3d {
 	namespace {
 		std::string getUseCaseName(const UseCase& useCase) {
 			switch(useCase) {
-			case UseCase::Dipole: return "Dipole";
-			case UseCase::ParticleWave: return "ParticleWave";
-			case UseCase::Test: return "Test";
+				case UseCase::Dipole: return "Dipole";
+				case UseCase::Test: return "Test";
 			}
 			// adhere to fallback policy in parameter parsing
-			return "ParticleWave";
+			return "Test";
 		}
 	}
 

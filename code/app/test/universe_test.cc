@@ -23,9 +23,9 @@ namespace ipic3d {
 	    EXPECT_EQ(1, properties.FieldOutputCycle);
 
 
-		UniverseProperties properties2(UseCase::Test, { 3,3,3 }, { 0.2,0.3,0.4 }, 5.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, { -0.1,-0.2,-0.3 }, 100);
+		UniverseProperties properties2(UseCase::Dipole, { 3,3,3 }, { 0.2,0.3,0.4 }, 5.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, { -0.1,-0.2,-0.3 }, 100);
 
-		EXPECT_EQ(UseCase::Test, properties2.useCase);
+		EXPECT_EQ(UseCase::Dipole, properties2.useCase);
 		EXPECT_EQ((coordinate_type{ 3,3,3 }), properties2.size);
 		EXPECT_EQ((V{ 0.2,0.3,0.4 }), properties2.cellWidth);
 		EXPECT_EQ(5.0, properties2.dt);
@@ -46,20 +46,10 @@ namespace ipic3d {
 	}
 
 	TEST(UseCase, Printable) {
-		UseCase useCase = UseCase::ParticleWave;
-		std::stringstream ss;
-		ss << useCase;
-		EXPECT_EQ("ParticleWave", ss.str());
-
 		UseCase useCase2 = UseCase::Dipole;
 		std::stringstream ss2;
 		ss2 << useCase2;
 		EXPECT_EQ("Dipole", ss2.str());
-
-		UseCase useCase3 = UseCase::Test;
-		std::stringstream ss3;
-		ss3 << useCase3;
-		EXPECT_EQ("Test", ss3.str());
 	}
 
 	TEST(UniverseProperties, TypeProperties) {

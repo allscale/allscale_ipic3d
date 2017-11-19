@@ -22,7 +22,6 @@ namespace ipic3d {
 			properties.size = { 2,1,1 };
 			properties.cellWidth = { 1,1,1 };
 			properties.dt = 1;
-			properties.useCase = UseCase::Test;
 
 			// Create a universe with these properties
 			Universe universe = Universe(properties);
@@ -148,7 +147,6 @@ namespace ipic3d {
 		properties.size = {1,1,1};
 		properties.cellWidth = { 1,1,1 };
 		properties.dt = 0.1;
-		properties.useCase = UseCase::Test;
 
 		// number of steps
 		unsigned niter = 9;
@@ -198,7 +196,6 @@ namespace ipic3d {
 
 		// Set universe properties
 		UniverseProperties properties;
-		properties.useCase = UseCase::Test;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 3e-11;
@@ -279,7 +276,6 @@ namespace ipic3d {
 
 		// Set universe properties
 		UniverseProperties properties;
-		properties.useCase = UseCase::Test;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 3e-11;
@@ -354,7 +350,6 @@ namespace ipic3d {
 
 		// Set universe properties
 		UniverseProperties properties;
-		properties.useCase = UseCase::Test;
 		properties.size = { 1,1,1 };
 		properties.cellWidth = { 1e4,1e4,1e4 };
 		properties.dt = 0.01;
@@ -402,10 +397,6 @@ namespace ipic3d {
 
 			// update position
 			p.updatePosition(properties.dt);
-
-			//std::cout << i << " " << i * universe.properties.dt << " ";
-			//std::cout << p.position.x << " " << p.position.y << " " << p.position.z << " ";
-			//std::cout << p.velocity.x << " " << p.velocity.y << " " << p.velocity.z << "\n";
 		}
 
 		// check where particle ended up
@@ -436,7 +427,6 @@ namespace ipic3d {
 		properties.size = {3,3,3};
 		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
-		properties.useCase = UseCase::Test;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
@@ -588,7 +578,6 @@ namespace ipic3d {
 		properties.size = {3,3,3};
 		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
-		properties.useCase = UseCase::Test;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
@@ -739,7 +728,6 @@ namespace ipic3d {
 		properties.size = {4,4,4};
 		properties.cellWidth = { .5,.5,.5 };
 		properties.dt = 0.1;
-		properties.useCase = UseCase::Test;
 
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
