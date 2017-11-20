@@ -350,13 +350,13 @@ namespace ipic3d {
 				//	Compute transverse magnetic (TM) sets
 				bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
 
-				field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos].J.x; 
+				field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.x; 
 
-				field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos].J.y; 
+				field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.y; 
 
 
 				//	Compute transverse electric (TE) sets
-				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos].J.z );
+				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos - utils::Coordinate<3>(1)].J.z );
 
 				bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({0,-1,0})].E.z) / universeProperties.cellWidth.y; 
 
@@ -368,21 +368,23 @@ namespace ipic3d {
 			}
 //			{
 //				//	Compute transverse magnetic (TM) sets
-//				bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
+//				if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
+//					bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
+//				}
 //
-//				field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos].J.x; 
+//				field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.x; 
 //
-//				field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos].J.y; 
+//				field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.y; 
 //
 //
 //				//	Compute transverse electric (TE) sets
-//				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos].J.z );
+//				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos - utils::Coordinate<3>(1)].J.z );
 //
-//				bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({0,-1,0})].E.z) / universeProperties.cellWidth.y; 
+//				if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
+//					bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({0,-1,0})].E.z) / universeProperties.cellWidth.y; 
 //
-//				bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({-1,0,0})].E.z) / universeProperties.cellWidth.x; 
-//
-//				//	Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
+//					bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({-1,0,0})].E.z) / universeProperties.cellWidth.x; 
+//				}
 //
 //				break;
 //			}

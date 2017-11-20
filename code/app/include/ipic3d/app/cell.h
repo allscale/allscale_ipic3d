@@ -123,9 +123,6 @@ namespace ipic3d {
 			for(int i = 0; i < 2; ++i) {
 				for(int j = 0; j < 2; ++j) {
 					for(int k = 0; k < 2; ++k) {
-						//utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-						//auto cornerPos = getOriginOfCell(cur, universeProperties); 
-						//auto fac = (i == 0 ? (1 - cornerPos.x) : cornerPos.x) * (j == 0 ? (1 - cornerPos.y) : cornerPos.y) * (k == 0 ? (1 - cornerPos.z) : cornerPos.z);
 				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
 						Js[i][j][k] += p.q * p.velocity * fac;
 					}
