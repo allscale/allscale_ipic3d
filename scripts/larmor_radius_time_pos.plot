@@ -16,5 +16,5 @@ set tmargin .5
 #set rmargin 1.
 #set lmargin 9.5
 
-plot "../results/larmor_radius_simple.txt" using 2:3 with linespoints lw 2.0 lc 3 pt 3 title "Larmor radius"
+plot "../results/larmor_radius.txt" using 3:2 with linespoints lw 2.0 lc 3 pt 3 title "Larmor radius"
 

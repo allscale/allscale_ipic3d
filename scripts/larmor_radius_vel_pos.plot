@@ -3,7 +3,7 @@ set terminal postscript eps color enhanced "Times" 26
 set grid xtics ytics
 set xlabel "position" font "Times, 26"
 set ylabel "velocity" font "Times, 26"
-set output "| epstopdf --filter > ../imgs/larmor_radius_pos_vel_real.pdf"
+set output "| epstopdf --filter > ../imgs/larmor_radius_pos_vel.pdf"
 
 set datafile missing '#'
 
