@@ -76,6 +76,10 @@ namespace ipic3d {
 
 				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
 
+					// TODO: required to work around an allscalecc frontend bug
+					// should be removed once the issue in the compiler is resolved
+					fields[cur].Bext = { 0,0,0 };
+
 					// initialize rhos
 					densityNodes[cur].rho = initProperties.rhoInit / (fourPI); 
 
