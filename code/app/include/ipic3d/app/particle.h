@@ -15,20 +15,20 @@ namespace ipic3d {
 		double q;							// charge of this particle
 		double qom;							// charge over mass for this particle
 
-		Vector3<double> velocityStar;  	// auxiliary parameters for the Boris mover
-
 		// user-specified default constructor to ensure proper initialization
-		Particle() : position(), velocity(), q(), qom(), velocityStar() {};
+		Particle() : position(), velocity(), q(), qom() {};
 
+		/**
+ 		 * Update position
+ 		 */
 		void updatePosition(double dt) {
-			position += velocity * dt;
-		}
+        	position += velocity * dt;
+        }
 
-		void updateVelocity(const Force& force, double dt) {
-			velocity += force * dt * qom;
-		}
-
-		void updateVelocityBorisStyle(const Force& E, const Force& B, double dt) {
+		/**
+ 		 * Update velocity using the Boris method
+ 		 */ 	
+		void updateVelocity(const Force& E, const Force& B, double dt) {
 
 			auto k = qom * 0.5 * dt;
 
@@ -52,32 +52,12 @@ namespace ipic3d {
 			out << "Particle: " << std::endl;
 			out << "\tPosition: " << p.position << std::endl;
 			out << "\tVelocity: " << p.velocity << std::endl;
-			out << "\tVelocityStar: " << p.velocityStar << std::endl;
 			out << "\tCharge: " << p.q << std::endl;
 			out << "\tCharge over mass: " << p.qom << std::endl;
 			return out;
 		}
 
 	};
-
-	/**
-	* This function computes the force exerted on a particle within a given electric field
-	* TODO: add interpolation?
-	*
-	* @param E the electric field
-	* @param p the particle for which to compute the force
-	*/
-	Force computeElectricForce(const Vector3<double> E[2][2][2], const Particle& p) {
-		Force f(0);
-		for(int i = 0; i < 2; i++) {
-			for(int j = 0; j < 2; j++) {
-				for(int k = 0; k < 2; k++) {
-					f += E[i][j][k] * p.q;
-				}
-			}
-		}
-		return f;
-	}
 
 } // end namespace ipic3d
 

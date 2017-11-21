@@ -363,8 +363,6 @@ namespace ipic3d {
 					bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.dt * ( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x - (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
 				}
 
-				//	Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
-
 				break;
 			}
 //			{

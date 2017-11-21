@@ -132,14 +132,6 @@ namespace ipic3d {
 	}
 
 
-	TEST(Simulation, SingleParticleFirstOrder) {
-
-		// this test checks whether particles are properly migrated between cells
-		detail::testSingleParticle<detail::default_particle_mover>();
-
-	}
-
-
 	TEST(Simulation, SingleParticleBorisMover) {
 
 		// Set universe properties
@@ -178,7 +170,7 @@ namespace ipic3d {
 		cell.particles.push_back(p);
 
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
@@ -237,18 +229,17 @@ namespace ipic3d {
 
 		// push velocity back in time by 1/2 dt
 		// 		this is purely done to compare against the Matlab version 
-		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
+		p.updateVelocity(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
 
 		// number of steps
 		unsigned numSteps = 1000;
 		// run the simulation
-		//simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(niter,universe);
 		for(unsigned i = 0; i < numSteps; ++i) {
 			auto E = field[field_pos].E;
 			auto B = field[field_pos].B;
 
 			// update velocity
-			p.updateVelocityBorisStyle(E, B, properties.dt);
+			p.updateVelocity(E, B, properties.dt);
 
 			// update position
 			p.updatePosition(properties.dt);
@@ -317,7 +308,7 @@ namespace ipic3d {
 
 		// push velocity back in time by 1/2 dt
 		// 		this is purely done to compare against the Matlab version 
-		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
+		p.updateVelocity(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
 
 		cell.particles.push_back(p);
 
@@ -327,7 +318,7 @@ namespace ipic3d {
 		// number of steps
 		unsigned numSteps = 10;
 		// run the simulation
-		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(numSteps,universe);
+		simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::default_particle_mover>(numSteps,universe);
 
 		// check where particle ended up
 		ASSERT_FALSE(cell.particles.empty());
@@ -382,18 +373,17 @@ namespace ipic3d {
 
 		// push velocity back in time by 1/2 dt
 		// 		this is purely done to compare against the Matlab version 
-		p.updateVelocityBorisStyle(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
+		p.updateVelocity(field[field_pos].E, field[field_pos].B, -0.5*properties.dt);
 
 		// run the simulation
 		// number of steps
 		unsigned numSteps = 5000;
-		//simulateSteps<detail::default_particle_to_field_projector,detail::default_field_solver,detail::boris_mover>(numSteps,universe);
 		for(unsigned i = 0; i < numSteps; ++i) {
 			auto E = field[field_pos].E;
 			auto B = field[field_pos].B;
 
 			// update velocity
-			p.updateVelocityBorisStyle(E, B, properties.dt);
+			p.updateVelocity(E, B, properties.dt);
 
 			// update position
 			p.updatePosition(properties.dt);
@@ -464,7 +454,7 @@ namespace ipic3d {
 		// run the simulation
 		// number of steps
 		unsigned niter = 1;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved from one cell to another
 		ASSERT_TRUE(a.particles.empty());
@@ -491,7 +481,7 @@ namespace ipic3d {
 
 		// run the simulation to propagate the particle further
 		niter = 4;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved out of the domain
 		ASSERT_TRUE(a.particles.empty());
@@ -518,7 +508,7 @@ namespace ipic3d {
 
 		// run the simulation to push the particle outside the domain
 		niter = 2;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved out of the domain
 		ASSERT_FALSE(a.particles.empty());
@@ -547,7 +537,7 @@ namespace ipic3d {
 		Particle& p2 = a.particles.front();
 		p2.velocity.x  = -1.0;
 		niter = 1;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		EXPECT_NEAR(c.particles.front().position.x, 1.464, 1e-3);
 		EXPECT_NEAR(c.particles.front().position.y, 0.8, 1e-1);
@@ -615,7 +605,7 @@ namespace ipic3d {
 		// run the simulation
 		// number of steps
 		unsigned niter = 1;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved from one cell to another
 		ASSERT_TRUE(a.particles.empty());
@@ -642,7 +632,7 @@ namespace ipic3d {
 
 		// run the simulation to propagate the particle further
 		niter = 4;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved out of the domain
 		ASSERT_TRUE(a.particles.empty());
@@ -669,7 +659,7 @@ namespace ipic3d {
 
 		// run the simulation to push the particle outside the domain
 		niter = 2;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved out of the domain
 		ASSERT_FALSE(a.particles.empty());
@@ -698,7 +688,7 @@ namespace ipic3d {
 		Particle& p2 = a.particles.front();
 		p2.velocity.x = p2.velocity.y = -1.0;
 		niter = 1;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		EXPECT_NEAR(c.particles.front().position.x, 1.464, 1e-3);
 		EXPECT_NEAR(c.particles.front().position.y, 1.464, 1e-3);
@@ -796,7 +786,7 @@ namespace ipic3d {
 		// run the simulation
 		// number of steps
 		unsigned niter = 20;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::boris_mover>(niter,universe);
+		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check number of particles in the domain
 		total_particles = countParticlesInDomain(universe);

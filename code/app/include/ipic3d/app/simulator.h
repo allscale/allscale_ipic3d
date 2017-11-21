@@ -24,14 +24,14 @@ namespace ipic3d {
 
 		struct leapfrog_field_solver;
 
-		struct boris_mover;
+		struct default_particle_mover;
 	}
 
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::leapfrog_field_solver,
-		typename ParticleMover 				= detail::boris_mover
+		typename ParticleMover 				= detail::default_particle_mover
 	>
 	void simulateSteps(unsigned numSteps, Universe& universe);
 
@@ -39,7 +39,7 @@ namespace ipic3d {
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::leapfrog_field_solver,
-		typename ParticleMover 				= detail::boris_mover
+		typename ParticleMover 				= detail::default_particle_mover
 	>
 	void simulateStep(Universe& universe) {
 		simulateSteps<ParticleToFieldProjector,FieldSolver,ParticleMover>(1, universe);
@@ -199,14 +199,7 @@ namespace ipic3d {
 
 		struct default_particle_mover {
 			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers) const {
-				moveParticlesFirstOrder(universeProperties,cell,pos,field);
-				exportParticles(universeProperties,cell,pos,particleTransfers);
-			}
-		};
-
-		struct boris_mover {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers) const {
-				moveParticlesBorisStyle(universeProperties,cell,pos,field);
+				moveParticles(universeProperties,cell,pos,field);
 				exportParticles(universeProperties,cell,pos,particleTransfers);
 			}
 		};

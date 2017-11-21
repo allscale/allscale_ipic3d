@@ -143,52 +143,6 @@ namespace ipic3d {
 	}
 
 	/**
-	 * This function updates the position of all particles within a cell for a single
-	 * time step, considering the given field as a driving force.
-	 *
-	 * @param universeProperties the properties of this universe
-	 * @param the cell whose particles are to be moved
-	 * @param pos the coordinates of this cell in the grid
-	 * @param field the most recently computed state of the surrounding force fields
-	 */
-	void moveParticlesFirstOrder(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
-
-		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
-
-		// quick-check
-		if (cell.particles.empty()) return;
-
-		// -- move the particles in space --
-
-		// extract forces
-		Vector3<double> E[2][2][2];
-		for(int i=0; i<2; i++) {
-			for(int j=0; j<2; j++) {
-				for(int k=0; k<2; k++) {
-					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-					E[i][j][k] = field[cur].E;
-				}
-			}
-		}
-
-		// update particles
-		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p) {
-
-			// update position
-			p.updatePosition(universeProperties.dt);
-
-			// compute electric force
-			auto f = computeElectricForce(E, p);
-
-			// update speed
-			p.updateVelocity(f,universeProperties.dt);
-
-
-		});
-
-	}
-
-	/**
 	* This function computes a trilinear interpolation for a given target position within a rectangular box spanned by 8 corner points
 	*   This is interpolation of fields to particles
 	* Math: http://paulbourke.net/miscellaneous/interpolation/
@@ -223,7 +177,7 @@ namespace ipic3d {
 	 * @param pos the coordinates of this cell in the grid
 	 * @param field the most recently computed state of the surrounding force fields
 	 */
-	void moveParticlesBorisStyle(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
+	void moveParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
 
 		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
@@ -264,7 +218,7 @@ namespace ipic3d {
 			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
 			// update velocity
-			p.updateVelocityBorisStyle(E, B, universeProperties.dt);
+			p.updateVelocity(E, B, universeProperties.dt);
 
 			// update position
 			p.updatePosition(universeProperties.dt);

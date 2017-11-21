@@ -25,7 +25,7 @@ namespace ipic3d {
 		EXPECT_EQ(0.0, p.position.z);
 
 		// update the particle position
-		p.updatePosition(1);
+		p.updatePosition(1.0);
 
 		EXPECT_EQ(1.0, p.position.x);
 		EXPECT_EQ(2.0, p.position.y);
@@ -65,71 +65,20 @@ namespace ipic3d {
 		EXPECT_EQ(3.0, p.velocity.z);
 
 		// no force, no change in velocity
-		p.updateVelocity({ 0.0, 0.0, 0.0 }, 1);
+		p.updateVelocity({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, 1.0);
 
 		EXPECT_EQ(1.0, p.velocity.x);
 		EXPECT_EQ(2.0, p.velocity.y);
 		EXPECT_EQ(3.0, p.velocity.z);
 
 		// apply some force
-		p.updateVelocity({ 1.0, -1.0, 3.0 }, 1);
+		p.updateVelocity({ 1.0, -1.0, 3.0 }, { 0.0, 1.0, 2.0 }, 1.0);
 
-		EXPECT_EQ(1.0 + ( 1.0 * p.qom), p.velocity.x);
-		EXPECT_EQ(2.0 + (-1.0 * p.qom), p.velocity.y);
-		EXPECT_EQ(3.0 + ( 3.0 * p.qom), p.velocity.z);
-
-
-	}
-
-	TEST(Particle, Force) {
-
-		// this test checks proper force calculation of a particle in an electric field
-
-		// create a test-particle
-		Particle p;
-		p.position.x = 0.5;
-		p.position.y = 0.5;
-		p.position.z = 0.5;
-
-		p.q = 0.25;
-
-		p.velocity.x = 0.0;
-		p.velocity.y = 0.0;
-		p.velocity.z = 0.0;
-
-		// initialize an electric field
-		Vector3<double> E[2][2][2];
-		for(int i = 0; i < 2; i++) {
-			for(int j = 0; j < 2; j++) {
-				for(int k = 0; k < 2; k++) {
-					E[i][j][k] = 0;
-				}
-			}
-		}
-
-		Vector3<double> force = computeElectricForce(E, p);
-
-		EXPECT_EQ(0.0, force.x);
-		EXPECT_EQ(0.0, force.y);
-		EXPECT_EQ(0.0, force.z);
-
-		// modify electric field
-		for(int i = 0; i < 2; i++) {
-			for(int j = 0; j < 2; j++) {
-				for(int k = 0; k < 2; k++) {
-					E[i][j][k] = 1.0;
-				}
-			}
-		}
-
-		force = computeElectricForce(E, p);
-
-		EXPECT_EQ(2.0, force.x);
-		EXPECT_EQ(2.0, force.y);
-		EXPECT_EQ(2.0, force.z);
+		EXPECT_NEAR(p.velocity.x, -2.42857, 1e-04);
+		EXPECT_NEAR(p.velocity.y, 3.71429, 1e-04);
+		EXPECT_NEAR(p.velocity.z, 12.14286, 1e-04);
 
 	}
-
 
 } // end namespace ipic3d
 
