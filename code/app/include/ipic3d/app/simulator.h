@@ -98,7 +98,7 @@ namespace ipic3d {
 		// extract size of grid
 		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
-		auto densitySize = size + utils::Coordinate<3>(1); // J is defined on nodes
+		auto densitySize = size + utils::Coordinate<3>(1); // J is defined on nodes only, no ghost cells
 		auto fieldSize = universe.field.size();
 		auto fieldStart = utils::Coordinate<3>(1);
 		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions

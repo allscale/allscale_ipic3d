@@ -24,19 +24,17 @@ namespace ipic3d {
 
 	struct DensityNode {
 		Vector3<double> J;				// current density
-		double rho;						// charge density
 	};
 
+	// TODO: can be used for poisson correction - initProperties.rhoInit / (fourPI);
 	struct DensityCell {
-		double rho;						// charge density
+		Vector3<double> rho;			// charge density
 	};
 
 
 	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes
 
 	using BcField = allscale::api::user::data::Grid<BcFieldCell,3>;	// a 3D grid of magnetic field cells defined on centers
-
-	using DensityCells = allscale::api::user::data::Grid<DensityCell,3>;	// a 3D grid of density cells
 
 	using DensityNodes = allscale::api::user::data::Grid<DensityNode,3>;	// a 3D grid of density nodes
 
@@ -57,7 +55,7 @@ namespace ipic3d {
 		Field fields(fieldSize);
 
 		// the 3D density fields
-		DensityNodes densityNodes(fieldSize);
+		DensityNodes densityNodes(universeProperties.size + coordinate_type(1));
 
 		switch(universeProperties.useCase) {
 
@@ -78,16 +76,16 @@ namespace ipic3d {
 
 					// TODO: required to work around an allscalecc frontend bug
 					// should be removed once the issue in the compiler is resolved
-					fields[cur].Bext = { 0,0,0 };
-
-					// initialize rhos
-					densityNodes[cur].rho = initProperties.rhoInit / (fourPI); 
+					fields[cur].Bext = { 0.0, 0.0, 0.0 };
 
 					// initialize electrical field
 					fields[cur].E = ebc;
 
 					// initialize magnetic field
 					fields[cur].B = initProperties.magneticFieldAmplitude;
+
+					// initialize current density on nodes
+					densityNodes[cur - coordinate_type(1)].J = { 0.0, 0.0, 0.0 };
 
 					// -- add earth model --
 
