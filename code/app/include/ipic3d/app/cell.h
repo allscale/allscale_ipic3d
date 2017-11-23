@@ -62,9 +62,9 @@ namespace ipic3d {
 			// add the requested number of parameters
 			std::minstd_rand randGenerator((unsigned)(pos[0] * 10000 + pos[1] * 100 + pos[2]));
 			const double randMax = std::minstd_rand::max();
-			// TODO: can we use pfor here?
+			// TODO: we plan to can use bags to store particle which would allow us to parallelize this for loop
 			// Maxellian random velocity and uniform spatial distribution
-			// To note: this is for one spacy
+			// To note: this is for one specie
 			for (unsigned i = 0; i < particlesPerCell; i++) {
 				Particle p;
 
@@ -104,6 +104,53 @@ namespace ipic3d {
 	* @param pos the coordinates of this cell in the grid
 	* @param contributions the density contributions output
 	*/
+//	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, DensityNodes& density) {
+//
+//		// quick-check
+//		if(cell.particles.empty()) return;		// nothing to contribute
+//
+//		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
+//
+//		auto map = [](const UniverseProperties& universeProperties, const Vector3<double>& cellOrigin, const Particle& p, Vector3<double> res[2][2][2]) {
+//			// get the fractional distance of the particle from the cell origin
+//			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+//
+//			// computation of J also includes weights from the particles as for E
+//			for(int i = 0; i < 2; ++i) {
+//				for(int j = 0; j < 2; ++j) {
+//					for(int k = 0; k < 2; ++k) {
+//				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
+//						res[i][j][k] += p.q * p.velocity * fac;
+//					}
+//				}
+//			}
+//		};
+//
+//		auto reduce = [&](const Vector3<double> a[2][2][2], const Vector3<double> b[2][2][2]) { 
+//			Vector3<double> res[2][2][2];
+//			for(int i = 0; i < 2; ++i) {
+//				for(int j = 0; j < 2; ++j) {
+//					for(int k = 0; k < 2; ++k) {
+//						res[i][j][k] = a[i][j][k] + b[i][j][k];
+//					}
+//				}
+//			}
+//			return res;
+//		}; 
+//		auto init = []() { Vector3<double>(0.0); };
+//
+//		Vector3<double> Js[2][2][2] = allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
+//
+//		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+//		for(int i=0; i<2; i++) {
+//			for(int j=0; j<2; j++) {
+//				for(int k=0; k<2; k++) {
+//					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
+//					density[cur].J = Js[i][j][k] / vol;
+//				}
+//			}
+//		}
+//	}
 	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, DensityNodes& density) {
 
 		// quick-check
@@ -147,6 +194,7 @@ namespace ipic3d {
 	*   This is interpolation of fields to particles
 	* Math: http://paulbourke.net/miscellaneous/interpolation/
 	* TODO: Move this to some math utilities header?
+			etd::cout << v_plus << '\n';
 	*
 	* @param corners the 8 surrounding points to interpolate from
 	* @param pos the target position for which to interpolate
