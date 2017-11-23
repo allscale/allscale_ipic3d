@@ -390,7 +390,7 @@ namespace ipic3d {
 			bcfield[pos].Bc = { 0.8, 0.8, 0.8 };
 		});
 		// initialize density
-		DensityNodes density(properties.size + coordinate_type(3));
+		CurrentDensity density(properties.size + coordinate_type(1));
 		allscale::api::user::algorithm::pfor(zero,density.size(),[&](const auto& pos){
 			density[pos].J = { 0.6, 0.6, 0.6 };
 		});
@@ -436,7 +436,7 @@ namespace ipic3d {
 			bcfield[pos].Bc = { 0.8, 0.8, 0.8 };
 		});
 		// initialize density
-		DensityNodes density(properties.size + coordinate_type(3));
+		CurrentDensity density(properties.size + coordinate_type(1));
 		allscale::api::user::algorithm::pfor(zero,density.size(),[&](const auto& pos){
 			density[pos].J = { 0.6, 0.6, 0.6 };
 		});
@@ -485,7 +485,7 @@ namespace ipic3d {
 			bcfield[pos].Bc = { 0.0, 0.0, 0.0 };
 		});
 		// initialize density
-		DensityNodes density(properties.size + coordinate_type(3));
+		CurrentDensity density(properties.size + coordinate_type(1));
 		allscale::api::user::algorithm::pfor(zero,density.size(),[&](const auto& pos){
 			density[pos].J = { 0.0, 0.0, 0.0 };
 		});

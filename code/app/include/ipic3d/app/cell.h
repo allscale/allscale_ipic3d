@@ -104,7 +104,7 @@ namespace ipic3d {
 	* @param pos the coordinates of this cell in the grid
 	* @param contributions the density contributions output
 	*/
-//	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, DensityNodes& density) {
+//	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) {
 //
 //		// quick-check
 //		if(cell.particles.empty()) return;		// nothing to contribute
@@ -151,7 +151,7 @@ namespace ipic3d {
 //			}
 //		}
 //	}
-	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, DensityNodes& density) {
+	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) {
 
 		// quick-check
 		if(cell.particles.empty()) return;		// nothing to contribute

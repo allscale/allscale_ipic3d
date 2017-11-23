@@ -36,7 +36,7 @@ namespace ipic3d {
 
 	using BcField = allscale::api::user::data::Grid<BcFieldCell,3>;	// a 3D grid of magnetic field cells defined on centers
 
-	using DensityNodes = allscale::api::user::data::Grid<DensityNode,3>;	// a 3D grid of density nodes
+	using CurrentDensity = allscale::api::user::data::Grid<DensityNode,3>;	// a 3D grid of density nodes
 
 	// declaration
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields);
@@ -54,9 +54,6 @@ namespace ipic3d {
 		// the 3D force fields
 		Field fields(fieldSize);
 
-		// the 3D density fields
-		DensityNodes densityNodes(universeProperties.size + coordinate_type(1));
-
 		switch(universeProperties.useCase) {
 
 			case UseCase::Dipole: {
@@ -70,7 +67,6 @@ namespace ipic3d {
 
 				// Dipole's Center
 				auto objectCenter = universeProperties.objectCenter;
-				const double fourPI = 16.0 * atan(1.0);
 
 				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
 
@@ -83,9 +79,6 @@ namespace ipic3d {
 
 					// initialize magnetic field
 					fields[cur].B = initProperties.magneticFieldAmplitude;
-
-					// initialize current density on nodes
-					densityNodes[cur - coordinate_type(1)].J = { 0.0, 0.0, 0.0 };
 
 					// -- add earth model --
 
@@ -141,6 +134,24 @@ namespace ipic3d {
 		return bcfield;
 	}
 
+	CurrentDensity initCurrentDensity(const UniverseProperties& universeProperties) {
+
+		using namespace allscale::api::user::algorithm;
+
+		utils::Size<3> start = 0;
+		utils::Size<3> densitySize = universeProperties.size + coordinate_type(1);
+
+		// the 3D current density
+		CurrentDensity currentDensity(densitySize);
+
+		pfor(start, densitySize, [&](const utils::Coordinate<3>& cur) {
+
+			// initialize current density on nodes
+			currentDensity[cur].J = { 0.0, 0.0, 0.0 };
+		});
+
+		return currentDensity;
+	}
 
 	/**
  	* calculate curl on nodes, given a vector field defined on central points
@@ -277,7 +288,7 @@ namespace ipic3d {
 	/**
 	* Explicit Field Solver: Fields are computed using forward approximation
 	*/
-	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) {
+	void solveFieldForward(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, CurrentDensity& density, Field& field, BcField& bcfield) {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
@@ -331,7 +342,7 @@ namespace ipic3d {
 	/**
 	* Explicit Field Solver: Fields are computed using leapfrog algorithm
 	*/
-	void solveFieldLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, DensityNodes& density, Field& field, BcField& bcfield) {
+	void solveFieldLeapfrog(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, CurrentDensity& density, Field& field, BcField& bcfield) {
 
 		assert_true(pos.dominatedBy(field.size())) << "Position " << pos << " is outside universe of size " << field.size();
 
