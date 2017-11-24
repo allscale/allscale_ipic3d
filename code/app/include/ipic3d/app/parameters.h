@@ -155,12 +155,10 @@ namespace ipic3d {
 			while( !std::getline(in, str).eof() ) {
 				
 				// ignore comments
-				static const std::string comment = "#";
-				str = str.substr( 0, str.find(comment) );
+				str = str.substr( 0, str.find("#") );
 
 				// ignore those lines that do not follow the pattern
-				static const std::string eqsign = "=";
-				if ( str.find( eqsign ) == std::string::npos ) {
+				if ( str.find("=") == std::string::npos ) {
 					continue;
 				}
 
