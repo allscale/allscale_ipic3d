@@ -88,6 +88,21 @@ namespace ipic3d {
 
 				cell.particles.push_back(p);
 			}
+	
+			// print particles position and velocity
+			if ((pos.x == 3) && (pos.y == 3) && (pos.z == 3)) {
+
+				std::cout << "x y z u v w\n";
+				for(const auto& p : cell.particles) {
+					std::cout << p.position.x << " ";
+					std::cout << p.position.y << " ";
+					std::cout << p.position.z << " ";
+					std::cout << p.velocity.x << " ";
+					std::cout << p.velocity.y << " ";
+					std::cout << p.velocity.z << "\n";
+				}
+			
+			}
 
 		});
 

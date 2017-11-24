@@ -37,7 +37,7 @@ B1z = 2.0
 
 #  %%%%%%%%%%%%%%%%%%% TIME %%%%%%%%%%%%%%%%%%
 dt = 0.15                   # dt = time step  
-ncycles = 100		 #!!!    # cycles
+ncycles = 1		 #!!!    # cycles
 th = 1.0                     # th =   decentering parameter
 c = 1.0                      # c = light speed 
 
@@ -81,11 +81,11 @@ rhoINIT =  1.0	1.0
 # Injection density (make sure you are neutral)
 rhoINJECT =  1.0   1.0 
 # npcelx = number of particles per cell - Direction X 
-npcelx =    1   8
+npcelx =    8   8
 # npcely = number of particles per cell - Direction Y 
-npcely =    1   8
+npcely =    8   8
 # npcelz = number of particles per cell - Direction Z 
-npcelz =    1   8
+npcelz =    8   8
 
 
 # qom = charge to mass ratio for different species 
