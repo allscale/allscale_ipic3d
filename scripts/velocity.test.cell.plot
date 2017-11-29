@@ -7,9 +7,13 @@ set grid noxtics ytics
 #set yrange [0:]
 #set logscale xy
 #set xtics (1, 2, 4, 8)
-set output "| epstopdf --filter > ../imgs/171124.particles.test.cell.000.pos.pdf"
+set output "| epstopdf --filter > ../imgs/171124.particles.test.cell.000.vel.hist.pdf"
 
 set datafile missing '#'
+
+#set style histogram gap 5
+set style data histogram
+set style histogram clustered gap 20
 
 # legend
 set key width 0 samplen 1.8
@@ -20,5 +24,5 @@ set tmargin .5
 set rmargin 1.
 #set lmargin 9.5
 
-plot "../results/particles.test.cell.000.txt" using 1:2 title "Position"
+plot "../results/particles.test.cell.000.txt" using 4 title "Velocity x"
 
