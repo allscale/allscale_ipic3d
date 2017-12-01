@@ -6,7 +6,7 @@
 #SBATCH -A 2017-21
 
 # 100 hours wall-clock time will be given to this job
-#SBATCH -t 08:00:00
+#SBATCH -t 03:20:00
 
 # Get an email once it is ready
 #SBATCH --mail-type=ALL 

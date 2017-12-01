@@ -26,7 +26,6 @@ namespace ipic3d {
 		Vector3<double> J;				// current density
 	};
 
-	// TODO: can be used for poisson correction - initProperties.rhoInit / (fourPI);
 	struct DensityCell {
 		Vector3<double> rho;			// charge density
 	};

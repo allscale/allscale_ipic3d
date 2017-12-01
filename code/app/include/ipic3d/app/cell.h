@@ -44,55 +44,70 @@ namespace ipic3d {
 		// -- initialize the state of each individual cell --
 
 		// compute number of particles to be added for the uniform distribution
-		unsigned particlesPerCell = initProperties.particlesPerCell[0].x * initProperties.particlesPerCell[0].y * initProperties.particlesPerCell[0].z;
+		unsigned totalParticlesPerCell = initProperties.particlesPerCell[0].x * initProperties.particlesPerCell[0].y * initProperties.particlesPerCell[0].z;
 
 		const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
 
 		// pre-compute values for computing q
 		double q_factor = params.qom[0] / fabs(params.qom[0]);
-		q_factor = q_factor * (properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z) / particlesPerCell;
-		
+		q_factor = q_factor * (properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z) / totalParticlesPerCell;
+		const double fourPI = 16.0 * atan(1.0);
+		q_factor = q_factor * params.rhoInit[0] / fourPI;
+
+		auto particlesPerCell = initProperties.particlesPerCell[0];
+	
 		// TODO: return this as a treeture
 		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 
 			Cell& cell = cells[pos];
-
-			// -- add particles --
+			auto cellOrigin = getOriginOfCell(pos, properties);
 
 			// add the requested number of parameters
 			std::minstd_rand randGenerator((unsigned)(pos[0] * 10000 + pos[1] * 100 + pos[2]));
 			const double randMax = std::minstd_rand::max();
+
+			// -- add particles --
 			// TODO: we plan to can use bags to store particle which would allow us to parallelize this for loop
 			// Maxellian random velocity and uniform spatial distribution
 			// To note: this is for one specie
-			for (unsigned i = 0; i < particlesPerCell; i++) {
-				Particle p;
+			for (unsigned i = 0; i < particlesPerCell.x; i++) {
+				for (unsigned j = 0; j < particlesPerCell.y; j++) {
+					for (unsigned k = 0; k < particlesPerCell.z; k++) {
+						Particle p;
 
-				Vector3<double> randVals = {(double)randGenerator() / randMax, (double)randGenerator() / randMax, (double)randGenerator() / randMax};
-				// initialize particle's position
-				p.position = getCenterOfCell(pos, properties) + allscale::utils::elementwiseProduct(randVals, properties.cellWidth) - properties.cellWidth/2;
+						// initialize particle's position
+						p.position.x = (i + 0.5) * (properties.cellWidth.x / particlesPerCell.x) + cellOrigin.x; 
+						p.position.y = (j + 0.5) * (properties.cellWidth.y / particlesPerCell.y) + cellOrigin.y; 
+						p.position.z = (k + 0.5) * (properties.cellWidth.z / particlesPerCell.z) + cellOrigin.z; 
 
-				// initialize particle's speed
-				auto theta = 2.0 * M_PI * randVals;
-				Vector3<double> prob;
-				prob[0] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[0] ) );
-				prob[1] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[1] ) );
-				prob[2] = sqrt( -2.0 * log( 1.0 - 0.999999 * randVals[2] ) );
+						// initialize particle's velocity
+						double prob0, prob1;
+						double theta0, theta1;
 
-				p.velocity[0] = params.u0[0] + params.uth[0] * ( prob[0] * cos(theta[0]) );
-				p.velocity[1] = params.v0[0] + params.vth[0] * ( prob[1] * sin(theta[1]) );
-				p.velocity[2] = params.w0[0] + params.wth[0] * ( prob[2] * cos(theta[2]) );
-				
-				p.qom = params.qom[0];
-				p.q = q_factor * params.rhoInit[0];  
+						double harvest = (double)randGenerator() / randMax;
+						prob0 = sqrt( -2.0 * log( 1.0 - 0.999999 * harvest ) );
+						harvest = (double)randGenerator() / randMax;
+						theta0 = 2.0 * M_PI * harvest;
 
-				cell.particles.push_back(p);
+						harvest = (double)randGenerator() / randMax;
+						prob1 = sqrt( -2.0 * log( 1.0 - 0.999999 * harvest ) );
+						harvest = (double)randGenerator() / randMax;
+						theta1 = 2.0 * M_PI * harvest;
+
+						p.velocity.x = params.u0[0] + params.uth[0] * ( prob0 * cos(theta0) );
+						p.velocity.y = params.v0[0] + params.vth[0] * ( prob0 * sin(theta0) );
+						p.velocity.z = params.w0[0] + params.wth[0] * ( prob1 * cos(theta1) );
+						
+						p.qom = params.qom[0];
+						p.q = q_factor;  
+
+						cell.particles.push_back(p);
+					}
+				}
 			}
 	
 			// print particles position and velocity
-			if ((pos.x == 3) && (pos.y == 3) && (pos.z == 3)) {
-
-				std::cout << "x y z u v w\n";
+			if (0) {
 				for(const auto& p : cell.particles) {
 					std::cout << p.position.x << " ";
 					std::cout << p.position.y << " ";
