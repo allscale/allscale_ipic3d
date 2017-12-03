@@ -9,7 +9,7 @@ import plotly.plotly as py
 
 from pylab import genfromtxt;  
 
-mat = genfromtxt("../results/particles.test.1201.txt");
+mat = genfromtxt("../results/particles.test.1202.txt");
 
 plt.plot(mat[:,0], mat[:,1], 'ro')
 plt.xlabel("Value")
