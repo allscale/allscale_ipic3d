@@ -134,53 +134,6 @@ namespace ipic3d {
 	* @param pos the coordinates of this cell in the grid
 	* @param contributions the density contributions output
 	*/
-//	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) {
-//
-//		// quick-check
-//		if(cell.particles.empty()) return;		// nothing to contribute
-//
-//		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
-//
-//		auto map = [](const UniverseProperties& universeProperties, const Vector3<double>& cellOrigin, const Particle& p, Vector3<double> res[2][2][2]) {
-//			// get the fractional distance of the particle from the cell origin
-//			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
-//
-//			// computation of J also includes weights from the particles as for E
-//			for(int i = 0; i < 2; ++i) {
-//				for(int j = 0; j < 2; ++j) {
-//					for(int k = 0; k < 2; ++k) {
-//				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
-//						res[i][j][k] += p.q * p.velocity * fac;
-//					}
-//				}
-//			}
-//		};
-//
-//		auto reduce = [&](const Vector3<double> a[2][2][2], const Vector3<double> b[2][2][2]) { 
-//			Vector3<double> res[2][2][2];
-//			for(int i = 0; i < 2; ++i) {
-//				for(int j = 0; j < 2; ++j) {
-//					for(int k = 0; k < 2; ++k) {
-//						res[i][j][k] = a[i][j][k] + b[i][j][k];
-//					}
-//				}
-//			}
-//			return res;
-//		}; 
-//		auto init = []() { Vector3<double>(0.0); };
-//
-//		Vector3<double> Js[2][2][2] = allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
-//
-//		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-//		for(int i=0; i<2; i++) {
-//			for(int j=0; j<2; j++) {
-//				for(int k=0; k<2; k++) {
-//					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-//					density[cur].J = Js[i][j][k] / vol;
-//				}
-//			}
-//		}
-//	}
 	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) {
 
 		// quick-check
