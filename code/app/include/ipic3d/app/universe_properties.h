@@ -96,9 +96,9 @@ namespace ipic3d {
 			magneticField({ params.B0.x, params.B0.y, params.B0.z }),
 			FieldOutputCycle ( params.FieldOutputCycle ) 
 		{
-			origin.x = 0.0; //params.objectCenter.x - params.ncells.x * params.dspace.x / 2.0;
-			origin.y = 0.0; //params.objectCenter.y - params.ncells.y * params.dspace.y / 2.0;
-			origin.z = 0.0; //params.objectCenter.z - params.ncells.z * params.dspace.z / 2.0;
+			origin.x = params.objectCenter.x - params.ncells.x * params.dspace.x / 2.0;
+			origin.y = params.objectCenter.y - params.ncells.y * params.dspace.y / 2.0;
+			origin.z = params.objectCenter.z - params.ncells.z * params.dspace.z / 2.0;
 		}
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {

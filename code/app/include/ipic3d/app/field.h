@@ -305,9 +305,6 @@ namespace ipic3d {
 				// 		scale the sum by dt
 				// 		update E_{n+1} with the computed value
 				field[pos].E += (universeProperties.speedOfLight * curlB - density[pos - utils::Coordinate<3>(1)].J) * universeProperties.dt; // density needs to be shifted as pos corresponds to the fields position with a shift of one
-//				field[pos].E.x += (universeProperties.speedOfLight * curlB.z - density[pos - utils::Coordinate<3>(1)].J.x) * universeProperties.dt;
-//				field[pos].E.y += (universeProperties.speedOfLight * curlB.z - density[pos - utils::Coordinate<3>(1)].J.y) * universeProperties.dt;
-//				field[pos].E.y += (universeProperties.speedOfLight * (curlB.y - curlB.x) - density[pos - utils::Coordinate<3>(1)].J.z) * universeProperties.dt;
 
 				// do this check to not-udpate the ghost cells here
 				// TODO: a better idea to avoid this check
@@ -320,9 +317,6 @@ namespace ipic3d {
 					//		scale curl by -c*dt
 					//		update B_{n+1} on the center with the computed value
 					bcfield[pos].Bc -= universeProperties.speedOfLight * curlE * universeProperties.dt;
-	//				field[pos].B.x -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
-	//				field[pos].B.y -= universeProperties.speedOfLight * curlE.z * universeProperties.dt;
-	//				field[pos].B.z -= universeProperties.speedOfLight * (curlE.y - curlB.x) * universeProperties.dt;
 				}
 
 				// 		Boundary conditions: periodic are supported automatically supported as we added an extra row of cells around the grid
@@ -355,46 +349,48 @@ namespace ipic3d {
 			case UseCase::Dipole:
 			// new approach to appear here
 			{
-				// Compute E field
-				field[pos].E.x = field[pos].E.x + universeProperties.dt * ( universeProperties.speedOfLight * universeProperties.speedOfLight * ( (bcfield[pos].Bc.z - bcfield[pos-utils::Coordinate<3>({0,1,0})].Bc.z) / universeProperties.cellWidth.y - (bcfield[pos].Bc.y - bcfield[pos-utils::Coordinate<3>({0,0,1})].Bc.y) / universeProperties.cellWidth.z) - density[pos - utils::Coordinate<3>(1)].J.x ); 
+				if (1) {
+					// this approach is adopted from the article 'The Plasma Simulation Code: A modern particle-in-cell code with load-balancing and GPU support' by K. Germaschewski et al.
+					// Compute E field
+					field[pos].E.x = field[pos].E.x + universeProperties.dt * ( universeProperties.speedOfLight * universeProperties.speedOfLight * ( (bcfield[pos].Bc.z - bcfield[pos-utils::Coordinate<3>({0,1,0})].Bc.z) / universeProperties.cellWidth.y - (bcfield[pos].Bc.y - bcfield[pos-utils::Coordinate<3>({0,0,1})].Bc.y) / universeProperties.cellWidth.z) - density[pos - utils::Coordinate<3>(1)].J.x ); 
 
-				field[pos].E.y = field[pos].E.y + universeProperties.dt * ( universeProperties.speedOfLight * universeProperties.speedOfLight * ( (bcfield[pos].Bc.x - bcfield[pos-utils::Coordinate<3>({0,0,1})].Bc.x) / universeProperties.cellWidth.z - (bcfield[pos].Bc.z - bcfield[pos-utils::Coordinate<3>({1,0,0})].Bc.z) / universeProperties.cellWidth.x) - density[pos - utils::Coordinate<3>(1)].J.y ); 
+					field[pos].E.y = field[pos].E.y + universeProperties.dt * ( universeProperties.speedOfLight * universeProperties.speedOfLight * ( (bcfield[pos].Bc.x - bcfield[pos-utils::Coordinate<3>({0,0,1})].Bc.x) / universeProperties.cellWidth.z - (bcfield[pos].Bc.z - bcfield[pos-utils::Coordinate<3>({1,0,0})].Bc.z) / universeProperties.cellWidth.x) - density[pos - utils::Coordinate<3>(1)].J.y ); 
 
-				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * universeProperties.speedOfLight * ( (bcfield[pos].Bc.y - bcfield[pos-utils::Coordinate<3>({1,0,0})].Bc.y) / universeProperties.cellWidth.x - (bcfield[pos].Bc.x - bcfield[pos-utils::Coordinate<3>({0,1,0})].Bc.x) / universeProperties.cellWidth.y) - density[pos - utils::Coordinate<3>(1)].J.z ); 
+					field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * universeProperties.speedOfLight * ( (bcfield[pos].Bc.y - bcfield[pos-utils::Coordinate<3>({1,0,0})].Bc.y) / universeProperties.cellWidth.x - (bcfield[pos].Bc.x - bcfield[pos-utils::Coordinate<3>({0,1,0})].Bc.x) / universeProperties.cellWidth.y) - density[pos - utils::Coordinate<3>(1)].J.z ); 
 
-				//	Compute B field
-				if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
-					bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.dt * ( (field[pos+utils::Coordinate<3>({0,1,0})].E.z - field[pos].E.z) / universeProperties.cellWidth.y - (field[pos+utils::Coordinate<3>({0,0,1})].E.y - field[pos].E.y) / universeProperties.cellWidth.z );
+					//	Compute B field
+					if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
+						bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.dt * ( (field[pos+utils::Coordinate<3>({0,1,0})].E.z - field[pos].E.z) / universeProperties.cellWidth.y - (field[pos+utils::Coordinate<3>({0,0,1})].E.y - field[pos].E.y) / universeProperties.cellWidth.z );
 
-					bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.dt * ( (field[pos+utils::Coordinate<3>({0,0,1})].E.x - field[pos].E.x) / universeProperties.cellWidth.z - (field[pos+utils::Coordinate<3>({1,0,0})].E.z - field[pos].E.z) / universeProperties.cellWidth.x );
+						bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.dt * ( (field[pos+utils::Coordinate<3>({0,0,1})].E.x - field[pos].E.x) / universeProperties.cellWidth.z - (field[pos+utils::Coordinate<3>({1,0,0})].E.z - field[pos].E.z) / universeProperties.cellWidth.x );
 
-					bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.dt * ( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x - (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
+						bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.dt * ( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x - (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
+					}
+
+				} else {
+					// this approach is from the Birdsall book 'Plasma Physics via Computer Simulation'
+					//	Compute transverse magnetic (TM) sets
+					if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
+						bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
+					}
+
+					field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.x; 
+
+					field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.y; 
+
+
+					//	Compute transverse electric (TE) sets
+					field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos - utils::Coordinate<3>(1)].J.z );
+
+					if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
+						bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({0,-1,0})].E.z) / universeProperties.cellWidth.y; 
+
+						bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({-1,0,0})].E.z) / universeProperties.cellWidth.x; 
+					}
 				}
 
 				break;
 			}
-//			{
-//				//	Compute transverse magnetic (TM) sets
-//				if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
-//					bcfield[pos].Bc.z = bcfield[pos].Bc.z - universeProperties.speedOfLight * universeProperties.dt *( (field[pos+utils::Coordinate<3>({1,0,0})].E.y - field[pos].E.y) / universeProperties.cellWidth.x + (field[pos+utils::Coordinate<3>({0,1,0})].E.x - field[pos].E.x) / universeProperties.cellWidth.y );
-//				}
-//
-//				field[pos].E.x = field[pos].E.x + universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({0,-1,0})].Bc.z) / universeProperties.cellWidth.x - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.x; 
-//
-//				field[pos].E.y = field[pos].E.y - universeProperties.speedOfLight * universeProperties.dt * (bcfield[pos].Bc.z - bcfield[pos+utils::Coordinate<3>({-1,0,0})].Bc.z) / universeProperties.cellWidth.y - universeProperties.dt * density[pos - utils::Coordinate<3>(1)].J.y; 
-//
-//
-//				//	Compute transverse electric (TE) sets
-//				field[pos].E.z = field[pos].E.z + universeProperties.dt * ( universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({1,0,0})].Bc.y- bcfield[pos].Bc.y) / universeProperties.cellWidth.x - universeProperties.speedOfLight * (bcfield[pos+utils::Coordinate<3>({0,1,0})].Bc.x- bcfield[pos].Bc.x) / universeProperties.cellWidth.y - density[pos - utils::Coordinate<3>(1)].J.z );
-//
-//				if (pos < (bcfield.size() - utils::Coordinate<3>(1))) {
-//					bcfield[pos].Bc.x = bcfield[pos].Bc.x - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({0,-1,0})].E.z) / universeProperties.cellWidth.y; 
-//
-//					bcfield[pos].Bc.y = bcfield[pos].Bc.y - universeProperties.speedOfLight * universeProperties.dt * (field[pos].E.z - field[pos+utils::Coordinate<3>({-1,0,0})].E.z) / universeProperties.cellWidth.x; 
-//				}
-//
-//				break;
-//			}
 
 			default:
 				assert_not_implemented() << "The specified use case is not supported yet!";

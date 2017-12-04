@@ -357,7 +357,7 @@ namespace ipic3d {
 
 				// adjust particle's position in case it exits the domain
 				auto adjustPosition = [&](const int i) {
-					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.size[i] * universeProperties.cellWidth[i] - fabs(p.position[i])) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
+					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.size[i] * universeProperties.cellWidth[i] + p.position[i]) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
 				};
 
 				int i = (relPos.x < -halfWidth.x) ? 0 : ((relPos.x > halfWidth.x) ? 2 : 1);
