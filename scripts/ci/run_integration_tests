@@ -12,4 +12,5 @@ cd "$BUILD_DIR"
 # Adjust resource restriction.
 ulimit -t 14400
 
-./verify_output.sh
+./verify_output.sh test
+./verify_output.sh tiny
