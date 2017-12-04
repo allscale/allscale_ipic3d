@@ -26,7 +26,7 @@ fi
 echo "RESULT CHECK: Checking for problem case \"${CASE}\""
 
 # run application
-NUM_WORKERS="$NPROC" @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp --hpx:threads="$NPROC" --hpx:bind=none
+NUM_WORKERS="$NPROC" @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp $ADDITIONAL_ARGUMENTS
 
 # compare output
 set +e
