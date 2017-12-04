@@ -146,7 +146,7 @@ namespace ipic3d {
 			// open the config file and read all the inputs one by one
 			std::ifstream in(inputfile);
 			if(!in) {
-				assert_fail() << "File not found: " << inputfile;
+				std::cerr << "File not found: " << inputfile << std::endl;
 				exit(EXIT_FAILURE);
 			}
 
