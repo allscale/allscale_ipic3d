@@ -22,7 +22,7 @@ namespace ipic3d {
 
 		struct default_particle_to_field_projector;
 
-		struct default_field_solver;
+		struct leapfrog_field_solver;
 
 		struct default_particle_mover;
 	}
@@ -30,7 +30,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::default_field_solver,
+		typename FieldSolver 				= detail::leapfrog_field_solver,
 		typename ParticleMover 				= detail::default_particle_mover
 	>
 	void simulateSteps(unsigned numSteps, Universe& universe);
@@ -38,7 +38,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::default_field_solver,
+		typename FieldSolver 				= detail::leapfrog_field_solver,
 		typename ParticleMover 				= detail::default_particle_mover
 	>
 	void simulateStep(Universe& universe) {
@@ -98,6 +98,7 @@ namespace ipic3d {
 		// extract size of grid
 		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
+		auto densitySize = universe.currentDensity.size();
 		auto fieldSize = universe.field.size();
 		auto fieldStart = utils::Coordinate<3>(1);
 		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
@@ -130,10 +131,10 @@ namespace ipic3d {
 			// STEP 1: collect particle contributions
 			// project particles to current density
 			// use size, not densitySize, because all Js in the cell will be updated
-			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
+			pfor(zero, densitySize, [&](const utils::Coordinate<3>& pos) {
 				// TODO: this can be improved by adding rho
 				// 	J is defined on nodes
-				particleToFieldProjector(universe.properties, universe.cells[pos], pos, universe.currentDensity);
+				particleToFieldProjector(universe.properties, universe.cells, pos, universe.currentDensity);
 			});
 
 			// STEP 2: solve field equations
@@ -171,8 +172,8 @@ namespace ipic3d {
 	namespace detail {
 
 		struct default_particle_to_field_projector {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) const {
-				projectToDensityField(universeProperties,cell,pos,density);
+			void operator()(const UniverseProperties& universeProperties, const Cells& cells, const utils::Coordinate<3>& pos, CurrentDensity& density) const {
+				projectToDensityField(universeProperties,cells,pos,density);
 			}
 		};
 

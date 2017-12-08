@@ -134,42 +134,43 @@ namespace ipic3d {
 	* @param pos the coordinates of this cell in the grid
 	* @param contributions the density contributions output
 	*/
-	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) {
+	void projectToDensityField(const UniverseProperties& universeProperties, const Cells& cells, const utils::Coordinate<3>& pos, CurrentDensity& density) {
 
-		// quick-check
-		if(cell.particles.empty()) return;		// nothing to contribute
-
-		// init aggregated densities of neighboring cells
-		Vector3<double> Js[2][2][2] = { { { Vector3<double>(0.0) } } };
+		auto Js = Vector3<double>(0.0);
+		auto size = universeProperties.size;
 
 		// aggregate charge density from particles
-		// TODO: use pfor here
-		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
-		for(const auto& p : cell.particles) {
-			// get the fractional distance of the particle from the cell origin
-			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+		for(int i=-1; i<1; i++) {
+			for(int j=-1; j<1; j++) {
+				for(int k=-1; k<1; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
 
-			// computation of J also includes weights from the particles as for E
-			for(int i = 0; i < 2; ++i) {
-				for(int j = 0; j < 2; ++j) {
-					for(int k = 0; k < 2; ++k) {
+					// adjust particle's position in case it exits the domain
+					auto adjustPosition = [&](const int i) {
+						return cur[i] = ( (cur[i] < 0) ? size[i] - 1 : ((cur[i] >= size[i]) ? 0 : cur[i]) );
+					};
+				
+					cur[0] = adjustPosition(0);
+					cur[1] = adjustPosition(1);
+					cur[2] = adjustPosition(2);
+
+					const auto cellOrigin = getOriginOfCell(cur, universeProperties);
+					for(const auto& p : cells[cur].particles) {
+						// get the fractional distance of the particle from the cell origin
+						const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+
+						// computation of J also includes weights from the particles as for E
+						// despite the fact that we are working right now with multiple cells, so the position of J would be different
+						// 	the formula still works well as it captures position of J in each of those cells. 
 				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
-						Js[i][j][k] += p.q * p.velocity * fac;
+						Js += p.q * p.velocity * fac;
 					}
 				}
 			}
-
 		}
 
 		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		for(int i=0; i<2; i++) {
-			for(int j=0; j<2; j++) {
-				for(int k=0; k<2; k++) {
-					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-					density[cur].J = Js[i][j][k] / vol;
-				}
-			}
-		}
+		density[pos].J = (Js / vol) / 8.0;
 	}
 
 	/**
