@@ -35,7 +35,7 @@ NUM_WORKERS="$NPROC" @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inp
 
 # compare output
 set +e
-bash -c "diff <(sort ${CASE}.out) <(sort @PROJECT_SOURCE_DIR@/../outputs/${CASE}.out)"
+bash -c "diff <(sort ${CASE}.out) <(sort @PROJECT_SOURCE_DIR@/../outputs/${CASE}.static.out)"
 RETVAL=$?
 set -e
 
