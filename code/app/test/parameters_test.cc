@@ -18,7 +18,7 @@ namespace ipic3d {
 
 		EXPECT_NEAR(params.c, 1.0, 1e-15);
 		EXPECT_NEAR(params.dt, 0.15, 1e-15);
-		EXPECT_EQ(params.ncycles, 10);
+		EXPECT_EQ(params.ncycles, 30);
 
 		EXPECT_NEAR(params.L.x, 10.0, 1e-15);
 		EXPECT_NEAR(params.L.y, 10.0, 1e-15);
@@ -30,13 +30,13 @@ namespace ipic3d {
 		EXPECT_NEAR(params.planetRadius, 0.5, 1e-15);
 		EXPECT_NEAR(params.delta, 0.5, 1e-15);
 
-		EXPECT_EQ(params.ncells.x, 4);
-		EXPECT_EQ(params.ncells.y, 4);
-		EXPECT_EQ(params.ncells.z, 4);
+		EXPECT_EQ(params.ncells.x, 8);
+		EXPECT_EQ(params.ncells.y, 8);
+		EXPECT_EQ(params.ncells.z, 8);
 
-		EXPECT_NEAR(params.dspace.x, 2.5, 1e-15);
-		EXPECT_NEAR(params.dspace.y, 2.5, 1e-15);
-		EXPECT_NEAR(params.dspace.z, 2.5, 1e-15);
+		EXPECT_NEAR(params.dspace.x, 1.25, 1e-15);
+		EXPECT_NEAR(params.dspace.y, 1.25, 1e-15);
+		EXPECT_NEAR(params.dspace.z, 1.25, 1e-15);
 
 		EXPECT_EQ(params.ns, 2);
 		for (auto it = params.npcelx.cbegin(); it != params.npcelx.cend(); ++it) 
