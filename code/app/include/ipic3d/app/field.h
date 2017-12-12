@@ -26,9 +26,9 @@ namespace ipic3d {
 		Vector3<double> J;				// current density
 	};
 
-	struct DensityCell {
-		Vector3<double> rho;			// charge density
-	};
+	//struct DensityCell {
+	//	Vector3<double> rho;			// charge density
+	//};
 
 
 	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes

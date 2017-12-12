@@ -140,36 +140,55 @@ namespace ipic3d {
 		if(cell.particles.empty()) return;		// nothing to contribute
 
 		// init aggregated densities of neighboring cells
-		Vector3<double> Js[2][2][2] = { { { Vector3<double>(0.0) } } };
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				for(int k = 0; k < 2; ++k) {
+					utils::Coordinate<3> cur = pos + utils::Coordinate<3>{i, j, k};
+					density[cur].J = { 0.0, 0.0, 0.0 };
+				}
+			}
+		}
 
 		// aggregate charge density from particles
-		// TODO: use pfor here
+		// TODO: use pfor here, switch loop nest and pfors?
 		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
+		const double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 		for(const auto& p : cell.particles) {
 			// get the fractional distance of the particle from the cell origin
 			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
 
 			// computation of J also includes weights from the particles as for E
+			// TODO: Should be replaced by a call to trilinearInterpolationFP() (after renaming it to trilinearInterpolation only...)
 			for(int i = 0; i < 2; ++i) {
 				for(int j = 0; j < 2; ++j) {
 					for(int k = 0; k < 2; ++k) {
 				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
-						Js[i][j][k] += p.q * p.velocity * fac;
+					    utils::Coordinate<3> neighborPos = pos + utils::Coordinate<3>{i, j, k};
+						density[neighborPos].J += (p.q * p.velocity * fac) / vol;
 					}
 				}
 			}
-
 		}
+	}
 
-		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		for(int i=0; i<2; i++) {
-			for(int j=0; j<2; j++) {
-				for(int k=0; k<2; k++) {
-					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-					density[cur].J = Js[i][j][k] / vol;
+	void aggregateDensityContributions(const UniverseProperties& /*universeProperties*/, const CurrentDensity& densityContributions, const utils::Coordinate<3>& pos, DensityNode& density) {
+
+		auto size = densityContributions.size();
+		auto curDensityContributionPos = pos * 2;
+
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				for(int k = 0; k < 2; ++k) {
+					utils::Coordinate<3> cur = curDensityContributionPos + utils::Coordinate<3>{i - 1, j - 1, k - 1};
+					if(cur[0] < 0 || cur[0] >= size[0]) continue;
+					if(cur[1] < 0 || cur[1] >= size[1]) continue;
+					if(cur[2] < 0 || cur[2] >= size[2]) continue;
+
+					density.J += densityContributions[cur].J;
 				}
 			}
 		}
+
 	}
 
 	/**

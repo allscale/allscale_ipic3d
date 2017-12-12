@@ -201,4 +201,8 @@ namespace ipic3d {
 
 	}
 
+	TEST(Cell, DISABLED_DensityContributions) {
+		// TODO: implement test for density contribution computation
+	}
+
 }

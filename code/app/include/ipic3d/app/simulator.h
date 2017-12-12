@@ -24,6 +24,10 @@ namespace ipic3d {
 
 		struct default_field_solver;
 
+		struct forward_field_solver;
+
+		struct leapfrog_field_solver;
+
 		struct default_particle_mover;
 	}
 
@@ -107,6 +111,9 @@ namespace ipic3d {
 
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
+
+		// create a grid of buffers for density projection from particles to grid nodes
+		Grid<DensityNode> densityContributions(size * 2);
 		
 		// create the output file
 		auto& manager = allscale::api::core::FileIOManager::getInstance();
@@ -122,18 +129,25 @@ namespace ipic3d {
 		// run time loop for the simulation
 		for(unsigned i = 0; i < numSteps; ++i) {
 
+			std::cout << i << std::endl;
+
 			using namespace allscale::api::user::algorithm;
 
 			// write output to a file: total energy, momentum, E and B total energy
 			writeOutputData(i, numSteps, universe, outtxt);
 
-			// STEP 1: collect particle contributions
-			// project particles to current density
-			// use size, not densitySize, because all Js in the cell will be updated
+			// STEP 1a: collect particle density contributions and store in buffers
 			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
 				// TODO: this can be improved by adding rho
 				// 	J is defined on nodes
-				particleToFieldProjector(universe.properties, universe.cells[pos], pos, universe.currentDensity);
+				particleToFieldProjector(universe.properties, universe.cells[pos], pos, densityContributions);
+			});
+
+			// STEP 1b: aggregate densities in buffers to density nodes
+			pfor(zero, universe.currentDensity.size(), [&](const utils::Coordinate<3>& pos) {
+				// TODO: this can be improved by adding rho
+				// 	J is defined on nodes
+				aggregateDensityContributions(universe.properties, densityContributions, pos, universe.currentDensity[pos]);
 			});
 
 			// STEP 2: solve field equations
@@ -171,8 +185,8 @@ namespace ipic3d {
 	namespace detail {
 
 		struct default_particle_to_field_projector {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) const {
-				projectToDensityField(universeProperties,cell,pos,density);
+			void operator()(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& densityContributions) const {
+				projectToDensityField(universeProperties, cell, pos, densityContributions);
 			}
 		};
 
