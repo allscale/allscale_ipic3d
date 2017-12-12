@@ -47,12 +47,12 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
 	# C flags
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c99")
 	set(CMAKE_C_FLAGS_DEBUG "-O0 -g3 -ggdb")
-	set(CMAKE_C_FLAGS_RELEASE "-O2")
+	set(CMAKE_C_FLAGS_RELEASE "-O3")
 
 	# C++ flags
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14")
 	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -ggdb")
-	set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 	# Yo Dawg, I heard you like templates!
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-depth-900")

@@ -152,7 +152,7 @@ namespace ipic3d {
 		// aggregate charge density from particles
 		// TODO: use pfor here, switch loop nest and pfors?
 		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
-		const double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		
 		for(const auto& p : cell.particles) {
 			// get the fractional distance of the particle from the cell origin
 			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
@@ -164,14 +164,14 @@ namespace ipic3d {
 					for(int k = 0; k < 2; ++k) {
 				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
 					    utils::Coordinate<3> neighborPos = pos + utils::Coordinate<3>{i, j, k};
-						density[neighborPos].J += (p.q * p.velocity * fac) / vol;
+						density[neighborPos].J += (p.q * p.velocity * fac);
 					}
 				}
 			}
 		}
 	}
 
-	void aggregateDensityContributions(const UniverseProperties& /*universeProperties*/, const CurrentDensity& densityContributions, const utils::Coordinate<3>& pos, DensityNode& density) {
+	void aggregateDensityContributions(const UniverseProperties& universeProperties, const CurrentDensity& densityContributions, const utils::Coordinate<3>& pos, DensityNode& density) {
 
 		auto size = densityContributions.size();
 		auto curDensityContributionPos = pos * 2;
@@ -189,6 +189,8 @@ namespace ipic3d {
 			}
 		}
 
+		const double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		density.J = density.J / vol;
 	}
 
 	/**
