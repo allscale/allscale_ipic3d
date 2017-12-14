@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <chrono>
 
 #include "allscale/utils/vector.h"
 
@@ -32,18 +33,27 @@ namespace {
 		GRID_SIZE.z * CELL_WIDTH.z
 	};
 
-	int processUniverse(Universe& universe, std::uint64_t numTimeSteps) {
+	int processUniverse(Universe& universe, std::uint64_t numParticles, std::uint64_t numTimeSteps) {
+		const bool dumpParticles = std::getenv("DUMP_PARTICLE_POSITION");
 
 		// --- sample output initial state --
-		outputParticlePositionSamples(universe.cells, std::string("t_begin.txt"), 1000);
+		if (dumpParticles) outputParticlePositionSamples(universe.cells, std::string("t_begin.txt"), 1000);
 
 
 		// ----- run the simulation ------
 		std::cout << "Running simulation..." << std::endl;
+
+		auto start = std::chrono::high_resolution_clock::now();
 		simulateSteps(numTimeSteps, universe);
+		auto end = std::chrono::high_resolution_clock::now();
+
 		std::cout << "Simulation Finished" << std::endl;
 
-		outputParticlePositionSamples(universe.cells, std::string("t_end.txt"), 1000);
+		double s = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() / 1000.0;
+		std::cout << "Simulation took " << s << "s\n";
+		std::cout << "Throughput: " << (numTimeSteps * numParticles) / s << " particles/s \n";
+
+		if (dumpParticles) outputParticlePositionSamples(universe.cells, std::string("t_end.txt"), 1000);
 
 		return EXIT_SUCCESS;
 	}
@@ -66,7 +76,7 @@ namespace {
 
 		// -- run the simulation --
 
-		return processUniverse(universe,numTimeSteps);
+		return processUniverse(universe,numParticles,numTimeSteps);
 
 	}
 
