@@ -7,7 +7,80 @@
 
 namespace ipic3d {
 
-	TEST(Cell, initCells) {
+	TEST(Cell, initCellsUniform) {
+		using namespace distribution;
+
+		UniverseProperties properties;
+		properties.size = coordinate_type(3,3,3);
+		properties.cellWidth = { 1.0, 1.0, 1.0 };
+
+		distribution::uniform<> dist(
+				// position
+				Vector3<double>{0,0,0},
+				Vector3<double>{3,3,3},
+
+				// velocity
+				Vector3<double>{-0.1,-0.1,-0.1},
+				Vector3<double>{+0.1,+0.1,+0.1}
+		);
+
+		auto cells = initCells(properties,100,dist);
+
+		// test correct number of particles
+		EXPECT_EQ(100,countParticlesInDomain(cells));
+	}
+
+	TEST(Cell, initCellsNormal) {
+		using namespace distribution;
+
+		UniverseProperties properties;
+		properties.size = coordinate_type(3,3,3);
+		properties.cellWidth = { 1.0, 1.0, 1.0 };
+
+		distribution::normal<> dist(
+				// position
+				Vector3<double>{1.5,1.5,1.5},
+				Vector3<double>{0.5,0.5,0.5},
+
+				// velocity
+				Vector3<double>{-0.1,-0.1,-0.1},
+				Vector3<double>{+0.1,+0.1,+0.1}
+		);
+
+		auto cells = initCells(properties,100,dist);
+
+		// test correct number of particles
+		EXPECT_EQ(100,countParticlesInDomain(cells));
+	}
+
+	TEST(Cell, initCellsNormalSpherical) {
+		using namespace distribution;
+
+		UniverseProperties properties;
+		properties.size = coordinate_type(3,3,3);
+		properties.cellWidth = { 1.0, 1.0, 1.0 };
+
+
+		auto dist = distribution::make_spherical(
+			distribution::normal<>(
+				// position
+				Vector3<double>{1.5,1.5,1.5},
+				Vector3<double>{0.5,0.5,0.5},
+
+				// velocity
+				Vector3<double>{-0.1,-0.1,-0.1},
+				Vector3<double>{+0.1,+0.1,+0.1}
+			)
+		);
+
+		auto cells = initCells(properties,100,dist);
+
+		// test correct number of particles
+		EXPECT_EQ(100,countParticlesInDomain(cells));
+	}
+
+
+	TEST(Cell, initCellsFromConfig) {
 
 		// this test checks the initCells() function
 

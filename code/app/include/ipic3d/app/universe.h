@@ -81,4 +81,32 @@ namespace ipic3d {
 		return universe;
 	}
 
+	template<typename Distribution>
+	Universe createUniverseFromDistribution(const UniverseProperties& universeProperties, const InitProperties& initProperties, std::uint64_t numParticles, const Distribution& distribution) {
+
+		// initialize grid of cells
+		Cells&& cells = initCells(universeProperties,numParticles,distribution);
+
+		// initialize fields on nodes
+		Field&& field = initFields(initProperties, universeProperties);
+
+		// initialize magnetic fields on centers
+		BcField&& bcField = initBcFields(universeProperties, field);
+
+		// initialize current density on nodes
+		CurrentDensity&& currentDensity = initCurrentDensity(universeProperties);
+
+		// create the universe with the given properties, cells and fields
+		Universe universe(universeProperties, std::move(cells), std::move(field), std::move(bcField), std::move(currentDensity));
+
+		return universe;
+	}
+
+
+
+	// count the number of particles in all cells
+	std::uint64_t countParticlesInDomain(const Universe& universe) {
+		return countParticlesInDomain(universe.cells);
+	}
+
 }
