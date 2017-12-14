@@ -61,7 +61,7 @@ namespace ipic3d {
 	// write output depending on the set frequency
 	template<typename StreamObject>
 	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
-		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
+		if ( universe.properties.FieldOutputCycle > 0 && ((cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps)) ) {
 			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
 			auto getB = [](const auto& field, const auto& index) { return (field[index].B + field[index].Bext); };
 

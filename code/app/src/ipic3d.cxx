@@ -66,6 +66,7 @@ namespace {
 		universeProperties.cellWidth = CELL_WIDTH;
 		universeProperties.size = GRID_SIZE;
 		universeProperties.dt = DELTA_T;
+		universeProperties.FieldOutputCycle = 0;
 
 		// set up init properties
 		InitProperties initProperties;
@@ -146,13 +147,13 @@ namespace {
 
 		// utility for help messages
 		auto showHelp = [](){
-			std::cout << "Benchmark flags: -X:N\n"
+			std::cout << "Benchmark designation: :X:N\n"
 					  << "      X ... benchmark type:\n"
 					  << "           U ... uniform\n"
 					  << "           C ... cluster\n"
 					  << "           E ... explosion\n"
 					  << "           B ... beam\n"
-					  << "      N ... total number of particles:\n";
+					  << "      N ... total number of particles\n";
 			return EXIT_FAILURE;
 		};
 
