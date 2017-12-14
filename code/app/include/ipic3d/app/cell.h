@@ -732,7 +732,7 @@ namespace ipic3d {
 	* This function prints the positions of selected particles for visualization purposes
 	*/
 	template<typename StreamObject>
-	void outputParticlePositionSamples(const Cells& cells, StreamObject& out, const unsigned numParticles) {
+	void outputParticlePositionSamples(const Cells& cells, StreamObject& out, const unsigned /*numParticles*/) {
 		// TODO: implement output facilities for large problems
 		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
