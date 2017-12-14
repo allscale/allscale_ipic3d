@@ -467,13 +467,59 @@ namespace ipic3d {
 	}
 
 	/**
+	* This function prints the positions of selected particles for visualization purposes
+	*/
+	template<typename StreamObject>
+	void outputParticlePositionSamples(const Cells& cells, StreamObject& out, const unsigned numParticles) {
+		// TODO: implement output facilities for large problems
+		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
+
+		// compute number of particles per cell to print
+		// TODO: integer division, what about the remainder?
+		const auto& size = cells.size();
+
+		std::minstd_rand randGenerator(0);
+		const unsigned randMax = size.x * size.y * size.z;
+		unsigned particleCount = 0;
+
+		// TODO: ensure unique particles (use std::set based on position and particle index?)?
+		// TODO: ensure termination if less particles present in universe than random samples requested
+		// or leave everything as it is...
+		// static_assert(false && "fixme");
+
+		while(particleCount < numParticles) {
+			// get random linear index
+			const unsigned randVal = randGenerator() % randMax;
+			// derive x/y/z components
+			utils::Coordinate<3> randIndex = {(randVal / size.y) / size.z, (randVal / size.z) % size.y, randVal % size.z};
+			const auto& particles = cells[randIndex].particles;
+			// get random particle
+			const auto& randParticleIndex = randGenerator() % particles.size();
+			const auto& pos = particles[randParticleIndex].position;
+			out << pos.x << " " << pos.y << " " << pos.z << "\n";
+			++particleCount;
+		}
+	}
+
+	/**
 	* This function outputs the number of particles per cell using AllScale IO
 	*/
-	void outputNumberOfParticlesPerCell(const Cells& cells, std::string& filename) {
+	void outputNumberOfParticlesPerCell(const Cells& cells, const std::string& filename) {
 		auto& manager = allscale::api::core::FileIOManager::getInstance();
 		auto text = manager.createEntry(filename);
 		auto out = manager.openOutputStream(text);
 		outputNumberOfParticlesPerCell(cells, out);
+		manager.close(out);
+	}
+
+	/**
+	* This function prints the positions of selected particles for visualization purposes
+	*/
+	void outputParticlePositionSamples(const Cells& cells, const std::string& filename, const unsigned numParticles = 200) {
+		auto& manager = allscale::api::core::FileIOManager::getInstance();
+		auto text = manager.createEntry(filename);
+		auto out = manager.openOutputStream(text);
+		outputParticlePositionSamples(cells, out, numParticles);
 		manager.close(out);
 	}
 

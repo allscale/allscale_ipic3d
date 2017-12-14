@@ -42,6 +42,9 @@ int main(int argc, char** argv) {
 	// initialize universe
 	auto universe = createUniverseFromParams(params, baseName);
 
+	// dump samples of particle positions for visualization
+	outputParticlePositionSamples(universe.cells, "p_pos.txt");
+
 	// get the number of particles in all cells before the simulation begins for error checking
 	assert_decl(int start_particles = countParticlesInDomain(universe));
 
