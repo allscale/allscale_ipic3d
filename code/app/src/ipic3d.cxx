@@ -72,6 +72,7 @@ namespace {
 		initProperties.driftVelocity.push_back(0);
 
 		// initialize universe
+		std::cout << "Creating Particles ..." << std::endl;
 		auto universe = createUniverseFromDistribution(universeProperties,initProperties,numParticles,dist);
 
 		// -- run the simulation --
@@ -156,7 +157,7 @@ namespace {
 		};
 
 		// check the format
-		if (config.length() <= 3 || config[0] != '-' || config[2] != ':') {
+		if (config.length() <= 3 || config[0] != ':' || config[2] != ':') {
 			return showHelp();
 		}
 
@@ -191,7 +192,7 @@ int main(int argc, char** argv) {
 	std::string inputFilename = argv[1];
 
 	// add benchmark support
-	if (inputFilename[0] == '-') {
+	if (inputFilename[0] == ':') {
 		return processBenchmark(inputFilename);
 	}
 

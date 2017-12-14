@@ -122,22 +122,19 @@ namespace ipic3d {
 			// a generator for uniformly distributed vector3 instances
 			class uniform {
 
-				Vector3<double> min;
-				Vector3<double> max;
+				std::uniform_real_distribution<> x;
+				std::uniform_real_distribution<> y;
+				std::uniform_real_distribution<> z;
 
-				mutable std::minstd_rand randGen;
+				std::minstd_rand randGen;
 
 			public:
 
 				uniform(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed)
-					: min(min), max(max), randGen(seed) {}
+					: x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
 
-				Vector3<double> operator()() const {
-					return {
-						min.x + (max.x - min.x) * ((double)randGen() / std::minstd_rand::max()),
-						min.y + (max.y - min.y) * ((double)randGen() / std::minstd_rand::max()),
-						min.z + (max.z - min.z) * ((double)randGen() / std::minstd_rand::max())
-					};
+				Vector3<double> operator()() {
+					return { x(randGen), y(randGen), z(randGen) };
 				}
 
 			};
@@ -145,18 +142,18 @@ namespace ipic3d {
 			// a generator for normal distributed vector3 instances
 			class normal {
 
-				mutable std::normal_distribution<> x;
-				mutable std::normal_distribution<> y;
-				mutable std::normal_distribution<> z;
+				std::normal_distribution<> x;
+				std::normal_distribution<> y;
+				std::normal_distribution<> z;
 
-				mutable std::minstd_rand randGen;
+				std::minstd_rand randGen;
 
 			public:
 
 				normal(const Vector3<double>& mean, const Vector3<double>& stddev, std::uint32_t seed)
 					: x(mean.x,stddev.x),y(mean.y,stddev.y),z(mean.z,stddev.z), randGen(seed) {}
 
-				Vector3<double> operator()() const {
+				Vector3<double> operator()() {
 					return { x(randGen),y(randGen),z(randGen) };
 				}
 
@@ -177,7 +174,7 @@ namespace ipic3d {
 			generic_particle_generator(const PositionDist& posGen, const VelocityDist& velGen, const SpeciesDist& speciesGen)
 				: speciesGen(speciesGen), posGen(posGen), velGen(velGen) {}
 
-			Particle operator()() const {
+			Particle operator()() {
 				Particle p = speciesGen();
 				p.position = posGen();
 				p.velocity = velGen();
@@ -250,7 +247,7 @@ namespace ipic3d {
 				assert_gt(radius,0);
 			}
 
-			Particle operator()() const {
+			Particle operator()() {
 				for(int i=0; i<100000; i++) {
 					Particle p = dist();
 					if (norm(p.position - center) <= radius) {
@@ -284,10 +281,13 @@ namespace ipic3d {
 			// get targeted cell
 			auto& cell = cells[pos];
 
+			// get a local, mutable copy of the particle distribution
+			auto next = dist;
+
 			// generate number of particles
 			for(std::uint64_t i=0; i<numParticles; ++i) {
-				auto cur = dist();
-				while(!isInsideUniverse(properties,cur)) cur = dist();
+				auto cur = next();
+				while(!isInsideUniverse(properties,cur)) cur = next();
 				if (isInside(properties,pos,cur)) {
 					cell.particles.push_back(cur);
 				}
