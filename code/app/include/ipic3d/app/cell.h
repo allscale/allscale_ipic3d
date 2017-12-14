@@ -15,6 +15,7 @@
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
 #include "ipic3d/app/parameters.h"
+#include "ipic3d/app/ziggurat_normal_distribution.h"
 
 namespace ipic3d {
 
@@ -142,19 +143,22 @@ namespace ipic3d {
 			// a generator for normal distributed vector3 instances
 			class normal {
 
-				std::normal_distribution<> x;
-				std::normal_distribution<> y;
-				std::normal_distribution<> z;
+				Vector3<double> mean;
+				Vector3<double> stddev;
 
-				std::minstd_rand randGen;
+				ziggurat_normal_distribution rand;
 
 			public:
 
 				normal(const Vector3<double>& mean, const Vector3<double>& stddev, std::uint32_t seed)
-					: x(mean.x,stddev.x),y(mean.y,stddev.y),z(mean.z,stddev.z), randGen(seed) {}
+					: mean(mean), stddev(stddev), rand(seed) {}
 
 				Vector3<double> operator()() {
-					return { x(randGen),y(randGen),z(randGen) };
+					return {
+						mean.x + stddev.x * rand(),
+						mean.y + stddev.y * rand(),
+						mean.z + stddev.z * rand()
+					};
 				}
 
 			};
