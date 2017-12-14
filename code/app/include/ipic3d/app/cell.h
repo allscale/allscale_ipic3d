@@ -279,20 +279,34 @@ namespace ipic3d {
 		// the 3-D grid of cells
 		Cells cells(properties.size);
 
+		// get a private copy of the distribution generator
+		auto next = dist;
+
+		// generate list of particles
+		std::vector<Particle> particles(numParticles);
+		for(std::uint64_t i=0; i<numParticles; ++i) {
+			auto cur = next();
+			while(!isInsideUniverse(properties,cur)) cur = next();
+			particles[i] = cur;
+		}
+
+		// just some info about the progress
+		std::cout << "Sorting in particles ...\n";
+
 		// distribute particles randomly
-		pfor(properties.size, [&,numParticles,dist](const auto& pos) {
+		pfor(properties.size, [&,numParticles](const auto& pos) {
 
 			// get targeted cell
 			auto& cell = cells[pos];
 
-			// get a local, mutable copy of the particle distribution
-			auto next = dist;
+			// get cell corners
+			auto& width = properties.cellWidth;
+			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
+			Vector3<double> hig = low + width;
 
-			// generate number of particles
-			for(std::uint64_t i=0; i<numParticles; ++i) {
-				auto cur = next();
-				while(!isInsideUniverse(properties,cur)) cur = next();
-				if (isInside(properties,pos,cur)) {
+			// filter out local particles
+			for(const auto& cur : particles) {
+				if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
 					cell.particles.push_back(cur);
 				}
 			}
