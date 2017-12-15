@@ -583,10 +583,16 @@ namespace ipic3d {
 			}
 		}
 
-		// move particles
+		// create buffer of remaining particles
 		std::vector<Particle> remaining;
 		remaining.reserve(cell.particles.size());
-		for(auto& p : cell.particles) {
+
+		// sort out particles
+		std::vector<std::vector<Particle>*> targets(cell.particles.size());
+		allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
+			// get the current particle
+			auto& p = cell.particles[index];
+
 			// compute relative position
 			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
 			auto halfWidth = universeProperties.cellWidth / 2.0;
@@ -606,12 +612,16 @@ namespace ipic3d {
 				p.position[2] = adjustPosition(2);
 
 				// send to neighbor cell
-				auto target = neighbors[{i,j,k}];
-				if (target) target->push_back(p);
+				targets[index] = neighbors[{i,j,k}];
 			} else {
 				// keep particle
-				remaining.push_back(p);
+				targets[index] = &remaining;
 			}
+		});
+
+		// actually transfer particles
+		for(std::size_t i = 0; i<cell.particles.size(); ++i) {
+			targets[i]->push_back(cell.particles[i]);
 		}
 
 		// update content
