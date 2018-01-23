@@ -143,16 +143,16 @@ namespace ipic3d {
 		for(int i = 0; i < 2; ++i) {
 			for(int j = 0; j < 2; ++j) {
 				for(int k = 0; k < 2; ++k) {
-					utils::Coordinate<3> cur = pos + utils::Coordinate<3>{i, j, k};
+					utils::Coordinate<3> cur = 2 * pos + utils::Coordinate<3>{i, j, k};
 					density[cur].J = { 0.0, 0.0, 0.0 };
 				}
 			}
 		}
 
 		// aggregate charge density from particles
-		// TODO: use pfor here, switch loop nest and pfors?
 		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
 		
+		// TODO: use pfor here, switch loop nest and pfors?
 		for(const auto& p : cell.particles) {
 			// get the fractional distance of the particle from the cell origin
 			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
@@ -163,7 +163,7 @@ namespace ipic3d {
 				for(int j = 0; j < 2; ++j) {
 					for(int k = 0; k < 2; ++k) {
 				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
-					    utils::Coordinate<3> neighborPos = pos + utils::Coordinate<3>{i, j, k};
+					    utils::Coordinate<3> neighborPos = 2 * pos + utils::Coordinate<3>{i, j, k};
 						density[neighborPos].J += (p.q * p.velocity * fac);
 					}
 				}
@@ -171,6 +171,14 @@ namespace ipic3d {
 		}
 	}
 
+	/**
+	* This function aggregates the density contributions into the current density on the nodes
+	*
+	* @param universeProperties the properties of this universe
+	* @param densityContributions the density contributions
+	* @param pos the coordinates of this current density on the grid
+	* @param density the current density output
+	*/
 	void aggregateDensityContributions(const UniverseProperties& universeProperties, const CurrentDensity& densityContributions, const utils::Coordinate<3>& pos, DensityNode& density) {
 
 		auto size = densityContributions.size();
@@ -190,7 +198,7 @@ namespace ipic3d {
 		}
 
 		const double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-		density.J = density.J / vol;
+		density.J = density.J / vol / 8.0; // divide by 8 to average the value contributed by 8 neighboring cells
 	}
 
 	/**

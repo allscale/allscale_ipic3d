@@ -34,7 +34,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::default_field_solver,
+		typename FieldSolver 				= detail::leapfrog_field_solver,
 		typename ParticleMover 				= detail::default_particle_mover
 	>
 	void simulateSteps(unsigned numSteps, Universe& universe);
@@ -42,7 +42,7 @@ namespace ipic3d {
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
-		typename FieldSolver 				= detail::default_field_solver,
+		typename FieldSolver 				= detail::leapfrog_field_solver,
 		typename ParticleMover 				= detail::default_particle_mover
 	>
 	void simulateStep(Universe& universe) {
@@ -145,7 +145,6 @@ namespace ipic3d {
 
 			// STEP 1b: aggregate densities in buffers to density nodes
 			pfor(zero, universe.currentDensity.size(), [&](const utils::Coordinate<3>& pos) {
-				// TODO: this can be improved by adding rho
 				// 	J is defined on nodes
 				aggregateDensityContributions(universe.properties, densityContributions, pos, universe.currentDensity[pos]);
 			});
