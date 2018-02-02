@@ -133,6 +133,13 @@ namespace ipic3d {
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
 
+		auto zero = utils::Coordinate<3>(0);
+
+		// init current density
+		allscale::api::user::algorithm::pfor(zero, universe.currentDensity.size(), [&](const utils::Coordinate<3>& pos) {
+			universe.currentDensity[pos].J = {0.0,0.0,0.0};
+		});
+
 		// configure the cell
 		Cell& a = universe.cells[{0,0,0}];
 		Cell& b = universe.cells[{1,0,0}];
@@ -187,7 +194,6 @@ namespace ipic3d {
 		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, g, {0,1,1}) );
 		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, h, {1,1,1}) );
 	
-		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
 
 		allscale::api::user::data::Grid<DensityNode, 3> densityContributions(size * 2);
