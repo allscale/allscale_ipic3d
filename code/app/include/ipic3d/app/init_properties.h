@@ -41,7 +41,8 @@ namespace ipic3d {
 			}
 
 			for(int i = 0; i < (params.ns); i++) {
-				particlesPerCell.push_back({ params.npcelx[i], params.npcely[i], params.npcelz[i] });
+				assert_true(params.npcelx[i] >= 0 && params.npcely[i] >= 0 && params.npcelz[i] >= 0) << "Expected positive number of particles.";
+				particlesPerCell.push_back({ (unsigned)params.npcelx[i], (unsigned)params.npcely[i], (unsigned)params.npcelz[i] });
 			}
 
 			magneticFieldAmplitude = { params.B0.x, params.B0.y, params.B0.z };
