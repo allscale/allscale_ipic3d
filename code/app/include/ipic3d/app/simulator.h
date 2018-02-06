@@ -108,7 +108,8 @@ namespace ipic3d {
 
 		// create a buffer for particle transfers
 		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
-		
+
+#ifdef ENABLE_DEBUG_OUTPUT
 		// create the output file
 		auto& manager = allscale::api::core::FileIOManager::getInstance();
 		// define the output file name
@@ -116,7 +117,9 @@ namespace ipic3d {
 		// create the result file
 		auto logFile = manager.createEntry(outputFilename);
 		auto outtxt = manager.openOutputStream(logFile);
+
 		writeOutputHeader(outtxt);
+#endif
 
 		// -- run the simulation --
 
@@ -125,8 +128,10 @@ namespace ipic3d {
 
 			using namespace allscale::api::user::algorithm;
 
+#ifdef ENABLE_DEBUG_OUTPUT
 			// write output to a file: total energy, momentum, E and B total energy
 			writeOutputData(i, numSteps, universe, outtxt);
+#endif
 
 //			// STEP 1: collect particle contributions
 //			// project particles to current density
@@ -164,8 +169,10 @@ namespace ipic3d {
 
 		}
 
+#ifdef ENABLE_DEBUG_OUTPUT
 		// close the IO manager 
 		manager.close(outtxt);
+#endif
 
 	}
 
