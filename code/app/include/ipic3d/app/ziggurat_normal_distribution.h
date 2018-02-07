@@ -1,5 +1,12 @@
 #include <math.h>
 
+
+#ifdef _MSC_VER
+	// disable double to float conversion warnings
+	#pragma warning( push )
+	#pragma warning( disable : 4244 4305)
+#endif //_MSC_VER
+
 namespace ipic3d {
 
 	/**
@@ -10,8 +17,8 @@ namespace ipic3d {
 		unsigned long jz, jsr = 123456789;
 
 		long hz;
-		unsigned long iz, kn[128], ke[256];
-		float wn[128], fn[128], we[256], fe[256];
+		unsigned long iz, kn[128]/*, ke[256]*/;
+		float wn[128], fn[128]/*, we[256], fe[256]*/;
 
 		unsigned long shr3() {
 			jz=jsr;
@@ -128,3 +135,6 @@ namespace ipic3d {
 
 } // end namespace ipic3d
 
+#ifdef _MSC_VER
+	#pragma warning( pop ) 
+#endif // _MSC_VER

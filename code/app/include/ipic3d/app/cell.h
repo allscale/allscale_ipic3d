@@ -617,7 +617,7 @@ namespace ipic3d {
 
 		// sort out particles
 		std::vector<std::vector<Particle>*> targets(cell.particles.size());
-		allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
+		allscale::api::user::algorithm::pfor(std::size_t(0), cell.particles.size(),[&](std::size_t index){
 			// get the current particle
 			auto& p = cell.particles[index];
 

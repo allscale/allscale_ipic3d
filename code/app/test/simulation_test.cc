@@ -470,7 +470,7 @@ namespace ipic3d {
 		EXPECT_NEAR(b.particles.front().velocity.z, 0.0, 1e-0);
 
 		// check number of particles in the domain
-		int total_particles = countParticlesInDomain(universe);
+		auto total_particles = countParticlesInDomain(universe);
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
@@ -621,7 +621,7 @@ namespace ipic3d {
 		EXPECT_NEAR(b.particles.front().velocity.z, 0.0, 1e-0);
 
 		// check number of particles in the domain
-		int total_particles = countParticlesInDomain(universe);
+		auto total_particles = countParticlesInDomain(universe);
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
@@ -775,7 +775,7 @@ namespace ipic3d {
 		h.particles.push_back(p7);
 
 		// check number of particles in the domain
-		int total_particles = countParticlesInDomain(universe);
+		auto total_particles = countParticlesInDomain(universe);
 		EXPECT_EQ(8, total_particles);
 	   
 		// verify the proper placement of particles 

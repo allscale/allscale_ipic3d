@@ -14,7 +14,7 @@ namespace ipic3d {
 	struct InitProperties {
 
 		// the number of time steps
-		unsigned numSteps;
+		std::uint64_t numSteps;
 
 		// the number of particles per cell per dimension, one entry per species
 		std::vector<Vector3<unsigned>> particlesPerCell;
@@ -28,7 +28,7 @@ namespace ipic3d {
 		// charge density defined on nodes
 		double rhoInit;
 
-		InitProperties(const unsigned numSteps = 1, const std::vector<Vector3<unsigned>>& particlesPerCell = {},
+		InitProperties(const std::uint64_t numSteps = 1, const std::vector<Vector3<unsigned>>& particlesPerCell = {},
 			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticFieldAmplitude = { 0,0,0 }, const double rhoInit = 1.0)
 			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticFieldAmplitude(magneticFieldAmplitude), rhoInit(rhoInit) {}
 

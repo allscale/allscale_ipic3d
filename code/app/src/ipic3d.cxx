@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 	auto universe = createUniverseFromParams(params, baseName);
 
 	// get the number of particles in all cells before the simulation begins for error checking
-	assert_decl(int start_particles = countParticlesInDomain(universe));
+	assert_decl(auto start_particles = countParticlesInDomain(universe));
 
 	// ----- run the simulation ------
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 	// ----- finish ------
 
 	// get the number of particles in all cells at the end of the simulation for error checking
-	assert_decl(int end_particles = countParticlesInDomain(universe));
+	assert_decl(auto end_particles = countParticlesInDomain(universe));
 	assert_eq(start_particles, end_particles) << "[Error]: Periodic boundary conditions on particles were not preserved!";
 
 	std::cout << "Simulation finished successfully, producing output data..." << std::endl;

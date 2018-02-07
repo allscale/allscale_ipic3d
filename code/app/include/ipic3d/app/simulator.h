@@ -37,7 +37,7 @@ namespace ipic3d {
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::default_particle_mover
 	>
-	void simulateSteps(unsigned numSteps, Universe& universe);
+	void simulateSteps(std::uint64_t numSteps, Universe& universe);
 
 
 	template<
@@ -90,7 +90,7 @@ namespace ipic3d {
 		typename FieldSolver,
 		typename ParticleMover
 	>
-	void simulateSteps(unsigned numSteps, Universe& universe) {
+	void simulateSteps(std::uint64_t numSteps, Universe& universe) {
 
 		// instantiate operators
 		//auto particleToFieldProjector = ParticleToFieldProjector();
@@ -131,7 +131,7 @@ namespace ipic3d {
 		// -- run the simulation --
 
 		// run time loop for the simulation
-		for(unsigned i = 0; i < numSteps; ++i) {
+		for(std::uint64_t i = 0; i < numSteps; ++i) {
 
 			using namespace allscale::api::user::algorithm;
 
