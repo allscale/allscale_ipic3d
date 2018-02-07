@@ -65,7 +65,7 @@ namespace ipic3d {
 	// write output depending on the set frequency
 	template<typename StreamObject>
 	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
-		if ( (cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps) ) {
+		if ( universe.properties.FieldOutputCycle > 0 && ((cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps)) ) {
 			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
 			auto getB = [](const auto& field, const auto& index) { return (field[index].B + field[index].Bext); };
 
@@ -93,8 +93,8 @@ namespace ipic3d {
 	void simulateSteps(unsigned numSteps, Universe& universe) {
 
 		// instantiate operators
-		auto particleToFieldProjector = ParticleToFieldProjector();
-		auto fieldSolver = FieldSolver();
+		//auto particleToFieldProjector = ParticleToFieldProjector();
+		//auto fieldSolver = FieldSolver();
 		auto particleMover = ParticleMover();
 
 		// -- setup simulation --
@@ -102,9 +102,10 @@ namespace ipic3d {
 		// extract size of grid
 		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
-		auto fieldSize = universe.field.size();
-		auto fieldStart = utils::Coordinate<3>(1);
-		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		//auto densitySize = universe.currentDensity.size();
+		//auto fieldSize = universe.field.size();
+		//auto fieldStart = utils::Coordinate<3>(1);
+		//auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 
 
 		// -- auxiliary structures for communication --
@@ -115,6 +116,7 @@ namespace ipic3d {
 		// create a grid of buffers for density projection from particles to grid nodes
 		Grid<DensityNode> densityContributions(size * 2);
 		
+#ifdef ENABLE_DEBUG_OUTPUT
 		// create the output file
 		auto& manager = allscale::api::core::FileIOManager::getInstance();
 		// define the output file name
@@ -122,41 +124,42 @@ namespace ipic3d {
 		// create the result file
 		auto logFile = manager.createEntry(outputFilename);
 		auto outtxt = manager.openOutputStream(logFile);
+
 		writeOutputHeader(outtxt);
+#endif
 
 		// -- run the simulation --
 
 		// run time loop for the simulation
 		for(unsigned i = 0; i < numSteps; ++i) {
 
-			std::cout << i << std::endl;
-
 			using namespace allscale::api::user::algorithm;
 
+#ifdef ENABLE_DEBUG_OUTPUT
 			// write output to a file: total energy, momentum, E and B total energy
 			writeOutputData(i, numSteps, universe, outtxt);
-
+#endif
 			// STEP 1a: collect particle density contributions and store in buffers
-			pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-				// TODO: this can be improved by adding rho
-				// 	J is defined on nodes
-				particleToFieldProjector(universe.properties, universe.cells[pos], pos, densityContributions);
-			});
+			//pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
+			//	// TODO: this can be improved by adding rho
+			//	// 	J is defined on nodes
+			//	particleToFieldProjector(universe.properties, universe.cells[pos], pos, densityContributions);
+			//});
 
-			// STEP 1b: aggregate densities in buffers to density nodes
-			pfor(zero, universe.currentDensity.size(), [&](const utils::Coordinate<3>& pos) {
-				// 	J is defined on nodes
-				aggregateDensityContributions(universe.properties, densityContributions, pos, universe.currentDensity[pos]);
-			});
+			//// STEP 1b: aggregate densities in buffers to density nodes
+			//pfor(zero, universe.currentDensity.size(), [&](const utils::Coordinate<3>& pos) {
+			//	// 	J is defined on nodes
+			//	aggregateDensityContributions(universe.properties, densityContributions, pos, universe.currentDensity[pos]);
+			//});
 
 			// STEP 2: solve field equations
 			// update boundaries
 			updateFieldsOnBoundaries(universe.field, universe.bcfield);
-			
+
 			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
-			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-				fieldSolver(universe.properties, pos, universe.currentDensity, universe.field, universe.bcfield);
-			});
+			//pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+			//	fieldSolver(universe.properties, pos, universe.currentDensity, universe.field, universe.bcfield);
+			//});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
@@ -176,8 +179,10 @@ namespace ipic3d {
 
 		}
 
+#ifdef ENABLE_DEBUG_OUTPUT
 		// close the IO manager 
 		manager.close(outtxt);
+#endif
 
 	}
 

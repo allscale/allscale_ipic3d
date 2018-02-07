@@ -15,6 +15,7 @@
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
 #include "ipic3d/app/parameters.h"
+#include "ipic3d/app/ziggurat_normal_distribution.h"
 
 namespace ipic3d {
 
@@ -33,6 +34,288 @@ namespace ipic3d {
 
 	using Cells = allscale::api::user::data::Grid<Cell, 3>; // a 3D grid of cells
 
+
+	/**
+	 * Tests whether a given particle is to be maintained by a cell of the given position.
+	 * @param universeProperties the properties of this universe
+	 * @param pos the coordinates of this cell in the grid
+	 * @param p the particle to be tested
+	 * @return true if the particle should be stored in the designated cell, false otherwise
+	 */
+	bool isInside(const UniverseProperties& universeProperties, const utils::Coordinate<3>& pos, const Particle& p) {
+		// compute relative position
+		Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
+
+		// get cell width
+		auto halfWidth = universeProperties.cellWidth / 2.0;
+
+		// TODO: sort out which face belongs to which cell
+
+		// check relative position
+		return ((fabs(relPos.x) <= halfWidth.x) && (fabs(relPos.y) <= halfWidth.y) && (fabs(relPos.z) <= halfWidth.z));
+	}
+
+	/**
+	 * Tests whether a given particle is within the particle universe.
+	 * @param universeProperties the properties of this universe
+	 * @param p the particle to be tested
+	 * @return true if the particle is inside, false otherwise
+	 */
+	bool isInsideUniverse(const UniverseProperties& universeProperties, const Particle& p) {
+		Vector3<double> zero = 0;
+		Vector3<double> size {
+			universeProperties.size.x * universeProperties.cellWidth.x,
+			universeProperties.size.y * universeProperties.cellWidth.y,
+			universeProperties.size.z * universeProperties.cellWidth.z
+		};
+		return zero.dominatedBy(p.position) && p.position.strictlyDominatedBy(size);
+	}
+
+
+	// count the number of particles in all cells
+	std::uint64_t countParticlesInDomain(const Cells& cells) {
+
+		auto fold = [&](const coordinate_type& index, std::uint64_t& res) {
+			res += (std::uint64_t)cells[index].particles.size();
+		};
+
+		auto reduce = [&](const std::uint64_t& a, const std::uint64_t& b) { return a + b; };
+		auto init = []()->std::uint64_t { return 0; };
+
+		coordinate_type zero(0);
+		coordinate_type full(cells.size());
+
+		return allscale::api::user::algorithm::preduce(zero, full, fold, reduce, init).get();
+	}
+
+	namespace distribution {
+
+		namespace species {
+
+			// a generator for electrons
+			struct electron {
+
+				Particle operator()() const {
+					Particle p;
+					p.q = -1.0;
+					p.qom = -25.0;
+					return p;
+				}
+
+			};
+
+			// a generator for protons
+			struct proton {
+
+				Particle operator()() const {
+					Particle p;
+					p.q = 1.0;
+					p.qom = 1.0;
+					return p;
+				}
+
+			};
+
+		}
+
+		namespace vector {
+
+			// a generator for uniformly distributed vector3 instances
+			class uniform {
+
+				std::uniform_real_distribution<> x;
+				std::uniform_real_distribution<> y;
+				std::uniform_real_distribution<> z;
+
+				std::minstd_rand randGen;
+
+			public:
+
+				uniform(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed)
+					: x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
+
+				Vector3<double> operator()() {
+					return { x(randGen), y(randGen), z(randGen) };
+				}
+
+			};
+
+			// a generator for normal distributed vector3 instances
+			class normal {
+
+				Vector3<double> mean;
+				Vector3<double> stddev;
+
+				ziggurat_normal_distribution rand;
+
+			public:
+
+				normal(const Vector3<double>& mean, const Vector3<double>& stddev, std::uint32_t seed)
+					: mean(mean), stddev(stddev), rand(seed) {}
+
+				Vector3<double> operator()() {
+					return {
+						mean.x + stddev.x * rand(),
+						mean.y + stddev.y * rand(),
+						mean.z + stddev.z * rand()
+					};
+				}
+
+			};
+
+		}
+
+
+		template<typename PositionDist, typename VelocityDist, typename SpeciesDist>
+		class generic_particle_generator {
+
+			SpeciesDist speciesGen;
+			PositionDist posGen;
+			VelocityDist velGen;
+
+		public:
+
+			generic_particle_generator(const PositionDist& posGen, const VelocityDist& velGen, const SpeciesDist& speciesGen)
+				: speciesGen(speciesGen), posGen(posGen), velGen(velGen) {}
+
+			Particle operator()() {
+				Particle p = speciesGen();
+				p.position = posGen();
+				p.velocity = velGen();
+				return p;
+			}
+
+		};
+
+
+		template<typename SpeciesGen = species::electron>
+		struct uniform : public generic_particle_generator<vector::uniform,vector::uniform,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::uniform,vector::uniform,SpeciesGen>;
+
+			uniform(
+					const Vector3<double>& minPos,
+					const Vector3<double>& maxPos,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					std::uint32_t seed = 0
+			) : super({minPos,maxPos,seed+1},{minVel,maxVel,seed+2},SpeciesGen()) {}
+
+			uniform(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& minPos,
+					const Vector3<double>& maxPos,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					std::uint32_t seed = 0
+			) : super({minPos,maxPos,seed+1},{minVel,maxVel,seed+2},speciesGen) {}
+
+		};
+
+		template<typename SpeciesGen = species::electron>
+		struct normal : public generic_particle_generator<vector::normal,vector::uniform,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::normal,vector::uniform,SpeciesGen>;
+
+			normal(
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					std::uint32_t seed = 0
+			) : super({center,stddev,seed+1},{minVel,maxVel,seed+2},SpeciesGen()) {}
+
+			normal(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					std::uint32_t seed = 0
+			) : super({center,stddev,seed+1},{minVel,maxVel,seed+2},speciesGen) {}
+
+		};
+
+		template<typename Distribution>
+		class spherical {
+
+			Distribution dist;
+
+			Vector3<double> center;
+			double radius;
+
+		public:
+
+			spherical(const Distribution& dist, const Vector3<double>& center, double radius)
+				: dist(dist), center(center), radius(radius) {
+				assert_gt(radius,0);
+			}
+
+			Particle operator()() {
+				for(int i=0; i<100000; i++) {
+					Particle p = dist();
+					if (norm(p.position - center) <= radius) {
+						return p;
+					}
+				}
+				assert_fail() << "Probably empty distribution!";
+				return {};
+			}
+
+		};
+
+		template<typename Distribution>
+		spherical<Distribution> make_spherical(const Distribution& dist, const Vector3<double>& center = 0, double radius = 1) {
+			return { dist, center, radius };
+		}
+
+	}
+
+
+	template<typename Distribution>
+	Cells initCells(const UniverseProperties& properties, std::uint64_t numParticles, const Distribution& dist) {
+		using allscale::api::user::algorithm::pfor;
+
+		// the 3-D grid of cells
+		Cells cells(properties.size);
+
+		// get a private copy of the distribution generator
+		auto next = dist;
+
+		// generate list of particles
+		std::vector<Particle> particles(numParticles);
+		for(std::uint64_t i=0; i<numParticles; ++i) {
+			auto cur = next();
+			while(!isInsideUniverse(properties,cur)) cur = next();
+			particles[i] = cur;
+		}
+
+		// just some info about the progress
+		std::cout << "Sorting in particles ...\n";
+
+		// distribute particles randomly
+		pfor(properties.size, [&,numParticles](const auto& pos) {
+
+			// get targeted cell
+			auto& cell = cells[pos];
+
+			// get cell corners
+			auto& width = properties.cellWidth;
+			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
+			Vector3<double> hig = low + width;
+
+			// filter out local particles
+			for(const auto& cur : particles) {
+				if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
+					cell.particles.push_back(cur);
+				}
+			}
+
+		});
+
+		// done
+		return cells;
+	}
 
 	Cells initCells(const Parameters& params, const InitProperties& initProperties, const UniverseProperties& properties) {
 
@@ -328,10 +611,16 @@ namespace ipic3d {
 			}
 		}
 
-		// move particles
+		// create buffer of remaining particles
 		std::vector<Particle> remaining;
 		remaining.reserve(cell.particles.size());
-		for(auto& p : cell.particles) {
+
+		// sort out particles
+		std::vector<std::vector<Particle>*> targets(cell.particles.size());
+		allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
+			// get the current particle
+			auto& p = cell.particles[index];
+
 			// compute relative position
 			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
 			auto halfWidth = universeProperties.cellWidth / 2.0;
@@ -351,12 +640,16 @@ namespace ipic3d {
 				p.position[2] = adjustPosition(2);
 
 				// send to neighbor cell
-				auto target = neighbors[{i,j,k}];
-				if (target) target->push_back(p);
+				targets[index] = neighbors[{i,j,k}];
 			} else {
 				// keep particle
-				remaining.push_back(p);
+				targets[index] = &remaining;
 			}
+		});
+
+		// actually transfer particles
+		for(std::size_t i = 0; i<cell.particles.size(); ++i) {
+			targets[i]->push_back(cell.particles[i]);
 		}
 
 		// update content
@@ -375,12 +668,9 @@ namespace ipic3d {
 		int incorrectlyPlacedParticles = 0;
 
 		for(auto& p : cell.particles) {
-			// compute relative position
-			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
-			auto halfWidth = universeProperties.cellWidth / 2.0;
-			if ((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
+			if (!isInside(universeProperties,pos,p)) {
 				++incorrectlyPlacedParticles;
-            }
+			}
 		}
 		
 		if (incorrectlyPlacedParticles) {
@@ -495,13 +785,47 @@ namespace ipic3d {
 	}
 
 	/**
+	* This function prints the positions of selected particles for visualization purposes
+	*/
+	template<typename StreamObject>
+	void outputParticlePositions(const Cells& cells, StreamObject& out) {
+		// TODO: implement output facilities for large problems
+		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
+
+		const auto& size = cells.size();
+		
+		for(int i=0; i<size.x; i++) {
+			for(int j=0; j<size.y; j++) {
+				for(int k=0; k<size.z; k++) {
+					for(const auto& p : cells[{i,j,k}].particles) {
+						const auto& pos = p.position;
+						out << pos.x << " " << pos.y << " " << pos.z << "\n";
+					}
+				}
+			}
+		}
+
+	}
+
+	/**
 	* This function outputs the number of particles per cell using AllScale IO
 	*/
-	void outputNumberOfParticlesPerCell(const Cells& cells, std::string& filename) {
+	void outputNumberOfParticlesPerCell(const Cells& cells, const std::string& filename) {
 		auto& manager = allscale::api::core::FileIOManager::getInstance();
 		auto text = manager.createEntry(filename);
 		auto out = manager.openOutputStream(text);
 		outputNumberOfParticlesPerCell(cells, out);
+		manager.close(out);
+	}
+
+	/**
+	* This function prints the positions of selected particles for visualization purposes
+	*/
+	void outputParticlePositions(const Cells& cells, const std::string& filename) {
+		auto& manager = allscale::api::core::FileIOManager::getInstance();
+		auto text = manager.createEntry(filename);
+		auto out = manager.openOutputStream(text);
+		outputParticlePositions(cells, out);
 		manager.close(out);
 	}
 

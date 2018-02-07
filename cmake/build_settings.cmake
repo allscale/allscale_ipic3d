@@ -7,6 +7,9 @@ option(USE_VALGRIND "Allow Valgrind for unit tests" OFF)
 option(USE_ALLSCALECC "Use allscalecc as compiler" OFF)
 option(ENABLE_PROFILING "Enable AllScale profiling support" OFF)
 option(ALLSCALE_CHECK_BOUNDS "Enable bounds checks for AllScale data items and utility structures" OFF)
+option(ENABLE_DEBUG_OUTPUT "Enable debug output" OFF)
+
+# ALLSCALE_CHECK_BOUNDS ... Enable bounds checks for AllScale data items and utility structures
 
 # Developer options
 # -DOVERRIDE_ALLSCALECC   ... Allows one to use a specific AllScale Compiler (path to allscalecc)
@@ -24,6 +27,10 @@ endif()
 
 if(ENABLE_PROFILING)
 	add_definitions(-DENABLE_PROFILING)
+endif()
+
+if(ENABLE_DEBUG_OUTPUT)
+	add_definitions(-DENABLE_DEBUG_OUTPUT)
 endif()
 
 if(NOT DEFINED ALLSCALE_CHECK_BOUNDS AND CMAKE_BUILD_TYPE STREQUAL "Debug")

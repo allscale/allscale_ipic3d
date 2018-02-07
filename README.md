@@ -56,6 +56,7 @@ Following options can be supplied to CMake
 | -DBUILD_COVERAGE        | ON / OFF        |
 | -DUSE_ASSERT            | ON / OFF        |
 | -DALLSCALE_CHECK_BOUNDS | ON / OFF        |
+| -DENABLE_DEBUG_OUTPUT   | ON / OFF        |
 | -DUSE_VALGRIND          | ON / OFF        |
 | -DUSE_ALLSCALECC        | ON / OFF        |
 | -DENABLE_PROFILING      | ON / OFF        |

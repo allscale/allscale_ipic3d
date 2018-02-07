@@ -1,16 +1,12 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "allscale/utils/vector.h"
-
+#include "ipic3d/app/benchmark.h"
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/field.h"
 #include "ipic3d/app/parameters.h"
 #include "ipic3d/app/simulator.h"
 #include "ipic3d/app/universe.h"
-#include "ipic3d/app/common.h"
-
-#include "ipic3d/app/utils/points.h"
 
 using namespace ipic3d;
 
@@ -26,6 +22,11 @@ int main(int argc, char** argv) {
 
 	std::string inputFilename = argv[1];
 
+	// add benchmark support
+	if (inputFilename[0] == ':') {
+		return processBenchmark(inputFilename);
+	}
+
 	// load input configuration
 	std::cout << "Loading configuration file \"" << inputFilename << "\" ..." << std::endl;
 	auto params = Parameters(inputFilename);
@@ -35,7 +36,7 @@ int main(int argc, char** argv) {
 	// setup simulation
 	std::cout << "Initializing simulation state ..." << std::endl;
 
-	// remove preceeding path from filename and file suffix, keep only file name itself
+	// remove preceding path from filename and file suffix, keep only file name itself
 	const auto sepPos = inputFilename.find_last_of("/\\");
 	std::string baseName = inputFilename.substr(sepPos + 1, inputFilename.find_last_of('.') - sepPos - 1);
 
@@ -71,4 +72,3 @@ int main(int argc, char** argv) {
 	// be done
 	return EXIT_SUCCESS;
 }
-
