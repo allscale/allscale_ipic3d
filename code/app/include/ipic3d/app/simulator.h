@@ -89,8 +89,8 @@ namespace ipic3d {
 	void simulateSteps(unsigned numSteps, Universe& universe) {
 
 		// instantiate operators
-//		auto particleToFieldProjector = ParticleToFieldProjector();
-//		auto fieldSolver = FieldSolver();
+		//auto particleToFieldProjector = ParticleToFieldProjector();
+		//auto fieldSolver = FieldSolver();
 		auto particleMover = ParticleMover();
 
 		// -- setup simulation --
@@ -98,10 +98,10 @@ namespace ipic3d {
 		// extract size of grid
 		auto zero = utils::Coordinate<3>(0);
 		auto size = universe.cells.size();
-//		auto densitySize = universe.currentDensity.size();
-//		auto fieldSize = universe.field.size();
-//		auto fieldStart = utils::Coordinate<3>(1);
-//		auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
+		//auto densitySize = universe.currentDensity.size();
+		//auto fieldSize = universe.field.size();
+		//auto fieldStart = utils::Coordinate<3>(1);
+		//auto fieldEnd = fieldSize - utils::Coordinate<3>(1); // one because a shift due to the boundary conditions
 
 
 		// -- auxiliary structures for communication --
@@ -133,23 +133,23 @@ namespace ipic3d {
 			writeOutputData(i, numSteps, universe, outtxt);
 #endif
 
-//			// STEP 1: collect particle contributions
-//			// project particles to current density
-//			// use size, not densitySize, because all Js in the cell will be updated
-//			pfor(zero, densitySize, [&](const utils::Coordinate<3>& pos) {
-//				// TODO: this can be improved by adding rho
-//				// 	J is defined on nodes
-//				particleToFieldProjector(universe.properties, universe.cells, pos, universe.currentDensity);
-//			});
-//
-//			// STEP 2: solve field equations
-//			// update boundaries
-//			updateFieldsOnBoundaries(universe.field, universe.bcfield);
-//
-//			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
-//			pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
-//				fieldSolver(universe.properties, pos, universe.currentDensity, universe.field, universe.bcfield);
-//			});
+			// STEP 1: collect particle contributions
+			// project particles to current density
+			// use size, not densitySize, because all Js in the cell will be updated
+			//pfor(zero, densitySize, [&](const utils::Coordinate<3>& pos) {
+			//	// TODO: this can be improved by adding rho
+			//	// 	J is defined on nodes
+			//	particleToFieldProjector(universe.properties, universe.cells, pos, universe.currentDensity);
+			//});
+
+			// STEP 2: solve field equations
+			// update boundaries
+			updateFieldsOnBoundaries(universe.field, universe.bcfield);
+
+			// TODO: can we call it like that fieldSolver(universe.field,density,universe.cells);
+			//pfor(fieldStart, fieldEnd, [&](const utils::Coordinate<3>& pos){
+			//	fieldSolver(universe.properties, pos, universe.currentDensity, universe.field, universe.bcfield);
+			//});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 

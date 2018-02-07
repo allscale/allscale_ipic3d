@@ -421,17 +421,16 @@ namespace ipic3d {
 		int bcfieldSize = (int)bcfield.size().x;
 		allscale::utils::Vector<int, 2> fullField(fieldSize - 1);
 		allscale::utils::Vector<int, 2> fullBcField(bcfieldSize - 1);
+		allscale::utils::Vector<int, 2> zero(0);
 
-		auto fieldRef = allscale::api::user::algorithm::pfor(fullField, [&](const auto& index) {
+		// TODO: parallel version pending
+		allscale::api::user::algorithm::detail::forEach(zero, fullField, [&](const auto& index) {
 			update(index, fieldSize, field);
 		});
 
-		auto bcfieldRef = allscale::api::user::algorithm::pfor(fullBcField, [&](const auto& index) {
+		allscale::api::user::algorithm::detail::forEach(zero, fullBcField, [&](const auto& index) {
 			update(index, bcfieldSize, bcfield);
 		});
-
-		fieldRef.wait();
-		bcfieldRef.wait();
 
 	}
 
