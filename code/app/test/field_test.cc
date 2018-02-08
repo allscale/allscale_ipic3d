@@ -307,43 +307,94 @@ namespace ipic3d {
 
 
 	TEST(Field, updateFieldsOnBoundaries) {
-		// Set universe properties
-		UniverseProperties properties;
-		properties.size = { 10, 10, 10 };
-		properties.cellWidth = { 1, 1, 1 };
-		properties.useCase = UseCase::Dipole;
 
-		utils::Coordinate<3> pos{0, 0, 0};
+	    coordinate_type size = {10, 10, 10};
 
-		// initialize field
-		Field field(properties.size + coordinate_type(3));
+		// initialize fields
+		Field field(size + coordinate_type(3));
+		BcField bcfield(size + coordinate_type(2));
+
+		// initialize every element with its index
+		allscale::api::user::algorithm::pfor(field.size(), [&](const auto& pos) {
+			field[pos].E = { (double)pos.x, (double)pos.y, (double)pos.z };
+			field[pos].B = { (double)pos.x, (double)pos.y, (double)pos.z };
+		});
+
+		allscale::api::user::algorithm::pfor(bcfield.size(), [&](const auto& pos) {
+			bcfield[pos].Bc = { (double)pos.x, (double)pos.y, (double)pos.z };
+		});
+
+		// set some proper values to working area of field (excluding ghost cells)
 		decltype(field.size()) start = 1;
 		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](const auto& pos){
 			field[pos].E = { 1.0, 1.0, 1.0 };
 			field[pos].B = { 2.0, 2.0, 2.0 };
 		});
-		BcField bcfield(properties.size + coordinate_type(2));
+				
 		allscale::api::user::algorithm::pfor(start, bcfield.size() - coordinate_type(1), [&](const auto& pos){
 			bcfield[pos].Bc = { 3.0, 3.0, 3.0 };
 		});
 
+		// check correct state
+	    Vector3<double> sumE(0.0);
+		Vector3<double> sumB(0.0);
+		Vector3<double> sumBc(0.0);
+
+		for(int i = 0; i < field.size().x; ++i) {
+			for(int j = 0; j < field.size().y; ++j) {
+				for(int k = 0; k < field.size().z; ++k) {
+					auto pos = coordinate_type({ i,j,k });
+					sumE += field[pos].E;
+					sumB += field[pos].B;
+				}
+			}
+		}
+
+		EXPECT_EQ(Vector3<double>(6527.0), sumE);
+		EXPECT_EQ(Vector3<double>(7858.0), sumB);
+
+		for(int i = 0; i < bcfield.size().x; ++i) {
+			for(int j = 0; j < bcfield.size().y; ++j) {
+				for(int k = 0; k < bcfield.size().z; ++k) {
+					auto pos = coordinate_type({ i,j,k });
+					sumBc += bcfield[pos].Bc;
+				}
+			}
+		}
+
+		EXPECT_EQ(Vector3<double>(7004.0), sumBc);
+
 		updateFieldsOnBoundaries(field, bcfield);
+				
+		auto fSize = field.size() - coordinate_type{1,1,1};
+		auto bcSize = bcfield.size()- coordinate_type{ 1, 1, 1 };
 
-		auto E = field[ {0, 5, 11} ].E;
-		EXPECT_NEAR( E.x, 1.0, 1e-06 );
-		EXPECT_NEAR( E.y, 1.0, 1e-06 );
-		EXPECT_NEAR( E.z, 1.0, 1e-06 );
+		// make sure corners were not written
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				for(int k = 0; k < 2; ++k) {
+					auto fPos = coordinate_type{ i * fSize.x, j * fSize.y, k * fSize.z };
+					auto bcPos = coordinate_type{ i * bcSize.x, j * bcSize.y, k * bcSize.z };
+					EXPECT_EQ(Vector3<double>((double)fPos.x, (double)fPos.y, (double)fPos.z), field[fPos].E) << " at " << fPos;
+					EXPECT_EQ(Vector3<double>((double)fPos.x, (double)fPos.y, (double)fPos.z), field[fPos].B) << " at " << fPos;
+					EXPECT_EQ(Vector3<double>((double)bcPos.x, (double)bcPos.y, (double)bcPos.z), bcfield[bcPos].Bc) << " at " << bcPos;
+				}
+			}
+		}
 
-		auto B = field[ {9, 12, 2} ].B;		
-		EXPECT_NEAR( B.x, 2.0, 1e-06 );
-		EXPECT_NEAR( B.y, 2.0, 1e-06 );
-		EXPECT_NEAR( B.z, 2.0, 1e-06 );
+		// make sure ghost cell areas were written
+		for(int i = 1; i < fSize.x; ++i) {
+			for(int j = 1; j < fSize.y; ++j) {
+				EXPECT_EQ(Vector3<double>(1.0), (field[{0,i,j}].E)) << " at " << coordinate_type(0, i, j);
+				EXPECT_EQ(Vector3<double>(1.0), (field[{fSize.x, i, j}].E)) << " at " << coordinate_type(fSize.x, i, j);
+				EXPECT_EQ(Vector3<double>(1.0), (field[{i, 0, j}].E)) << " at " << coordinate_type(i, 0, j);
+				EXPECT_EQ(Vector3<double>(1.0), (field[{i, fSize.y, j}].E)) << " at " << coordinate_type(i, fSize.y, j);
+				EXPECT_EQ(Vector3<double>(1.0), (field[{i, j, 0}].E)) << " at " << coordinate_type(i, j, 0);
+				EXPECT_EQ(Vector3<double>(1.0), (field[{i, j, fSize.z}].E)) << " at " << coordinate_type(i, j, fSize.z);
+			}
+		}
 
-		auto Bc = bcfield[ {3, 8, 12} ].Bc;
-		EXPECT_NEAR( Bc.x, 3.0, 1e-06 );
-		EXPECT_NEAR( Bc.y, 3.0, 1e-06 );
-		EXPECT_NEAR( Bc.z, 3.0, 1e-06 );
-
+		// change some values
 		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](const auto& pos){
 			field[pos].E = { (double) pos[0], (double) pos[1], (double) pos[2] };
 			field[pos].B = { 2.0 * pos[0], 2.0 * pos[1], 2.0 * pos[2]};
@@ -351,15 +402,10 @@ namespace ipic3d {
 
 		updateFieldsOnBoundaries(field, bcfield);
 
-		E = field[ {0, 5, 11} ].E;
-		EXPECT_NEAR( E.x, 11.0, 1e-06 );
-		EXPECT_NEAR( E.y, 5.0, 1e-06 );
-		EXPECT_NEAR( E.z, 11.0, 1e-06 );
+		// manually check a few positions
+		EXPECT_EQ(Vector3<double>(11.0, 5.0, 11.0), (field[{0, 5, 11}].E));
+		EXPECT_EQ(Vector3<double>(18.0, 2.0, 4.0), (field[{9, 12, 2}].B));
 
-		B = field[ {9, 12, 2} ].B;		
-		EXPECT_NEAR( B.x, 18.0, 1e-06 );
-		EXPECT_NEAR( B.y, 2.0, 1e-06 );
-		EXPECT_NEAR( B.z, 4.0, 1e-06 );
 	}
 
 
@@ -504,4 +550,5 @@ namespace ipic3d {
 	}
 
 } // end namespace ipic3d
+
 

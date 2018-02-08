@@ -402,34 +402,35 @@ namespace ipic3d {
  	*/
 	void updateFieldsOnBoundaries(Field& field, BcField& bcfield) {
 
-		auto update = [](const auto& index, const auto& size, auto& field) {
+		auto update = [](const auto& index, const auto& end, auto& field) {
+
 			// update on the x = 0 face
-			field[{ 0, index.x, index.y }] = field[{ size - 2, index.x, index.y }];
-			field[{ size - 1, index.x, index.y }] = field[{ 1, index.x, index.y }];
+			field[{ 0, index.x, index.y }] = field[{ end - 1, index.x, index.y }];
+			field[{ end, index.x, index.y }] = field[{ 1, index.x, index.y }];
 
 			// update on the y = 0 face
-			field[{ index.x, 0, index.y }] = field[{ index.x, size - 2, index.y }];
-			field[{ index.x, size - 1, index.y }] = field[{ index.x, 1, index.y }];
+			field[{ index.x, 0, index.y }] = field[{ index.x, end - 1, index.y }];
+			field[{ index.x, end, index.y }] = field[{ index.x, 1, index.y }];
 
 			// update on the z = 0 face
-			field[{ index.x, index.y, 0 }] = field[{ index.x, index.y, size - 2 }];
-			field[{ index.x, index.y, size - 1 }] = field[{ index.x, index.y, 1 }];
+			field[{ index.x, index.y, 0 }] = field[{ index.x, index.y, end - 1 }];
+			field[{ index.x, index.y, end }] = field[{ index.x, index.y, 1 }];
 		};
 
 		// Note: Assumes that the field sizes are equal in each dimension
-		int fieldSize = (int)field.size().x;
-		int bcfieldSize = (int)bcfield.size().x;
-		allscale::utils::Vector<int, 2> fullField(fieldSize - 1);
-		allscale::utils::Vector<int, 2> fullBcField(bcfieldSize - 1);
-		allscale::utils::Vector<int, 2> zero(0);
+		int fieldEnd = (int)field.size().x - 1;
+		int bcfieldEnd = (int)bcfield.size().x - 1;
+		allscale::utils::Vector<int, 2> fullField(fieldEnd);
+		allscale::utils::Vector<int, 2> fullBcField(bcfieldEnd);
+		allscale::utils::Vector<int, 2> start(1);
 
 		// TODO: parallel version pending
-		allscale::api::user::algorithm::detail::forEach(zero, fullField, [&](const auto& index) {
-			update(index, fieldSize, field);
+		allscale::api::user::algorithm::detail::forEach(start, fullField, [&](const auto& index) {
+			update(index, fieldEnd, field);
 		});
 
-		allscale::api::user::algorithm::detail::forEach(zero, fullBcField, [&](const auto& index) {
-			update(index, bcfieldSize, bcfield);
+		allscale::api::user::algorithm::detail::forEach(start, fullBcField, [&](const auto& index) {
+			update(index, bcfieldEnd, bcfield);
 		});
 
 	}
@@ -458,14 +459,18 @@ namespace ipic3d {
 	*/
 	template<typename StreamObject>
 	void outputFieldGrids(const Field& field, const BcField& bcField, StreamObject& streamObject) {
+
+
 		// TODO: implement output facilities for large problems
 		assert_le(field.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large field at this time";
 
 		// output dimensions
 		streamObject << field.size() << "\n";
 
+		coordinate_type start(1);
+
 		// output field values
-		allscale::api::user::algorithm::pfor(field.size(), [&](const auto& index) {
+		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](const auto& index) {
 			streamObject.atomic([&](auto& out) {
 				// write index
 				out << index.x << "," << index.y << "," << index.z << ":";
@@ -480,7 +485,7 @@ namespace ipic3d {
 		streamObject << bcField.size() << "\n";
 
 		// output bc field values
-		allscale::api::user::algorithm::pfor(bcField.size(), [&](const auto& index) {
+		allscale::api::user::algorithm::pfor(start, bcField.size() - coordinate_type(1), [&](const auto& index) {
 			streamObject.atomic([&](auto& out) {
 				// write index
 				out << index.x << "," << index.y << "," << index.z << ":";
