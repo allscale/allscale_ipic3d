@@ -577,6 +577,10 @@ namespace ipic3d {
 
 					const auto offset = utils::Coordinate<3>{ i - 1,j - 1,k - 1 } *2;
 					auto targetPos = centerIndex + offset;
+
+					// add user-defined data requirement
+					allscale::api::core::sema::needs_write_access(transfers,allscale::api::user::data::GridRegion<3>::single(targetPos));
+
 					targetPos[0] = wrap(centerIndex[0], offset[0], size[0]);
 					targetPos[1] = wrap(centerIndex[1], offset[1], size[1]);
 					targetPos[2] = wrap(centerIndex[2], offset[2], size[2]);
@@ -590,49 +594,53 @@ namespace ipic3d {
 		std::vector<Particle> remaining;
 		remaining.reserve(cell.particles.size());
 
-		// sort out particles
-		std::vector<std::vector<Particle>*> targets(cell.particles.size());
-//		allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
-		for(std::size_t index=0; index<cell.particles.size(); ++index) {
+		{
+			allscale::api::core::sema::no_more_dependencies();
 
-			// get the current particle
-			auto& p = cell.particles[index];
+			// sort out particles
+			std::vector<std::vector<Particle>*> targets(cell.particles.size());
+//			allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
+			for(std::size_t index=0; index<cell.particles.size(); ++index) {
 
-			// compute relative position
-			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
-			auto halfWidth = universeProperties.cellWidth / 2.0;
-			if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
+				// get the current particle
+				auto& p = cell.particles[index];
 
-				// adjust particle's position in case it exits the domain
-				auto adjustPosition = [&](const int i) {
-					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.size[i] * universeProperties.cellWidth[i] + p.position[i]) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
-				};
+				// compute relative position
+				Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
+				auto halfWidth = universeProperties.cellWidth / 2.0;
+				if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 
-				int i = (relPos.x < -halfWidth.x) ? 0 : ((relPos.x > halfWidth.x) ? 2 : 1);
-				int j = (relPos.y < -halfWidth.y) ? 0 : ((relPos.y > halfWidth.y) ? 2 : 1);
-				int k = (relPos.z < -halfWidth.z) ? 0 : ((relPos.z > halfWidth.z) ? 2 : 1);
+					// adjust particle's position in case it exits the domain
+					auto adjustPosition = [&](const int i) {
+						return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.size[i] * universeProperties.cellWidth[i] + p.position[i]) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
+					};
 
-				p.position[0] = adjustPosition(0);
-				p.position[1] = adjustPosition(1);
-				p.position[2] = adjustPosition(2);
+					int i = (relPos.x < -halfWidth.x) ? 0 : ((relPos.x > halfWidth.x) ? 2 : 1);
+					int j = (relPos.y < -halfWidth.y) ? 0 : ((relPos.y > halfWidth.y) ? 2 : 1);
+					int k = (relPos.z < -halfWidth.z) ? 0 : ((relPos.z > halfWidth.z) ? 2 : 1);
 
-				// send to neighbor cell
-				targets[index] = neighbors[{i,j,k}];
-			} else {
-				// keep particle
-				targets[index] = &remaining;
+					p.position[0] = adjustPosition(0);
+					p.position[1] = adjustPosition(1);
+					p.position[2] = adjustPosition(2);
+
+					// send to neighbor cell
+					targets[index] = neighbors[{i,j,k}];
+				} else {
+					// keep particle
+					targets[index] = &remaining;
+				}
+//			});
 			}
-//		});
-		}
 
-		// actually transfer particles
-		for(std::size_t i = 0; i<cell.particles.size(); ++i) {
-			targets[i]->push_back(cell.particles[i]);
+			// actually transfer particles
+			for(std::size_t i = 0; i<cell.particles.size(); ++i) {
+				targets[i]->push_back(cell.particles[i]);
+			}
+
 		}
 
 		// update content
 		cell.particles.swap(remaining);
-
 	}
 
 	/**
