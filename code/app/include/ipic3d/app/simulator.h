@@ -154,7 +154,7 @@ namespace ipic3d {
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 3: project forces to particles and move particles
-			pfor(zero, size, [&](const utils::Coordinate<3>& pos){
+			pfor(zero, size, [particleMover,&universe,&particleTransfers](const utils::Coordinate<3>& pos){
 				particleMover(universe.properties, universe.cells[pos], pos, universe.field, particleTransfers);
 			});
 

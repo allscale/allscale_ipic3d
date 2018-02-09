@@ -67,7 +67,7 @@ namespace ipic3d {
 				// Dipole's Center
 				auto objectCenter = universeProperties.objectCenter;
 
-				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+				pfor(start, workingFieldSize, [=,&fields](const utils::Coordinate<3>& cur) {
 
 					// TODO: required to work around an allscalecc frontend bug
 					// should be removed once the issue in the compiler is resolved
@@ -124,7 +124,7 @@ namespace ipic3d {
 		// the 3-D force fields
 		BcField bcfield(fieldSize);
 
-		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+		pfor(start, workingFieldSize, [=,&field,&bcfield](const utils::Coordinate<3>& cur) {
 			// init magnetic field at centers
 			interpN2C(cur, field, bcfield);
 		});
@@ -143,7 +143,7 @@ namespace ipic3d {
 		// the 3D current density
 		CurrentDensity currentDensity(densitySize);
 
-		pfor(start, densitySize, [&](const utils::Coordinate<3>& cur) {
+		pfor(start, densitySize, [=,&currentDensity](const utils::Coordinate<3>& cur) {
 
 			// initialize current density on nodes
 			currentDensity[cur].J = { 0.0, 0.0, 0.0 };

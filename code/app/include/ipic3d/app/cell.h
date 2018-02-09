@@ -294,7 +294,7 @@ namespace ipic3d {
 		std::cout << "Sorting in particles ...\n";
 
 		// distribute particles randomly
-		pfor(properties.size, [&,numParticles](const auto& pos) {
+		pfor(properties.size, [=,&cells](const auto& pos) {
 
 			// get targeted cell
 			auto& cell = cells[pos];
@@ -340,7 +340,7 @@ namespace ipic3d {
 		auto particlesPerCell = initProperties.particlesPerCell[0];
 	
 		// TODO: return this as a treeture
-		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [=,&cells](const utils::Coordinate<3>& pos) {
 
 			Cell& cell = cells[pos];
 			auto cellOrigin = getOriginOfCell(pos, properties);
@@ -389,18 +389,18 @@ namespace ipic3d {
 				}
 			}
 	
-			// print particles position and velocity
-			if (0) {
-				for(const auto& p : cell.particles) {
-					std::cout << p.position.x << " ";
-					std::cout << p.position.y << " ";
-					std::cout << p.position.z << " ";
-					std::cout << p.velocity.x << " ";
-					std::cout << p.velocity.y << " ";
-					std::cout << p.velocity.z << "\n";
-				}
-			
-			}
+//			// print particles position and velocity
+//			if (0) {
+//				for(const auto& p : cell.particles) {
+//					std::cout << p.position.x << " ";
+//					std::cout << p.position.y << " ";
+//					std::cout << p.position.z << " ";
+//					std::cout << p.velocity.x << " ";
+//					std::cout << p.velocity.y << " ";
+//					std::cout << p.velocity.z << "\n";
+//				}
+//
+//			}
 
 		});
 
@@ -445,7 +445,7 @@ namespace ipic3d {
 						// computation of J also includes weights from the particles as for E
 						// despite the fact that we are working right now with multiple cells, so the position of J would be different
 						// 	the formula still works well as it captures position of J in each of those cells. 
-				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
+						auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
 						Js += p.q * p.velocity * fac;
 					}
 				}
@@ -471,16 +471,16 @@ namespace ipic3d {
 	T trilinearInterpolationF2P(const T corners[2][2][2], const Vector3<double>& pos, const double vol) {
 		T res = T(0);
 
-	    for(int i = 0; i < 2; ++i) {
-		    for(int j = 0; j < 2; ++j) {
-			    for(int k = 0; k < 2; ++k) {
-				    auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z);
-				    res += corners[i][j][k] * fac;
-			    }
-		    }
-	    }
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				for(int k = 0; k < 2; ++k) {
+					auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z);
+					res += corners[i][j][k] * fac;
+				}
+			}
+		}
 
-	    return res / vol;
+		return res / vol;
 	}
 
 	/**
@@ -518,10 +518,12 @@ namespace ipic3d {
 
 		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
 
-        double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
 
 		// update particles
-		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
+//		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
+		for(std::size_t i=0; i<cell.particles.size(); ++i) {
+			Particle& p = cell.particles[i];
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
@@ -537,7 +539,8 @@ namespace ipic3d {
 
 			// update position
 			p.updatePosition(universeProperties.dt);
-		});
+		}
+//		});
 
 	}
 
@@ -589,7 +592,9 @@ namespace ipic3d {
 
 		// sort out particles
 		std::vector<std::vector<Particle>*> targets(cell.particles.size());
-		allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
+//		allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
+		for(std::size_t index=0; index<cell.particles.size(); ++index) {
+
 			// get the current particle
 			auto& p = cell.particles[index];
 
@@ -617,7 +622,8 @@ namespace ipic3d {
 				// keep particle
 				targets[index] = &remaining;
 			}
-		});
+//		});
+		}
 
 		// actually transfer particles
 		for(std::size_t i = 0; i<cell.particles.size(); ++i) {
@@ -670,6 +676,7 @@ namespace ipic3d {
 		// import particles sent to this cell
 		utils::Coordinate<3> size = transfers.size();
 		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
+
 		for(int i = 0; i<3; i++) {
 			for(int j = 0; j<3; j++) {
 				for(int k = 0; k<3; k++) {

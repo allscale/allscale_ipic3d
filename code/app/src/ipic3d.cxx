@@ -36,9 +36,8 @@ namespace {
 	int processUniverse(Universe& universe, std::uint64_t numParticles, std::uint64_t numTimeSteps) {
 		const bool dumpParticles = std::getenv("DUMP_PARTICLE_POSITION");
 
-		// --- sample output initial state --
-		if (dumpParticles) outputParticlePositionSamples(universe.cells, std::string("t_begin.txt"), 1000);
-
+//		// --- sample output initial state --
+//		if (dumpParticles) outputParticlePositionSamples(universe.cells, std::string("t_begin.txt"), 1000);
 
 		// ----- run the simulation ------
 		std::cout << "Running simulation..." << std::endl;
@@ -53,7 +52,7 @@ namespace {
 		std::cout << "Simulation took " << s << "s\n";
 		std::cout << "Throughput: " << (numTimeSteps * numParticles) / s << " particles/s \n";
 
-		if (dumpParticles) outputParticlePositionSamples(universe.cells, std::string("t_end.txt"), 1000);
+//		if (dumpParticles) outputParticlePositionSamples(universe.cells, std::string("t_end.txt"), 1000);
 
 		return EXIT_SUCCESS;
 	}
