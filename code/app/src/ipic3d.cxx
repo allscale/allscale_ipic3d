@@ -66,8 +66,8 @@ int main(int argc, char** argv) {
 	auto& manager = allscale::api::core::FileIOManager::getInstance();
 	auto text = manager.createEntry(outputFilename);
 	auto out = manager.openOutputStream(text);
-	outputNumberOfParticlesPerCell(universe.cells, out);
-	outputFieldGrids(universe.field, universe.bcfield, out);
+//	outputNumberOfParticlesPerCell(universe.cells, out);
+//	outputFieldGrids(universe.field, universe.bcfield, out);
 
 	// be done
 	return EXIT_SUCCESS;
