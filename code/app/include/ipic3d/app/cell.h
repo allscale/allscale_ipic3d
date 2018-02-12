@@ -608,23 +608,39 @@ namespace ipic3d {
 				// compute relative position
 				Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
 				auto halfWidth = universeProperties.cellWidth / 2.0;
-				if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 
-					// adjust particle's position in case it exits the domain
-					auto adjustPosition = [&](const int i) {
-						return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.size[i] * universeProperties.cellWidth[i] + p.position[i]) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
-					};
+				// if required, "reflect" particle's position and mark that velocity vector should be inverted
+				bool invertVelocity = false;
+				auto adjustPosition = [&](const int i) {
+					if((pos[i] == 0) && (relPos[i] < -halfWidth[i])) {
+						invertVelocity = true;
+						return p.position[i] + halfWidth[i];
+					} else if((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) {
+						invertVelocity = true;
+						return p.position[i] - halfWidth[i];
+					}
+					return p.position[i];
+				};
+
+				p.position[0] = adjustPosition(0);
+				p.position[1] = adjustPosition(1);
+				p.position[2] = adjustPosition(2);
+
+				if(invertVelocity) {
+					p.velocity *= (-1);
+				}
+
+				// recompute potentially new relative position
+				relPos = p.position - getCenterOfCell(pos, universeProperties);
+				
+				// send particle to neighboring cell if required
+				if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 
 					int i = (relPos.x < -halfWidth.x) ? 0 : ((relPos.x > halfWidth.x) ? 2 : 1);
 					int j = (relPos.y < -halfWidth.y) ? 0 : ((relPos.y > halfWidth.y) ? 2 : 1);
 					int k = (relPos.z < -halfWidth.z) ? 0 : ((relPos.z > halfWidth.z) ? 2 : 1);
 
-					p.position[0] = adjustPosition(0);
-					p.position[1] = adjustPosition(1);
-					p.position[2] = adjustPosition(2);
-
-					// send to neighbor cell
-					targets[index] = neighbors[{i,j,k}];
+					targets[index] = neighbors[{i, j, k}];					
 				} else {
 					// keep particle
 					targets[index] = &remaining;

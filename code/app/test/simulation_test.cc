@@ -511,20 +511,21 @@ namespace ipic3d {
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved out of the domain
-		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(a.particles.empty());
 		ASSERT_TRUE(b.particles.empty());
-		ASSERT_TRUE(c.particles.empty());
+		ASSERT_FALSE(c.particles.empty());
 
-		EXPECT_NEAR(a.particles.front().position.x, 0.048, 1e-3);
-		EXPECT_NEAR(a.particles.front().position.y, 0.8, 1e-1);
-		EXPECT_NEAR(a.particles.front().position.z, 0.0, 1e-0);
+		EXPECT_NEAR(c.particles.front().position.x, 1.298, 1e-3);
+		EXPECT_NEAR(c.particles.front().position.y, 0.8, 1e-1);
+		EXPECT_NEAR(c.particles.front().position.z, 0.0, 1e-0);
 
-		EXPECT_NEAR(a.particles.front().velocity.x, 2.12, 1e-2);
-		EXPECT_NEAR(a.particles.front().velocity.y, 0.0, 1e-0);
-		EXPECT_NEAR(a.particles.front().velocity.z, 0.0, 1e-0);
+		EXPECT_NEAR(c.particles.front().velocity.x, -2.12, 1e-2);
+		EXPECT_NEAR(c.particles.front().velocity.y, 0.0, 1e-0);
+		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
 
 		// check number of particles in the domain
 		total_particles = countParticlesInDomain(universe);
+
 		EXPECT_EQ(1, total_particles);
 	   
 		// verify the proper placement of particles 
@@ -532,29 +533,26 @@ namespace ipic3d {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
-
-		// now we push the same particle in the oposite direction 
-		Particle& p2 = a.particles.front();
-		p2.velocity.x  = -1.0;
 		niter = 1;
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
-		EXPECT_NEAR(c.particles.front().position.x, 1.464, 1e-3);
+		// check whether the particle was moved out of the domain
+		ASSERT_TRUE(a.particles.empty());
+		ASSERT_TRUE(b.particles.empty());
+		ASSERT_FALSE(c.particles.empty());
+
+		EXPECT_NEAR(c.particles.front().position.x, 1.102, 1e-3);
 		EXPECT_NEAR(c.particles.front().position.y, 0.8, 1e-1);
 		EXPECT_NEAR(c.particles.front().position.z, 0.0, 1e-0);
 
-		EXPECT_NEAR(c.particles.front().velocity.x, -0.84, 1e-2);
+		EXPECT_NEAR(c.particles.front().velocity.x, -1.96, 1e-2);
 		EXPECT_NEAR(c.particles.front().velocity.y, 0.0, 1e-0);
 		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
 
 		// check number of particles in the domain
 		total_particles = countParticlesInDomain(universe);
 		EXPECT_EQ(1, total_particles);
-
-		// check whether the particle was moved out of the domain
-		ASSERT_TRUE(a.particles.empty());
-		ASSERT_TRUE(b.particles.empty());
-		ASSERT_FALSE(c.particles.empty());
+		
 	}
 
 
@@ -662,17 +660,17 @@ namespace ipic3d {
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
 		// check whether the particle was moved out of the domain
-		ASSERT_FALSE(a.particles.empty());
+		ASSERT_TRUE(a.particles.empty());
 		ASSERT_TRUE(b.particles.empty());
-		ASSERT_TRUE(c.particles.empty());
+		ASSERT_FALSE(c.particles.empty());
 
-		EXPECT_NEAR(a.particles.front().position.x, 0.048, 1e-3);
-		EXPECT_NEAR(a.particles.front().position.y, 0.048, 1e-3);
-		EXPECT_NEAR(a.particles.front().position.z, 0.8, 1e-1);
+		EXPECT_NEAR(c.particles.front().position.x, 1.298, 1e-3);
+		EXPECT_NEAR(c.particles.front().position.y, 1.298, 1e-3);
+		EXPECT_NEAR(c.particles.front().position.z, 0.8, 1e-1);
 
-		EXPECT_NEAR(a.particles.front().velocity.x, 2.12, 1e-2);
-		EXPECT_NEAR(a.particles.front().velocity.y, 2.12, 1e-2);
-		EXPECT_NEAR(a.particles.front().velocity.z, 0.0, 1e-0);
+		EXPECT_NEAR(c.particles.front().velocity.x, -2.12, 1e-2);
+		EXPECT_NEAR(c.particles.front().velocity.y, -2.12, 1e-2);
+		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
 
 		// check number of particles in the domain
 		total_particles = countParticlesInDomain(universe);
@@ -683,29 +681,6 @@ namespace ipic3d {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
-
-		// now we push the same particle in the oposite direction 
-		Particle& p2 = a.particles.front();
-		p2.velocity.x = p2.velocity.y = -1.0;
-		niter = 1;
-		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
-
-		EXPECT_NEAR(c.particles.front().position.x, 1.464, 1e-3);
-		EXPECT_NEAR(c.particles.front().position.y, 1.464, 1e-3);
-		EXPECT_NEAR(c.particles.front().position.z, 0.8, 1e-1);
-
-		EXPECT_NEAR(c.particles.front().velocity.x, -0.84, 1e-2);
-		EXPECT_NEAR(c.particles.front().velocity.y, -0.84, 1e-2);
-		EXPECT_NEAR(c.particles.front().velocity.z, 0.0, 1e-0);
-
-		// check number of particles in the domain
-		total_particles = countParticlesInDomain(universe);
-		EXPECT_EQ(1, total_particles);
-
-		// check whether the particle was moved out of the domain
-		ASSERT_TRUE(a.particles.empty());
-		ASSERT_TRUE(b.particles.empty());
-		ASSERT_FALSE(c.particles.empty());
 	}
 
 
@@ -774,28 +749,46 @@ namespace ipic3d {
 		g.particles.push_back(p6);
 		h.particles.push_back(p7);
 
+		std::cout << __LINE__ << "\n";
+
 		// check number of particles in the domain
 		int total_particles = countParticlesInDomain(universe);
+
+		std::cout << __LINE__ << "\n";
+
 		EXPECT_EQ(8, total_particles);
+
+		std::cout << __LINE__ << "\n";
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
+
+		std::cout << __LINE__ << "\n";
 
 		// run the simulation
 		// number of steps
 		unsigned niter = 20;
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
+		std::cout << __LINE__ << "\n";
+
 		// check number of particles in the domain
 		total_particles = countParticlesInDomain(universe);
+
+		std::cout << __LINE__ << "\n";
+
 		EXPECT_EQ(8, total_particles);
 	   
+		std::cout << __LINE__ << "\n";
+
 		// verify the proper placement of particles 
 		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
+
+		std::cout << __LINE__ << "\n";
 	}
 
 } // end namespace ipic3d
