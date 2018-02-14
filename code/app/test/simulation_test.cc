@@ -749,46 +749,31 @@ namespace ipic3d {
 		g.particles.push_back(p6);
 		h.particles.push_back(p7);
 
-		std::cout << __LINE__ << "\n";
-
 		// check number of particles in the domain
 		int total_particles = countParticlesInDomain(universe);
 
-		std::cout << __LINE__ << "\n";
-
 		EXPECT_EQ(8, total_particles);
-
-		std::cout << __LINE__ << "\n";
 	   
 		// verify the proper placement of particles 
 		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
-
-		std::cout << __LINE__ << "\n";
 
 		// run the simulation
 		// number of steps
 		unsigned niter = 20;
 		simulateSteps<detail::default_particle_to_field_projector, detail::default_field_solver, detail::default_particle_mover>(niter,universe);
 
-		std::cout << __LINE__ << "\n";
-
 		// check number of particles in the domain
 		total_particles = countParticlesInDomain(universe);
 
-		std::cout << __LINE__ << "\n";
-
 		EXPECT_EQ(8, total_particles);
-	   
-		std::cout << __LINE__ << "\n";
 
 		// verify the proper placement of particles 
 		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
 			ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, universe.cells[pos], pos) );
 		});
 
-		std::cout << __LINE__ << "\n";
 	}
 
 } // end namespace ipic3d
