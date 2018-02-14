@@ -676,7 +676,7 @@ namespace ipic3d {
 		}
 		
 		if (incorrectlyPlacedParticles) {
-			std::cout << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
+			std::cerr << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
 			incorrectlyPlacedParticles = 0;
 			return false;
 		}
