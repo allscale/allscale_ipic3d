@@ -25,7 +25,15 @@ if [ "$#" -eq 1 ]; then
 	CASE="$1"
 fi
 
+REFERENCE_PATH="@PROJECT_SOURCE_DIR@/../outputs/${CASE}.static.out"
+
 echo "RESULT CHECK: Checking for problem case \"${CASE}\""
+
+# check if reference file present and not empty
+if [ ! -s "$REFERENCE_PATH" ] ; then
+	echo "RESULT CHECK: [FAILED] File $REFERENCE_PATH is missing or empty!"
+	exit 1
+fi
 
 # prepare additional arguments
 if [ ! -z "$RUNNING_IN_ALLSCALE_RUNTIME" ]; then
@@ -37,7 +45,7 @@ NUM_WORKERS="$NPROC" @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inp
 
 # compare output
 set +e
-bash -c "diff <(sort ${CASE}.out) <(sort @PROJECT_SOURCE_DIR@/../outputs/${CASE}.static.out)"
+bash -c "diff <(sort ${CASE}.out) <(sort $REFERENCE_PATH)"
 RETVAL=$?
 set -e
 
