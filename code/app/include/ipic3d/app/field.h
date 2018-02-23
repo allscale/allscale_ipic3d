@@ -460,9 +460,9 @@ namespace ipic3d {
 		// TODO: implement output facilities for large problems
 		assert_le(field.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large field at this time";
 
-		auto& manager = allscale::api::core::FileIOManager::getInstance();
 		// output field values
-		allscale::api::user::algorithm::async([=,&field,&manager]() {
+		allscale::api::user::algorithm::async([=,&field]() {
+			auto& manager = allscale::api::core::FileIOManager::getInstance();
 			auto text = manager.createEntry(outputFilename);
 			auto out = manager.openOutputStream(text);
 
@@ -472,10 +472,11 @@ namespace ipic3d {
 			for(std::int64_t i = 0; i < field.size().x; ++i) {
 				for(std::int64_t j = 0; j < field.size().y; ++j) {
 					for(std::int64_t k = 0; k < field.size().z; ++k) {
+						coordinate_type p{i,j,k};
 						// write index
-						out << i << "," << j << "," << k << ":";
+						out << p.x << "," << p.y << "," << p.z << ":";
 						// write data
-						out << field[{i, j, k}].E << "|" << field[{i, j, k}].B << "|" << field[{i, j, k}].Bext << "\n";
+						out << field[p].E << "|" << field[p].B << "|" << field[p].Bext << "\n";
 					}
 				}
 			}
@@ -503,10 +504,11 @@ namespace ipic3d {
 			for(std::int64_t i = 0; i < bcField.size().x; ++i) {
 				for(std::int64_t j = 0; j < bcField.size().y; ++j) {
 					for(std::int64_t k = 0; k < bcField.size().z; ++k) {
+						coordinate_type p{i,j,k};
 						// write index
-						out << i << "," << j << "," << k << ":";
+						out << p.x << "," << p.y << "," << p.z << ":";
 						// write data
-						out << bcField[{i, j, k}].Bc << "\n";
+						out << bcField[p].Bc << "\n";
 					}
 				}
 			}
