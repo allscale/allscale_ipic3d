@@ -317,12 +317,10 @@ namespace ipic3d {
 		h.particles.push_back(p);
 
 		// verify the proper particles count output
-		allscale::api::core::BufferIOManager manager;
-		auto text = manager.createEntry("text");
-		auto out = manager.openOutputStream(text);
-		outputNumberOfParticlesPerCell(universe.cells, out);
-		manager.close(out);
+		outputNumberOfParticlesPerCell(universe.cells, "text");
 
+		auto& manager = allscale::api::core::FileIOManager::getInstance();
+		auto text = manager.createEntry("text");
 		auto in = manager.openInputStream(text);
 		coordinate_type size;
 		char separator;

@@ -456,50 +456,70 @@ namespace ipic3d {
 	/**
 	* This function outputs all field values
 	*/
-	template<typename StreamObject>
-	void outputFieldGrids(const Field& field, const BcField& bcField, StreamObject& streamObject) {
+	void outputFieldGrids(const Field& field, const BcField& bcField, const std::string& outputFilename) {
 		// TODO: implement output facilities for large problems
 		assert_le(field.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large field at this time";
 
-		// output dimensions
-		streamObject << field.size() << "\n";
-
+		auto& manager = allscale::api::core::FileIOManager::getInstance();
 		// output field values
-		allscale::api::user::algorithm::pfor(field.size(), [&](const auto& index) {
-			streamObject.atomic([&](auto& out) {
-				// write index
-				out << index.x << "," << index.y << "," << index.z << ":";
-				// write data
-				out << field[index].E << "|" << field[index].B << "|" << field[index].Bext << "\n";
-			});
-		});
+		allscale::api::user::algorithm::async([=,&field,&manager]() {
+			auto text = manager.createEntry(outputFilename);
+			auto out = manager.openOutputStream(text);
 
-		streamObject << "\n";
+			// output dimensions
+			out << field.size() << "\n";
 
-		// output dimensions
-		streamObject << bcField.size() << "\n";
+			for(std::int64_t i = 0; i < field.size().x; ++i) {
+				for(std::int64_t j = 0; j < field.size().y; ++j) {
+					for(std::int64_t k = 0; k < field.size().z; ++k) {
+						// write index
+						out << i << "," << j << "," << k << ":";
+						// write data
+						out << field[{i, j, k}].E << "|" << field[{i, j, k}].B << "|" << field[{i, j, k}].Bext << "\n";
+					}
+				}
+			}
+			out << "\n";
+			manager.close(out);
+		}).wait();
+		//allscale::api::user::algorithm::pfor(field.size(), [&](const auto& index) {
+		//	streamObject.atomic([&](auto& out) {
+		//		// write index
+		//		out << index.x << "," << index.y << "," << index.z << ":";
+		//		// write data
+		//		out << field[index].E << "|" << field[index].B << "|" << field[index].Bext << "\n";
+		//	});
+		//});
 
 		// output bc field values
-		allscale::api::user::algorithm::pfor(bcField.size(), [&](const auto& index) {
-			streamObject.atomic([&](auto& out) {
-				// write index
-				out << index.x << "," << index.y << "," << index.z << ":";
-				out << bcField[index].Bc << "\n"; 
-			});
-		});
+		allscale::api::user::algorithm::async([=,&bcField]() {
+			auto& manager = allscale::api::core::FileIOManager::getInstance();
+			auto text = manager.createEntry(outputFilename);
+			auto out = manager.openOutputStream(text);
 
-		streamObject << "\n";
-	}
+			// output dimensions
+			out << bcField.size() << "\n";
 
-	/**
-	* This function outputs all field values using AllScale IO
-	*/
-	void outputFieldGrids(const Field& field, const BcField& bcField, std::string& filename) {
-		auto& manager = allscale::api::core::FileIOManager::getInstance();
-		auto text = manager.createEntry(filename);
-		auto out = manager.openOutputStream(text);
-		outputFieldGrids(field, bcField, out);
-		manager.close(out);
+			for(std::int64_t i = 0; i < bcField.size().x; ++i) {
+				for(std::int64_t j = 0; j < bcField.size().y; ++j) {
+					for(std::int64_t k = 0; k < bcField.size().z; ++k) {
+						// write index
+						out << i << "," << j << "," << k << ":";
+						// write data
+						out << bcField[{i, j, k}].Bc << "\n";
+					}
+				}
+			}
+			out << "\n";
+			manager.close(out);
+		}).wait();
+		//allscale::api::user::algorithm::pfor(bcField.size(), [&](const auto& index) {
+		//	streamObject.atomic([&](auto& out) {
+		//		// write index
+		//		out << index.x << "," << index.y << "," << index.z << ":";
+		//		out << bcField[index].Bc << "\n"; 
+		//	});
+		//});
 	}
 
 } // end namespace ipic3d

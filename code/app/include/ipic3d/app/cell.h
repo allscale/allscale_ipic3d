@@ -6,6 +6,7 @@
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/algorithm/pfor.h"
+#include "allscale/api/user/algorithm/async.h"
 #include "allscale/api/user/algorithm/preduce.h"
 #include "allscale/utils/static_grid.h"
 
@@ -769,22 +770,40 @@ namespace ipic3d {
 	/**
 	* This function outputs the number of particles per cell
 	*/
-	template<typename StreamObject>
-	void outputNumberOfParticlesPerCell(const Cells& cells, StreamObject& streamObject) {
+	void outputNumberOfParticlesPerCell(const Cells& cells, const std::string& outputFilename) {
 		// TODO: implement output facilities for large problems
 		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
-		// output dimensions
-		streamObject << cells.size() << "\n";
 
 		// output particles per cell
-		allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
-			streamObject.atomic([&](auto& out) { 
-				out << index.x << "," << index.y << "," << index.z << ":";
-				out << cells[index].particles.size() << "\n"; });
-		});
+		allscale::api::user::algorithm::async([=,&cells]() {
+			auto& manager = allscale::api::core::FileIOManager::getInstance();
+			auto text = manager.createEntry(outputFilename);
+			auto out = manager.openOutputStream(text);
 
-		streamObject << "\n";
+			// output dimensions
+			out << cells.size() << "\n";
+
+			for(std::int64_t i = 0; i < cells.size().x; ++i) {
+				for(std::int64_t j = 0; j < cells.size().y; ++j) {
+					for(std::int64_t k = 0; k < cells.size().z; ++k) {
+						out << i << "," << j << "," << k << ":";
+						out << cells[{i, j, k}].particles.size() << "\n";
+					}
+				}
+			}
+
+			//});
+			out << "\n";
+
+			manager.close(out);
+		}).wait();
+
+		//allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
+		//	streamObject.atomic([&](auto& out) { 
+		//		out << index.x << "," << index.y << "," << index.z << ":";
+		//		out << cells[index].particles.size() << "\n"; });
+		//});
 	}
 
 	/**
@@ -808,17 +827,6 @@ namespace ipic3d {
 			}
 		}
 
-	}
-
-	/**
-	* This function outputs the number of particles per cell using AllScale IO
-	*/
-	void outputNumberOfParticlesPerCell(const Cells& cells, const std::string& filename) {
-		auto& manager = allscale::api::core::FileIOManager::getInstance();
-		auto text = manager.createEntry(filename);
-		auto out = manager.openOutputStream(text);
-		outputNumberOfParticlesPerCell(cells, out);
-		manager.close(out);
 	}
 
 	/**
