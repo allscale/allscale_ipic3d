@@ -563,33 +563,56 @@ namespace ipic3d {
 		// get buffers for particles to be send to neighbors
 		utils::Coordinate<3> size = transfers.size();
 		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
-		allscale::utils::StaticGrid<std::vector<Particle>*,3,3,3> neighbors;
-		for(int i = 0; i<3; i++) {
-			for(int j = 0; j<3; j++) {
-				for(int k = 0; k<3; k++) {
-					// wraps indices both for overflow and underflow (-1 is mapped to size - 1)
-					// implementing periodic boundary conditions
-					auto wrap = [](const auto value, const auto delta, const auto max) {
-						if (delta >= 0)
-							return (value + delta) % max;
-						else
-							return ((value + delta) + max * (-delta)) % max;
-					};
 
-					const auto offset = utils::Coordinate<3>{ i - 1,j - 1,k - 1 } *2;
-					auto targetPos = centerIndex + offset;
+		// for increased precision, we do not want a transitive closure of the actual transfer buffer dependencies
+		{
+			using allscale::api::core::sema::needs_write_access;
+			using namespace allscale::api::user::data;
 
-					// add user-defined data requirement
-					allscale::api::core::sema::needs_write_access(transfers,allscale::api::user::data::GridRegion<3>::single(targetPos));
+			// get center (moved by size to keep % operator positive)
+			auto base = centerIndex + size;
 
-					targetPos[0] = wrap(centerIndex[0], offset[0], size[0]);
-					targetPos[1] = wrap(centerIndex[1], offset[1], size[1]);
-					targetPos[2] = wrap(centerIndex[2], offset[2], size[2]);
+			// explicit enumeration of dependencies
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, -2, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, -2,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, -2, +2 }) % size));
 
-					neighbors[{i,j,k}] = &transfers[targetPos];
-				}
-			}
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2,  0, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2,  0,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2,  0, +2 }) % size));
+
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, +2, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, +2,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, +2, +2 }) % size));
+
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, -2, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, -2,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, -2, +2 }) % size));
+
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0,  0, -2 }) % size));
+			//needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0,  0,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0,  0, +2 }) % size));
+
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, +2, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, +2,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, +2, +2 }) % size));
+
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, -2, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, -2,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, -2, +2 }) % size));
+
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2,  0, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2,  0,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2,  0, +2 }) % size));
+
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, +2, -2 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, +2,  0 }) % size));
+			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, +2, +2 }) % size));
+
+
 		}
+
+
 
 		// create buffer of remaining particles
 		std::vector<Particle> remaining;
@@ -597,6 +620,23 @@ namespace ipic3d {
 
 		{
 			allscale::api::core::sema::no_more_dependencies();
+
+			allscale::utils::StaticGrid<std::vector<Particle>*,3,3,3> neighbors;
+			for(int i = 0; i<3; i++) {
+				for(int j = 0; j<3; j++) {
+					for(int k = 0; k<3; k++) {
+
+						// get the current offset
+						const auto offset = utils::Coordinate<3>{ i - 1,j - 1,k - 1 } *2;
+
+						// add the wrap-around support
+						auto targetPos = (centerIndex + size + offset) % size;
+
+						// index this buffer to the neighboring cell
+						neighbors[{i,j,k}] = &transfers[targetPos];
+					}
+				}
+			}
 
 			// sort out particles
 			std::vector<std::vector<Particle>*> targets(cell.particles.size());
@@ -633,7 +673,7 @@ namespace ipic3d {
 
 				// recompute potentially new relative position
 				relPos = p.position - getCenterOfCell(pos, universeProperties);
-				
+
 				// send particle to neighboring cell if required
 				if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
 
@@ -641,7 +681,7 @@ namespace ipic3d {
 					int j = (relPos.y < -halfWidth.y) ? 0 : ((relPos.y > halfWidth.y) ? 2 : 1);
 					int k = (relPos.z < -halfWidth.z) ? 0 : ((relPos.z > halfWidth.z) ? 2 : 1);
 
-					targets[index] = neighbors[{i, j, k}];					
+					targets[index] = neighbors[{i, j, k}];
 				} else {
 					// keep particle
 					targets[index] = &remaining;
