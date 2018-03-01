@@ -10,7 +10,7 @@ set -e
 export NPROC="${NPROC:-4}"
 
 # set a cpu time limit (in seconds)
-ulimit -t 1200
+ulimit -t 3600
 
 # default to "test" problem case if no other case was specified, print usage if requested
 CASE="test"
