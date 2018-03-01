@@ -41,7 +41,7 @@ if [ ! -z "$RUNNING_IN_ALLSCALE_RUNTIME" ]; then
 fi
 
 # run application
-NUM_WORKERS="$NPROC" @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp $ADDITIONAL_ARGUMENTS
+NUM_WORKERS="$NPROC" /usr/bin/time -v @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp $ADDITIONAL_ARGUMENTS
 
 # compare output
 set +e
