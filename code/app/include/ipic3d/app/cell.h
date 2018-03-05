@@ -561,7 +561,6 @@ namespace ipic3d {
 
 		// -- migrate particles to other cells if boundaries are crossed --
 
-
 		// create buffer of remaining particles
 		std::vector<Particle> remaining;
 		remaining.reserve(cell.particles.size());
@@ -570,19 +569,109 @@ namespace ipic3d {
 
 			auto size = universeProperties.size;
 
-			allscale::utils::StaticGrid<std::vector<Particle>*,3,3,3> neighbors;
-			for(int i = 0; i<3; i++) {
-				for(int j = 0; j<3; j++) {
-					for(int k = 0; k<3; k++) {
+			std::vector<Particle>* neighbors[3][3][3];
 
-						// get neighbor cell in this direction (including wrap-around)
-						auto neighbor = (pos + utils::Coordinate<3>{ i-1, j-1, k-1 } + size) % size;
+			// NOTE: due to an unimplemented feature in the analysis, this loop needs to be unrolled (work in progress)
+//			for(int i = 0; i<3; i++) {
+//				for(int j = 0; j<3; j++) {
+//					for(int k = 0; k<3; k++) {
+//
+//						// get neighbor cell in this direction (including wrap-around)
+//						auto neighbor = (pos + utils::Coordinate<3>{ i-1, j-1, k-1 } + size) % size;
+//
+//						// index this buffer to the neighboring cell
+//						neighbors[i][j][k] = &transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
+//					}
+//				}
+//			}
 
-						// index this buffer to the neighboring cell
-						neighbors[{i,j,k}] = &transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
-					}
-				}
-			}
+			// -- unroll begin --
+
+			neighbors[0][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, -1 } + size) % size,TransferDirection{ 2, 2, 2 });
+			neighbors[0][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1,  0 } + size) % size,TransferDirection{ 2, 2, 1 });
+			neighbors[0][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1,  1 } + size) % size,TransferDirection{ 2, 2, 0 });
+
+			neighbors[0][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  0, -1 } + size) % size,TransferDirection{ 2, 1, 2 });
+			neighbors[0][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  0,  0 } + size) % size,TransferDirection{ 2, 1, 1 });
+			neighbors[0][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  0,  1 } + size) % size,TransferDirection{ 2, 1, 0 });
+
+			neighbors[0][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  1, -1 } + size) % size,TransferDirection{ 2, 0, 2 });
+			neighbors[0][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  1,  0 } + size) % size,TransferDirection{ 2, 0, 1 });
+			neighbors[0][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  1,  1 } + size) % size,TransferDirection{ 2, 0, 0 });
+
+
+			neighbors[1][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, -1 } + size) % size,TransferDirection{ 1, 2, 2 });
+			neighbors[1][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1,  0 } + size) % size,TransferDirection{ 1, 2, 1 });
+			neighbors[1][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1,  1 } + size) % size,TransferDirection{ 1, 2, 0 });
+
+			neighbors[1][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  0, -1 } + size) % size,TransferDirection{ 1, 1, 2 });
+			neighbors[1][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  0,  0 } + size) % size,TransferDirection{ 1, 1, 1 });
+			neighbors[1][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  0,  1 } + size) % size,TransferDirection{ 1, 1, 0 });
+
+			neighbors[1][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  1, -1 } + size) % size,TransferDirection{ 1, 0, 2 });
+			neighbors[1][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  1,  0 } + size) % size,TransferDirection{ 1, 0, 1 });
+			neighbors[1][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  1,  1 } + size) % size,TransferDirection{ 1, 0, 0 });
+
+
+			neighbors[2][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, -1 } + size) % size,TransferDirection{ 0, 2, 2 });
+			neighbors[2][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1,  0 } + size) % size,TransferDirection{ 0, 2, 1 });
+			neighbors[2][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1,  1 } + size) % size,TransferDirection{ 0, 2, 0 });
+
+			neighbors[2][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  0, -1 } + size) % size,TransferDirection{ 0, 1, 2 });
+			neighbors[2][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  0,  0 } + size) % size,TransferDirection{ 0, 1, 1 });
+			neighbors[2][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  0,  1 } + size) % size,TransferDirection{ 0, 1, 0 });
+
+			neighbors[2][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1, -1 } + size) % size,TransferDirection{ 0, 0, 2 });
+			neighbors[2][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1,  0 } + size) % size,TransferDirection{ 0, 0, 1 });
+			neighbors[2][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1,  1 } + size) % size,TransferDirection{ 0, 0, 0 });
+
+			// -- unroll end --
+
+
+			// -- (hopefully) temporary fix - begin --
+
+			// circumventing another bug (work in progress): perform a direct write operation on those buffers, not through data-dependent indirection
+			// TODO: remove once supported by analysis
+
+			neighbors[0][0][0]->clear();
+			neighbors[0][0][1]->clear();
+			neighbors[0][0][2]->clear();
+
+			neighbors[0][1][0]->clear();
+			neighbors[0][1][1]->clear();
+			neighbors[0][1][2]->clear();
+
+			neighbors[0][2][0]->clear();
+			neighbors[0][2][1]->clear();
+			neighbors[0][2][2]->clear();
+
+
+			neighbors[1][0][0]->clear();
+			neighbors[1][0][1]->clear();
+			neighbors[1][0][2]->clear();
+
+			neighbors[1][1][0]->clear();
+			neighbors[1][1][1]->clear();
+			neighbors[1][1][2]->clear();
+
+			neighbors[1][2][0]->clear();
+			neighbors[1][2][1]->clear();
+			neighbors[1][2][2]->clear();
+
+
+			neighbors[2][0][0]->clear();
+			neighbors[2][0][1]->clear();
+			neighbors[2][0][2]->clear();
+
+			neighbors[2][1][0]->clear();
+			neighbors[2][1][1]->clear();
+			neighbors[2][1][2]->clear();
+
+			neighbors[2][2][0]->clear();
+			neighbors[2][2][1]->clear();
+			neighbors[2][2][2]->clear();
+
+			// -- (hopefully) temporary fix - end --
 
 			// sort out particles
 			std::vector<std::vector<Particle>*> targets(cell.particles.size());
@@ -627,7 +716,7 @@ namespace ipic3d {
 					int j = (relPos.y < -halfWidth.y) ? 0 : ((relPos.y > halfWidth.y) ? 2 : 1);
 					int k = (relPos.z < -halfWidth.z) ? 0 : ((relPos.z > halfWidth.z) ? 2 : 1);
 
-					targets[index] = neighbors[{i, j, k}];
+					targets[index] = neighbors[i][j][k];
 				} else {
 					// keep particle
 					targets[index] = &remaining;
@@ -685,23 +774,70 @@ namespace ipic3d {
 		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 		// import particles sent to this cell
+
+//		for(int i = 0; i<3; i++) {
+//			for(int j = 0; j<3; j++) {
+//				for(int k = 0; k<3; k++) {
+//
+//					// skip the center (not relevant)
+////					if (i == 1 && j == 1 && k == 1) continue;
+//
+//					// obtain transfer buffer
+//					auto& in = transfers.getBuffer(pos,TransferDirection(i,j,k));
+//
+//					// import particles
+//					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
+//					in.clear();
+//				}
+//			}
+//		}
+
+
+		// NOTE: due to an unimplemented feature in the analysis, this loop needs to be unrolled (work in progress)
+
+		auto import = [&](auto& in) {
+			cell.particles.insert(cell.particles.end(), in.begin(), in.end());
+			in.clear();
+		};
+
 		// along all 26 directions (center is not relevant)
-		for(int i = 0; i<3; i++) {
-			for(int j = 0; j<3; j++) {
-				for(int k = 0; k<3; k++) {
+		import(transfers.getBuffer(pos,TransferDirection(0,0,0)));
+		import(transfers.getBuffer(pos,TransferDirection(0,0,1)));
+		import(transfers.getBuffer(pos,TransferDirection(0,0,2)));
 
-					// skip the center (not relevant)
-					if (i == 1 && j == 1 && k == 1) continue;
+		import(transfers.getBuffer(pos,TransferDirection(0,1,0)));
+		import(transfers.getBuffer(pos,TransferDirection(0,1,1)));
+		import(transfers.getBuffer(pos,TransferDirection(0,1,2)));
 
-					// obtain transfer buffer
-					auto& in = transfers.getBuffer(pos,TransferDirection(i,j,k));
+		import(transfers.getBuffer(pos,TransferDirection(0,2,0)));
+		import(transfers.getBuffer(pos,TransferDirection(0,2,1)));
+		import(transfers.getBuffer(pos,TransferDirection(0,2,2)));
 
-					// import particles
-					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
-					in.clear();
-				}
-			}
-		}
+
+		import(transfers.getBuffer(pos,TransferDirection(1,0,0)));
+		import(transfers.getBuffer(pos,TransferDirection(1,0,1)));
+		import(transfers.getBuffer(pos,TransferDirection(1,0,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(1,1,0)));
+		// skipped: import(transfers.getBuffer(pos,TransferDirection(1,1,1)));
+		import(transfers.getBuffer(pos,TransferDirection(1,1,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(1,2,0)));
+		import(transfers.getBuffer(pos,TransferDirection(1,2,1)));
+		import(transfers.getBuffer(pos,TransferDirection(1,2,2)));
+
+
+		import(transfers.getBuffer(pos,TransferDirection(2,0,0)));
+		import(transfers.getBuffer(pos,TransferDirection(2,0,1)));
+		import(transfers.getBuffer(pos,TransferDirection(2,0,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(2,1,0)));
+		import(transfers.getBuffer(pos,TransferDirection(2,1,1)));
+		import(transfers.getBuffer(pos,TransferDirection(2,1,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(2,2,0)));
+		import(transfers.getBuffer(pos,TransferDirection(2,2,1)));
+		import(transfers.getBuffer(pos,TransferDirection(2,2,2)));
 
 		// verify correct placement of the particles
 		assert_true(verifyCorrectParticlesPositionInCell(universeProperties, cell, pos));
