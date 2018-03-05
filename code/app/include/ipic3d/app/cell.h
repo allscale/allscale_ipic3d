@@ -10,12 +10,13 @@
 #include "allscale/api/user/algorithm/preduce.h"
 #include "allscale/utils/static_grid.h"
 
-#include "ipic3d/app/vector.h"
-#include "ipic3d/app/particle.h"
 #include "ipic3d/app/field.h"
+#include "ipic3d/app/parameters.h"
+#include "ipic3d/app/particle.h"
+#include "ipic3d/app/transfer_buffer.h"
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
-#include "ipic3d/app/parameters.h"
+#include "ipic3d/app/vector.h"
 #include "ipic3d/app/ziggurat_normal_distribution.h"
 
 namespace ipic3d {
@@ -554,64 +555,11 @@ namespace ipic3d {
 	 * @param pos the coordinates of this cell in the grid
 	 * @param transfers a grid of buffers to send particles to
 	 */
-	void exportParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+	void exportParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, TransferBuffers& transfers) {
 
 		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 		// -- migrate particles to other cells if boundaries are crossed --
-
-		// get buffers for particles to be send to neighbors
-		utils::Coordinate<3> size = transfers.size();
-		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
-
-		// for increased precision, we do not want a transitive closure of the actual transfer buffer dependencies
-		{
-			using allscale::api::core::sema::needs_write_access;
-			using namespace allscale::api::user::data;
-
-			// get center (moved by size to keep % operator positive)
-			auto base = centerIndex + size;
-
-			// explicit enumeration of dependencies
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, -2, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, -2,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, -2, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2,  0, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2,  0,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2,  0, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, +2, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, +2,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ -2, +2, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, -2, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, -2,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, -2, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0,  0, -2 }) % size));
-			//needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0,  0,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0,  0, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, +2, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, +2,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{  0, +2, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, -2, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, -2,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, -2, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2,  0, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2,  0,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2,  0, +2 }) % size));
-
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, +2, -2 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, +2,  0 }) % size));
-			needs_write_access(transfers,GridRegion<3>::single((base + utils::Coordinate<3>{ +2, +2, +2 }) % size));
-
-
-		}
-
 
 
 		// create buffer of remaining particles
@@ -619,21 +567,19 @@ namespace ipic3d {
 		remaining.reserve(cell.particles.size());
 
 		{
-			allscale::api::core::sema::no_more_dependencies();
+
+			auto size = universeProperties.size;
 
 			allscale::utils::StaticGrid<std::vector<Particle>*,3,3,3> neighbors;
 			for(int i = 0; i<3; i++) {
 				for(int j = 0; j<3; j++) {
 					for(int k = 0; k<3; k++) {
 
-						// get the current offset
-						const auto offset = utils::Coordinate<3>{ i - 1,j - 1,k - 1 } *2;
-
-						// add the wrap-around support
-						auto targetPos = (centerIndex + size + offset) % size;
+						// get neighbor cell in this direction (including wrap-around)
+						auto neighbor = (pos + utils::Coordinate<3>{ i-1, j-1, k-1 } + size) % size;
 
 						// index this buffer to the neighboring cell
-						neighbors[{i,j,k}] = &transfers[targetPos];
+						neighbors[{i,j,k}] = &transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
 					}
 				}
 			}
@@ -734,24 +680,23 @@ namespace ipic3d {
 	* @param pos the coordinates of this cell in the grid
 	* @param transfers a grid of buffers to import particles from
 	*/
-	void importParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+	void importParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, TransferBuffers& transfers) {
 
 		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 		// import particles sent to this cell
-		utils::Coordinate<3> size = transfers.size();
-		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
-
+		// along all 26 directions (center is not relevant)
 		for(int i = 0; i<3; i++) {
 			for(int j = 0; j<3; j++) {
 				for(int k = 0; k<3; k++) {
-					// iterates through all buffers attached to the cell at the given position
-					auto cur = centerIndex + utils::Coordinate<3>{i-1,j-1,k-1};
-					if (cur[0] < 0 || cur[0] >= size[0]) continue;
-					if (cur[1] < 0 || cur[1] >= size[1]) continue;
-					if (cur[2] < 0 || cur[2] >= size[2]) continue;
 
-					auto& in = transfers[cur];
+					// skip the center (not relevant)
+					if (i == 1 && j == 1 && k == 1) continue;
+
+					// obtain transfer buffer
+					auto& in = transfers.getBuffer(pos,TransferDirection(i,j,k));
+
+					// import particles
 					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
 					in.clear();
 				}

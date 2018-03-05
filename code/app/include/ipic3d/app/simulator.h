@@ -4,6 +4,7 @@
 
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/field.h"
+#include "ipic3d/app/transfer_buffer.h"
 #include "ipic3d/app/universe.h"
 
 namespace ipic3d {
@@ -107,7 +108,7 @@ namespace ipic3d {
 		// -- auxiliary structures for communication --
 
 		// create a buffer for particle transfers
-		Grid<std::vector<Particle>> particleTransfers(size * 3);	// a grid of buffers for transferring particles between cells
+		TransferBuffers particleTransfers(size);
 
 #ifdef ENABLE_DEBUG_OUTPUT
 		// create the output file
@@ -203,7 +204,7 @@ namespace ipic3d {
 		};
 
 		struct default_particle_mover {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, Grid<std::vector<Particle>>& particleTransfers) const {
+			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, TransferBuffers& particleTransfers) const {
 				moveParticles(universeProperties,cell,pos,field);
 				exportParticles(universeProperties,cell,pos,particleTransfers);
 			}
