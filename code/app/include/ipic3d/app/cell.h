@@ -510,8 +510,7 @@ namespace ipic3d {
 		for(int i=0; i<2; i++) {
 			for(int j=0; j<2; j++) {
 				for(int k=0; k<2; k++) {
-					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-					cur += utils::Coordinate<3>(1); // shift because of the boundary cells
+					utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
 					Es[i][j][k] = field[cur].E;
 					Bs[i][j][k] = field[cur].B;
 				}
@@ -572,6 +571,7 @@ namespace ipic3d {
 			std::vector<Particle>* neighbors[3][3][3];
 
 			// NOTE: due to an unimplemented feature in the analysis, this loop needs to be unrolled (work in progress)
+
 //			for(int i = 0; i<3; i++) {
 //				for(int j = 0; j<3; j++) {
 //					for(int k = 0; k<3; k++) {
@@ -580,7 +580,11 @@ namespace ipic3d {
 //						auto neighbor = (pos + utils::Coordinate<3>{ i-1, j-1, k-1 } + size) % size;
 //
 //						// index this buffer to the neighboring cell
-//						neighbors[i][j][k] = &transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
+//						auto& buffer = transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
+//						neighbors[i][j][k] = &buffer;
+//
+//						// clear buffer from particles moved in the last iteration
+//						buffer.clear();
 //					}
 //				}
 //			}
@@ -625,14 +629,6 @@ namespace ipic3d {
 			neighbors[2][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1,  0 } + size) % size,TransferDirection{ 0, 0, 1 });
 			neighbors[2][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1,  1 } + size) % size,TransferDirection{ 0, 0, 0 });
 
-			// -- unroll end --
-
-
-			// -- (hopefully) temporary fix - begin --
-
-			// circumventing another bug (work in progress): perform a direct write operation on those buffers, not through data-dependent indirection
-			// TODO: remove once supported by analysis
-
 			neighbors[0][0][0]->clear();
 			neighbors[0][0][1]->clear();
 			neighbors[0][0][2]->clear();
@@ -671,7 +667,7 @@ namespace ipic3d {
 			neighbors[2][2][1]->clear();
 			neighbors[2][2][2]->clear();
 
-			// -- (hopefully) temporary fix - end --
+			// -- unroll end --
 
 			// sort out particles
 			std::vector<std::vector<Particle>*> targets(cell.particles.size());
@@ -787,7 +783,6 @@ namespace ipic3d {
 //
 //					// import particles
 //					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
-//					in.clear();
 //				}
 //			}
 //		}
@@ -795,9 +790,12 @@ namespace ipic3d {
 
 		// NOTE: due to an unimplemented feature in the analysis, this loop needs to be unrolled (work in progress)
 
-		auto import = [&](auto& in) {
-			cell.particles.insert(cell.particles.end(), in.begin(), in.end());
-			in.clear();
+		auto import = [&](const auto& in) {
+			if (in.empty()) return;
+			auto& cur = cell.particles;
+			auto oldSize = cur.size();
+			cur.resize(oldSize + in.size());
+			std::memcpy(&cur[oldSize],&in[0],sizeof(Particle) * in.size());
 		};
 
 		// along all 26 directions (center is not relevant)
