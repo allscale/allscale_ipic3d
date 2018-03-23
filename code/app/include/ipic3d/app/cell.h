@@ -5,7 +5,6 @@
 
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/data/scalar.h"
 #include "allscale/api/user/algorithm/pfor.h"
 #include "allscale/api/user/algorithm/async.h"
 #include "allscale/api/user/algorithm/preduce.h"
@@ -285,31 +284,26 @@ namespace ipic3d {
 		// get a private copy of the distribution generator
 		auto next = dist;
 
-		// create a shared particle buffer
-		allscale::api::user::data::Scalar<std::vector<Particle>> buffer;
-
 		// just some info about the progress
 		std::cout << "Sorting in particles ...\n";
 
-		// insert particles in patches (of 1 GB each)
-		const std::uint64_t patch_size = (1<<30)/sizeof(Particle);
+		// insert particles in patches (of 4MB each)
+		const std::uint64_t patch_size = (1<<22)/sizeof(Particle);
 		for(std::uint64_t p=0; p<numParticles; p+=patch_size) {
 
 			// generate list of particles
-			allscale::api::user::algorithm::async([&](){
-				std::vector<Particle>& particles = buffer.get();
-				particles.clear();
-				auto current_patch = std::min(patch_size,numParticles-p);
-				particles.resize(current_patch);
-				for(std::uint64_t i=0; i<current_patch; ++i) {
-					auto cur = next();
-					while(!isInsideUniverse(properties,cur)) cur = next();
-					particles[i] = cur;
-				}
-			}).get();
+			auto current_patch = std::min(patch_size,numParticles-p);
+			std::vector<Particle> particles(current_patch);
+			for(std::uint64_t i=0; i<current_patch; ++i) {
+				auto cur = next();
+				while(!isInsideUniverse(properties,cur)) cur = next();
+				particles[i] = cur;
+			}
+
+			std::cout << "Submitting particles " << p << " - " << (p+current_patch) << " ... \n";
 
 			// distribute particles randomly
-			pfor(properties.size, [=,&cells,&buffer](const auto& pos) {
+			pfor(properties.size, [=,&cells](const auto& pos) {
 
 				// get targeted cell
 				auto& cell = cells[pos];
@@ -320,7 +314,7 @@ namespace ipic3d {
 				Vector3<double> hig = low + width;
 
 				// filter out local particles
-				for(const auto& cur : buffer.get()) {
+				for(const auto& cur : particles) {
 					if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
 						cell.particles.push_back(cur);
 					}
@@ -333,6 +327,67 @@ namespace ipic3d {
 		// done
 		return cells;
 	}
+
+	Cells initCells(const UniverseProperties& properties, std::uint64_t numParticles, const distribution::uniform<>&) {
+		using allscale::api::user::algorithm::pfor;
+
+		// the 3-D grid of cells
+		auto gridSize = properties.size;
+		Cells cells(gridSize);
+
+		// just some info about the progress
+		std::cout << "Sorting in uniformly distributed particles ...\n";
+
+		// compute particles per cell
+		auto numCells = properties.size.x * properties.size.y * properties.size.z;
+		std::uint64_t particlesPerCell = numParticles / numCells;
+		std::uint64_t remaining = numParticles % numCells;
+
+		std::cout << "  particles / cell: " << particlesPerCell << " (+1)\n";
+
+		// initialize each cell in parallel
+		pfor(properties.size, [=,&cells](const auto& pos) {
+
+			// get targeted cell
+			auto& cell = cells[pos];
+
+			// get cell corners
+			auto& width = properties.cellWidth;
+			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
+			Vector3<double> hig = low + width;
+
+			// create a uniform distribution
+			auto seed = ((pos.x * 1023) + pos.y) * 1023 + pos.z;
+
+			// TODO: speeds are hard-coded, actual passed distribution is ignored
+			distribution::uniform<> next(
+					low,hig, // within this box
+					// speeds are constant
+					Vector3<double> { -0.2, -0.2, -0.2},
+					Vector3<double> { +0.2, +0.2, +0.2},
+					seed
+			);
+
+			// get number of particles to be generated in this cell
+			auto numParticles = particlesPerCell;
+
+			// correct for remaining particles (to be evenly balance)
+			std::uint64_t linPos = (pos.x * gridSize.y + pos.y) * gridSize.z + pos.z;
+			if (linPos < remaining) {
+				numParticles += 1;
+			}
+
+			// generate particles
+			for(std::uint64_t i=0; i<numParticles; i++) {
+				cell.particles.push_back(next());
+			}
+
+		});
+
+		// done
+		return cells;
+	}
+
 
 	Cells initCells(const Parameters& params, const InitProperties& initProperties, const UniverseProperties& properties) {
 

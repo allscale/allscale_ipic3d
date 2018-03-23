@@ -13,7 +13,7 @@ namespace ipic3d {
 	const uint64_t NUM_TIME_STEPS = 100;
 	const double DELTA_T = 0.15;
 
-	const Vector3<int64_t> GRID_SIZE{ 16, 16, 16 };
+	const Vector3<int64_t> GRID_SIZE{ 64, 64, 64 };
 
 	const Vector3<double> CELL_WIDTH{ 10, 10, 10 };
 
