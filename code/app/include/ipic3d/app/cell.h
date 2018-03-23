@@ -5,6 +5,7 @@
 
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
+#include "allscale/api/user/data/scalar.h"
 #include "allscale/api/user/algorithm/pfor.h"
 #include "allscale/api/user/algorithm/async.h"
 #include "allscale/api/user/algorithm/preduce.h"
@@ -284,36 +285,50 @@ namespace ipic3d {
 		// get a private copy of the distribution generator
 		auto next = dist;
 
-		// generate list of particles
-		std::vector<Particle> particles(numParticles);
-		for(std::uint64_t i=0; i<numParticles; ++i) {
-			auto cur = next();
-			while(!isInsideUniverse(properties,cur)) cur = next();
-			particles[i] = cur;
-		}
+		// create a shared particle buffer
+		allscale::api::user::data::Scalar<std::vector<Particle>> buffer;
 
 		// just some info about the progress
 		std::cout << "Sorting in particles ...\n";
 
-		// distribute particles randomly
-		pfor(properties.size, [=,&cells](const auto& pos) {
+		// insert particles in patches (of 1 GB each)
+		const std::uint64_t patch_size = (1<<30)/sizeof(Particle);
+		for(std::uint64_t p=0; p<numParticles; p+=patch_size) {
 
-			// get targeted cell
-			auto& cell = cells[pos];
-
-			// get cell corners
-			auto& width = properties.cellWidth;
-			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
-			Vector3<double> hig = low + width;
-
-			// filter out local particles
-			for(const auto& cur : particles) {
-				if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
-					cell.particles.push_back(cur);
+			// generate list of particles
+			allscale::api::user::algorithm::async([&](){
+				std::vector<Particle>& particles = buffer.get();
+				particles.clear();
+				auto current_patch = std::min(patch_size,numParticles-p);
+				particles.resize(current_patch);
+				for(std::uint64_t i=0; i<current_patch; ++i) {
+					auto cur = next();
+					while(!isInsideUniverse(properties,cur)) cur = next();
+					particles[i] = cur;
 				}
-			}
+			}).get();
 
-		});
+			// distribute particles randomly
+			pfor(properties.size, [=,&cells,&buffer](const auto& pos) {
+
+				// get targeted cell
+				auto& cell = cells[pos];
+
+				// get cell corners
+				auto& width = properties.cellWidth;
+				Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
+				Vector3<double> hig = low + width;
+
+				// filter out local particles
+				for(const auto& cur : buffer.get()) {
+					if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
+						cell.particles.push_back(cur);
+					}
+				}
+
+			});
+
+		}
 
 		// done
 		return cells;
