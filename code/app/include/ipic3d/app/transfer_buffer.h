@@ -6,6 +6,7 @@
 #include "allscale/api/user/data/grid.h"
 
 #include "ipic3d/app/particle.h"
+#include "ipic3d/app/universe_properties.h"
 
 namespace ipic3d {
 
@@ -35,6 +36,37 @@ namespace ipic3d {
 			assert_true(0 <= x && x < 3) << x;
 			assert_true(0 <= y && y < 3) << y;
 			assert_true(0 <= z && z < 3) << z;
+		}
+
+		int getDeltaX() const {
+			return ((direction >> 4) & 0x3) - 1;
+		}
+
+		int getDeltaY() const {
+			return ((direction >> 2) & 0x3) - 1;
+		}
+
+		int getDeltaZ() const {
+			return (direction & 0x3) - 1;
+		}
+
+		Vector3<allscale::api::user::data::coordinate_type> getDelta() const {
+			return { getDeltaX(), getDeltaY(), getDeltaZ() };
+		}
+
+		coordinate_type step(const coordinate_type& position, const coordinate_type& boundaries) const {
+			return ((position + getDelta()) + boundaries) % boundaries;
+		}
+
+		template<typename Body>
+		static void forEach(const Body& body) {
+			for(int x = 0; x < 3; ++x) {
+				for(int y = 0; y < 3; ++y) {
+					for(int z = 0; z < 3; ++z) {
+						body(TransferDirection(x, y, z));
+					}
+				}
+			}
 		}
 
 	};
