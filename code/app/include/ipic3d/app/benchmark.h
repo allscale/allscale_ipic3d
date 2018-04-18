@@ -33,17 +33,17 @@ namespace ipic3d {
 
 
 		// ----- run the simulation ------
-		std::cout << "Running simulation..." << std::endl;
+		if (MPI_Context::isMaster()) std::cout << "Running simulation..." << std::endl;
 
 		auto start = std::chrono::high_resolution_clock::now();
 		simulateSteps(numTimeSteps, universe);
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Simulation Finished" << std::endl;
+		if (MPI_Context::isMaster()) std::cout << "Simulation Finished" << std::endl;
 
 		double s = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0;
-		std::cout << "Simulation took " << s << "s\n";
-		std::cout << "Throughput: " << (numTimeSteps * numParticles) / s << " particles/s \n";
+		if (MPI_Context::isMaster()) std::cout << "Simulation took " << s << "s\n";
+		if (MPI_Context::isMaster()) std::cout << "Throughput: " << (numTimeSteps * numParticles) / s << " particles/s \n";
 
 		if(dumpParticles) outputParticlePositions(universe.cells, std::string("t_end.txt"));
 

@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 	if (MPI_Context::isMaster()) std::cout << "Simulation finished successfully, producing output data..." << std::endl;
 
 	std::string outputFilename = baseName + ".out";
-	if (MPI_Context::isMaster()) outputNumberOfParticlesPerCell(universe.cells, outputFilename);
+	outputNumberOfParticlesPerCell(universe.cells, outputFilename);
 	//outputFieldGrids(universe.field, universe.bcfield, outputFilename);
 
 	// be done

@@ -40,7 +40,7 @@ namespace ipic3d {
 			MPI_Init(&argc,&argv);
 			MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 			MPI_Comm_size(MPI_COMM_WORLD,&size);
-			std::cout << "Initialized MPI on rank " << rank << " / " << size << " ..\n";
+			// std::cout << "Initialized MPI on rank " << rank << " / " << size << " ..\n";
 		}
 
 	public:
@@ -54,7 +54,7 @@ namespace ipic3d {
 
 		~MPI_Context() {
 			if (getInstancePtr() != this) return;
-			std::cout << "Finalizing MPI on rank " << rank << " ..\n";
+			// std::cout << "Finalizing MPI on rank " << rank << " ..\n";
 			MPI_Finalize();
 		}
 

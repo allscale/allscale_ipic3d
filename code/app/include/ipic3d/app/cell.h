@@ -337,14 +337,14 @@ namespace ipic3d {
 		Cells cells(gridSize);
 
 		// just some info about the progress
-		std::cout << "Sorting in uniformly distributed particles ...\n";
+		if(MPI_Context::isMaster()) std::cout << "Sorting in uniformly distributed particles ...\n";
 
 		// compute particles per cell
 		auto numCells = properties.size.x * properties.size.y * properties.size.z;
 		std::uint64_t particlesPerCell = numParticles / numCells;
 		std::uint64_t remaining = numParticles % numCells;
 
-		std::cout << "  particles / cell: " << particlesPerCell << " (+1)\n";
+		if(MPI_Context::isMaster()) std::cout << "  particles / cell: " << particlesPerCell << " (+1)\n";
 
 		// initialize each cell in parallel
 		MPI_Context::pforEachLocalCell([&](const auto& pos) {
