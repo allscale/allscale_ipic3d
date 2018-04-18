@@ -970,7 +970,7 @@ namespace ipic3d {
 
 
 		// output particles per cell
-		{
+		if (MPI_Context::isMaster()) {
 			auto& manager = allscale::api::core::FileIOManager::getInstance();
 			auto text = manager.createEntry(outputFilename);
 			auto out = manager.openOutputStream(text);

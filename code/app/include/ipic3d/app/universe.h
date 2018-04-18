@@ -56,13 +56,16 @@ namespace ipic3d {
 		// initialize initial properties
 		InitProperties initProperties = InitProperties(params);
 
-		std::cout << initProperties;
+		if (MPI_Context::isMaster()) std::cout << initProperties;
 
 		// initialize universe properties
 		UniverseProperties universeProperties = UniverseProperties(params);
 		universeProperties.outputFileBaseName = baseName;
 
-		std::cout << universeProperties;
+		if (MPI_Context::isMaster()) std::cout << universeProperties;
+
+		// initialize MPI workload distribution
+		MPI_Context::initCellDistribution(universeProperties.size);
 
 		// initialize grid of cells
 		Cells&& cells = initCells(params, initProperties, universeProperties);
