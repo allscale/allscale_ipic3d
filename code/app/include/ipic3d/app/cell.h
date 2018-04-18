@@ -76,19 +76,16 @@ namespace ipic3d {
 	// count the number of particles in all cells
 	std::uint64_t countParticlesInDomain(const Cells& cells) {
 
-		auto fold = [&](const coordinate_type& index, std::uint64_t& res) {
-			res += (std::uint64_t)cells[index].particles.size();
-		};
+		std::uint64_t localSum = 0;
+		MPI_Context::forEachLocalCell([&](auto pos) {
+			localSum += cells[pos].particles.size();
+		});
 
-		auto reduce = [&](const std::uint64_t& a, const std::uint64_t& b) { return a + b; };
-		auto init = []()->std::uint64_t { return 0; };
+		std::uint64_t globalSum = 0;
+		assert_eq(sizeof(long long unsigned), sizeof(std::uint64_t));
+		MPI_Allreduce(&localSum, &globalSum, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
 
-		coordinate_type zero(0);
-		coordinate_type full(cells.size());
-
-		assert_not_implemented() << "TODO: implement for MPI";
-		return 0;
-//		return allscale::api::user::algorithm::preduce(zero, full, fold, reduce, init).get();
+		return globalSum;
 	}
 
 	namespace distribution {

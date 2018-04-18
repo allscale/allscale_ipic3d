@@ -216,20 +216,22 @@ namespace ipic3d {
 			std::map<int, allscale::utils::ArchiveWriter> serializers;
 			for(const auto& transfer : transfers) {
 				auto& out = serializers[transfer.first];
-				out.write(transfer.second.size());
+				out.write<std::size_t>(transfer.second.size());
 				for(const auto& entry : transfer.second) {
-					out.write(entry.first);
-					out.write(entry.second);
+					out.write<coordinate_type>(entry.first);
+					out.write<std::vector<Particle>>(entry.second);
 				}
 			}
 
 			// send data to all our neighbors - nonblocking
 			MPI_Request sendRequests[transfers.size()];
+			std::vector<allscale::utils::Archive> archives;
 			int sendIndex = 0;
 			for(auto& serializer : serializers) {
-				auto archive = std::move(serializer.second).toArchive();
+				archives.emplace_back(std::move(serializer.second).toArchive());
+				auto& archive = archives.back();
 				auto& buffer = archive.getBuffer();
-				MPI_Isend(const_cast<char*>(&buffer[0]), buffer.size(), MPI_CHAR, serializer.first, 0, MPI_COMM_WORLD, &sendRequests[sendIndex++]);
+				MPI_Isend(const_cast<char*>(&buffer[0]), buffer.size(), MPI_BYTE, serializer.first, 0, MPI_COMM_WORLD, &sendRequests[sendIndex++]);
 			}
 
 			// receive a message from all our neighbors
@@ -238,9 +240,9 @@ namespace ipic3d {
 				MPI_Message message;
 				MPI_Mprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &message, &status);
 				int size;
-				MPI_Get_count(&status, MPI_CHAR, &size);
+				MPI_Get_count(&status, MPI_BYTE, &size);
 				std::vector<char> buffer(size);
-				MPI_Mrecv(&buffer[0], size, MPI_CHAR, &message, MPI_STATUS_IGNORE);
+				MPI_Mrecv(&buffer[0], size, MPI_BYTE, &message, MPI_STATUS_IGNORE);
 
 				allscale::utils::Archive archive(buffer);
 				allscale::utils::ArchiveReader reader(archive);
@@ -248,8 +250,8 @@ namespace ipic3d {
 				std::size_t numberOfCells = reader.read<std::size_t>();
 				for(std::size_t j = 0; j < numberOfCells; ++j) {
 					auto cellPosition = reader.read<coordinate_type>();
-					assert_eq(instance.getRankOf(cellPosition), rank) << "For cell position: " << cellPosition;
 					auto particles = reader.read<std::vector<Particle>>();
+					assert_eq(instance.getRankOf(cellPosition), rank) << "For cell position: " << cellPosition;
 					auto& targetVector = buffers.getBuffer(cellPosition, TransferDirection(0, 0, 0));
 					targetVector.insert(targetVector.end(), particles.cbegin(), particles.cend());
 				}
@@ -257,8 +259,6 @@ namespace ipic3d {
 
 			// wait for all sent messages to complete
 			MPI_Waitall(transfers.size(), sendRequests, MPI_STATUSES_IGNORE);
-
-			MPI_Barrier(MPI_COMM_WORLD);
 
 			assert_eq(flag.load(), 1);
 			flag.store(0);

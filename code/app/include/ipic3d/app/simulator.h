@@ -161,7 +161,9 @@ namespace ipic3d {
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
-			MPI_Context::exchangeBuffers(particleTransfers);
+//			MPI_Context::exchangeBuffers(particleTransfers);
+			auto number = countParticlesInDomain(universe);
+			if(MPI_Context::isMaster()) std::cout << "Number of particles: " << number << "\n";
 
 			// STEP 4: import particles into destination cells
 			MPI_Context::pforEachLocalCell([&](const utils::Coordinate<3>& pos){
