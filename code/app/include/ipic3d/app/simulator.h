@@ -161,6 +161,9 @@ namespace ipic3d {
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
+			MPI_Context::exchangeBuffers(particleTransfers);
+			return; // for now
+
 			// STEP 4: import particles into destination cells
 			MPI_Context::pforEachLocalCell([&](const utils::Coordinate<3>& pos){
 				importParticles(universe.properties, universe.cells[pos], pos, particleTransfers);

@@ -5,6 +5,9 @@
 
 #include <allscale/utils/assert.h>
 #include <allscale/utils/vector.h>
+#include <allscale/utils/printer/set.h>
+
+#include "ipic3d/app/transfer_buffer.h"
 
 namespace ipic3d {
 
@@ -108,6 +111,13 @@ namespace ipic3d {
 
 		}
 
+		static int getRankOf(const grid_size_t& pos) {
+			auto& instance = getInstance();
+			auto& size = instance.grid_size;
+			auto& distribution = instance.distribution;
+			return distribution[(pos.x*size.y + pos.y)*size.z + pos.z];
+		}
+
 		template<typename Body, bool parallel = false>
 		static void forEachLocalCell(const Body& body) {
 			auto& instance = getInstance();
@@ -153,6 +163,36 @@ namespace ipic3d {
 		template<typename Body>
 		static void pforEachLocalFieldEntry(const Body& body) {
 			forEachLocalCell<Body,true>(body);
+		}
+
+		static void exchangeBuffers(TransferBuffers& buffers) {
+			auto& instance = getInstance();
+			auto& size = instance.grid_size;
+			auto rank = instance.getRank();
+
+			// get list of all neighbors we need to send particles to
+			std::set<int> neighbors;
+			forEachLocalCell([&](auto pos) {
+				TransferDirection::forEach([&](auto direction){
+					auto neighborPosition = direction.step(pos, size);
+					int targetRank = getRankOf(neighborPosition);
+					if(targetRank != rank) {
+						neighbors.insert(targetRank);
+					}
+				});
+			});
+
+			// sort all particles to export into the list of neighbors
+
+
+			std::vector<MPI_Request> sendRequests;
+			// send data to all our neighbors - nonblocking
+
+			// probe for message size, allocate buffer, receive actual message
+			// for each received message
+				// sort received particles into correct cells
+				// free buffer
+				// remove request form queue
 		}
 
 	};
