@@ -1,8 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <atomic>
 #include <mpi.h>
 
+#include <allscale/utils/serializer.h>
+#include <allscale/utils/serializer/vectors.h>
 #include <allscale/utils/assert.h>
 #include <allscale/utils/vector.h>
 #include <allscale/utils/printer/set.h>
@@ -82,6 +85,15 @@ namespace ipic3d {
 			return size;
 		}
 
+		static std::size_t flattenCellCoordinates(const int64_t x, const int64_t y, const int64_t z) {
+			auto& size = getInstance().grid_size;
+			return (x*size.y + y)*size.z + z;
+		}
+
+		static std::size_t flattenCellCoordinates(const grid_size_t& size) {
+			return flattenCellCoordinates(size.x, size.y, size.z);
+		}
+
 		static void initCellDistribution(const grid_size_t& size) {
 
 			auto& instance = getInstance();
@@ -99,11 +111,11 @@ namespace ipic3d {
 			distribution.resize(size.x * size.y * size.z);
 
 			// setup distribution (for now, super stupid)
-			for(int i=0; i<size.x; i++) {
-				for(int j=0; j<size.y; j++) {
-					for(int k=0; k<size.z; k++) {
+			for(int x=0; x<size.x; x++) {
+				for(int y=0; y<size.y; y++) {
+					for(int z=0; z<size.z; z++) {
 						// TODO: find some better distribution
-						auto pos = (i*size.y + j)*size.z + k;
+						auto pos = flattenCellCoordinates(x, y, z);
 						distribution[pos] = pos % group_size;
 					}
 				}
@@ -115,7 +127,7 @@ namespace ipic3d {
 			auto& instance = getInstance();
 			auto& size = instance.grid_size;
 			auto& distribution = instance.distribution;
-			return distribution[(pos.x*size.y + pos.y)*size.z + pos.z];
+			return distribution[flattenCellCoordinates(pos)];
 		}
 
 		template<typename Body, bool parallel = false>
@@ -126,13 +138,13 @@ namespace ipic3d {
 			int rank = instance.rank;
 			// iterate through cells ..
 //			#pragma omp parallel for if(parallel) collapse(3)
-			for(int i=0; i<size.x; i++) {
-				for(int j=0; j<size.y; j++) {
-					for(int k=0; k<size.z; k++) {
+			for(int x=0; x<size.x; x++) {
+				for(int y=0; y<size.y; y++) {
+					for(int z=0; z<size.z; z++) {
 						// .. and if it is local ..
-						if (dist[(i*size.y + j)*size.z + k] == rank) {
+						if (dist[flattenCellCoordinates(x, y, z)] == rank) {
 							// .. invoke the operation
-							body(grid_size_t{i,j,k});
+							body(grid_size_t{x,y,z});
 						}
 					}
 				}
@@ -145,14 +157,14 @@ namespace ipic3d {
 		}
 
 		template<typename Body, bool parallel = false>
-		static void forEachLocalFieldEntry(const Body& body) {
+		static void forEachLocalFieldEntry(const Body& body, int additionalEntriesPerDimension) {
 			auto& instance = getInstance();
 			auto& size = instance.grid_size;
 			// iterate through cells ..
 //			#pragma omp parallel for if(parallel) collapse(3)
-			for(int i=0; i<size.x+1; i++) {
-				for(int j=0; j<size.y+1; j++) {
-					for(int k=0; k<size.z+1; k++) {
+			for(int i=0; i<size.x+additionalEntriesPerDimension; i++) {
+				for(int j=0; j<size.y+additionalEntriesPerDimension; j++) {
+					for(int k=0; k<size.z+additionalEntriesPerDimension; k++) {
 						// .. invoke the operation (all field elements are currently local)
 						body(grid_size_t{i,j,k});
 					}
@@ -166,33 +178,90 @@ namespace ipic3d {
 		}
 
 		static void exchangeBuffers(TransferBuffers& buffers) {
+			static std::atomic<int> flag{0};
+			assert_eq(flag.load(), 0);
+			flag.store(1);
+
 			auto& instance = getInstance();
 			auto& size = instance.grid_size;
 			auto rank = instance.getRank();
 
-			// get list of all neighbors we need to send particles to
-			std::set<int> neighbors;
+			// sort all particles to export into the list of neighbors
+
+			// mapping from rank to target cells containing the particles to transfer
+			std::map<int, std::map<coordinate_type, std::vector<Particle>>> transfers;
+
 			forEachLocalCell([&](auto pos) {
 				TransferDirection::forEach([&](auto direction){
 					auto neighborPosition = direction.step(pos, size);
 					int targetRank = getRankOf(neighborPosition);
 					if(targetRank != rank) {
-						neighbors.insert(targetRank);
+						const auto& particles = buffers.getBuffer(neighborPosition, direction.inverse());
+						auto& targetVector = transfers[targetRank][neighborPosition];
+						targetVector.insert(targetVector.end(), particles.cbegin(), particles.cend());
 					}
 				});
 			});
 
-			// sort all particles to export into the list of neighbors
+//			if(isMaster()) {
+//				for(auto& outer : transfers) {
+//					std::cout << "Target Rank: " << outer.first << std::endl;
+//					for(auto& inner : outer.second) {
+//						std::cout << "  Target Cell: " << inner.first << std::endl;
+//						std::cout << "    Particles: " << inner.second << std::endl;
+//					}
+//				}
+//			}
 
+			std::map<int, allscale::utils::ArchiveWriter> serializers;
+			for(const auto& transfer : transfers) {
+				auto& out = serializers[transfer.first];
+				out.write(transfer.second.size());
+				for(const auto& entry : transfer.second) {
+					out.write(entry.first);
+					out.write(entry.second);
+				}
+			}
 
-			std::vector<MPI_Request> sendRequests;
 			// send data to all our neighbors - nonblocking
+			MPI_Request sendRequests[transfers.size()];
+			int sendIndex = 0;
+			for(auto& serializer : serializers) {
+				auto archive = std::move(serializer.second).toArchive();
+				auto& buffer = archive.getBuffer();
+				MPI_Isend(const_cast<char*>(&buffer[0]), buffer.size(), MPI_CHAR, serializer.first, 0, MPI_COMM_WORLD, &sendRequests[sendIndex++]);
+			}
 
-			// probe for message size, allocate buffer, receive actual message
-			// for each received message
-				// sort received particles into correct cells
-				// free buffer
-				// remove request form queue
+			// receive a message from all our neighbors
+			for(int i = 0; i < transfers.size(); ++i) {
+				MPI_Status status;
+				MPI_Message message;
+				MPI_Mprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &message, &status);
+				int size;
+				MPI_Get_count(&status, MPI_CHAR, &size);
+				std::vector<char> buffer(size);
+				MPI_Mrecv(&buffer[0], size, MPI_CHAR, &message, MPI_STATUS_IGNORE);
+
+				allscale::utils::Archive archive(buffer);
+				allscale::utils::ArchiveReader reader(archive);
+
+				std::size_t numberOfCells = reader.read<std::size_t>();
+				for(std::size_t j = 0; j < numberOfCells; ++j) {
+					auto cellPosition = reader.read<coordinate_type>();
+					assert_eq(instance.getRankOf(cellPosition), rank) << "For cell position: " << cellPosition;
+					auto particles = reader.read<std::vector<Particle>>();
+					auto& targetVector = buffers.getBuffer(cellPosition, TransferDirection(0, 0, 0));
+					targetVector.insert(targetVector.end(), particles.cbegin(), particles.cend());
+				}
+			}
+
+			// wait for all sent messages to complete
+			MPI_Waitall(transfers.size(), sendRequests, MPI_STATUSES_IGNORE);
+
+			MPI_Barrier(MPI_COMM_WORLD);
+
+			assert_eq(flag.load(), 1);
+			flag.store(0);
 		}
 
 	};

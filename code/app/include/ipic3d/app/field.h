@@ -99,7 +99,7 @@ namespace ipic3d {
 						fields[cur].Bext = { 0.0, 0.0, 0.0 };
 					}
 
-				});
+				}, 2);
 
 				break;
 			}
@@ -127,7 +127,7 @@ namespace ipic3d {
 		MPI_Context::forEachLocalFieldEntry([&](const utils::Coordinate<3>& cur) {
 			// init magnetic field at centers
 			interpN2C(cur, field, bcfield);
-		});
+		}, 1);
 
 		// return the produced field
 		return bcfield;
@@ -147,7 +147,7 @@ namespace ipic3d {
 
 			// initialize current density on nodes
 			currentDensity[cur].J = { 0.0, 0.0, 0.0 };
-		});
+		}, 1);
 
 		return currentDensity;
 	}

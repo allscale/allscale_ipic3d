@@ -2,11 +2,13 @@
 
 #include "ipic3d/app/vector.h"
 
+#include <allscale/utils/serializer.h>
+
 namespace ipic3d {
 
 	using Force = Vector3<double>;
 
-	struct Particle {
+	struct Particle : public allscale::utils::trivially_serializable {
 
 		Vector3<double> position;			// position (absolute - TODO: relative to cell center)
 

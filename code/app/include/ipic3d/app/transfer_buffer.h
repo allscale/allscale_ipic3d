@@ -38,16 +38,32 @@ namespace ipic3d {
 			assert_true(0 <= z && z < 3) << z;
 		}
 
+		TransferDirection inverse() const {
+			return TransferDirection(2 - getDirectionX(), 2 - getDirectionY(), 2 - getDirectionZ());
+		}
+
+		Direction getDirectionX() const {
+			return (direction >> 4) & 0x3;
+		}
+
+		Direction getDirectionY() const {
+			return (direction >> 2) & 0x3;
+		}
+
+		Direction getDirectionZ() const {
+			return direction & 0x3;
+		}
+
 		int getDeltaX() const {
-			return ((direction >> 4) & 0x3) - 1;
+			return getDirectionX() - 1;
 		}
 
 		int getDeltaY() const {
-			return ((direction >> 2) & 0x3) - 1;
+			return getDirectionY() - 1;
 		}
 
 		int getDeltaZ() const {
-			return (direction & 0x3) - 1;
+			return getDirectionZ() - 1;
 		}
 
 		Vector3<allscale::api::user::data::coordinate_type> getDelta() const {
@@ -121,7 +137,7 @@ namespace ipic3d {
 		 * the given direction.
 		 */
 		particle_list& getBuffer(const grid_pos_t& src, const TransferDirection& dir) {
-			return buffers[(dir.direction >> 4) & 0x3][(dir.direction >> 2) & 0x3][dir.direction & 0x3][src];
+			return buffers[dir.getDirectionX()][dir.getDirectionY()][dir.getDirectionZ()][src];
 		}
 
 	};

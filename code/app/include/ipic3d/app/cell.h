@@ -968,6 +968,17 @@ namespace ipic3d {
 		// TODO: implement output facilities for large problems
 		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
+		const auto& size = cells.size();
+		std::vector<std::size_t> particleCounts(size.x * size.y * size.z);
+
+		MPI_Context::forEachLocalCell([&](auto pos) {
+			particleCounts[MPI_Context::flattenCellCoordinates(pos)] = cells[pos].particles.size();
+		});
+
+		std::vector<std::size_t> reducedParticleCounts(particleCounts.size());
+
+		assert_eq(sizeof(long long int), sizeof(std::size_t));
+		MPI_Reduce(&particleCounts[0], &reducedParticleCounts[0], particleCounts.size(), MPI_LONG_LONG_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 		// output particles per cell
 		if (MPI_Context::isMaster()) {
@@ -983,7 +994,7 @@ namespace ipic3d {
 					for(std::int64_t k = 0; k < cells.size().z; ++k) {
 						coordinate_type p{i,j,k};
 						out << p.x << "," << p.y << "," << p.z << ":";
-						out << cells[p].particles.size() << "\n";
+						out << reducedParticleCounts[MPI_Context::flattenCellCoordinates(p)] << "\n";
 					}
 				}
 			}
