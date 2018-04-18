@@ -3,6 +3,7 @@
 #include "ipic3d/app/cell.h"
 #include "ipic3d/app/field.h"
 #include "ipic3d/app/universe_properties.h"
+#include "ipic3d/app/mpi_context.h"
 
 namespace ipic3d {
 
@@ -83,6 +84,9 @@ namespace ipic3d {
 
 	template<typename Distribution>
 	Universe createUniverseFromDistribution(const UniverseProperties& universeProperties, const InitProperties& initProperties, std::uint64_t numParticles, const Distribution& distribution) {
+
+		// initialize MPI workload distribution
+		MPI_Context::initCellDistribution(universeProperties.size);
 
 		// initialize grid of cells
 		Cells&& cells = initCells(universeProperties,numParticles,distribution);

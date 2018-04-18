@@ -155,14 +155,14 @@ namespace ipic3d {
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 3: project forces to particles and move particles
-			pfor(zero, size, [particleMover,&universe,&particleTransfers](const utils::Coordinate<3>& pos){
+			MPI_Context::pforEachLocalCell([particleMover,&universe,&particleTransfers](const utils::Coordinate<3>& pos){
 				particleMover(universe.properties, universe.cells[pos], pos, universe.field, particleTransfers);
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 4: import particles into destination cells
-			pfor(zero, size, [&](const utils::Coordinate<3>& pos){
+			MPI_Context::pforEachLocalCell([&](const utils::Coordinate<3>& pos){
 				importParticles(universe.properties, universe.cells[pos], pos, particleTransfers);
 			});
 

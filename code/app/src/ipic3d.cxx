@@ -8,23 +8,29 @@
 #include "ipic3d/app/simulator.h"
 #include "ipic3d/app/universe.h"
 
+#include "ipic3d/app/mpi_context.h"
+
 using namespace ipic3d;
 
 int main(int argc, char** argv) {
+
+	// startup MPI
+	auto context = MPI_Context::init(argc,argv);
 
 	// ----- load and parse simulation parameters ------
 
 	// check the passed arguments
 	if (argc != 2 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
-		std::cout << "Usage: ./ipic3d <config-file>" << std::endl;
-		return EXIT_FAILURE;
+		if (MPI_Context::isMaster()) std::cout << "Usage: ./ipic3d <config-file>" << std::endl;
+		return EXIT_SUCCESS;
 	}
 
 	std::string inputFilename = argv[1];
 
 	// add benchmark support
 	if (inputFilename[0] == ':') {
-		return processBenchmark(inputFilename);
+		processBenchmark(inputFilename);
+		return EXIT_SUCCESS;
 	}
 
 	// load input configuration
@@ -34,7 +40,7 @@ int main(int argc, char** argv) {
 	// ----- initialize simulation environment ------
 
 	// setup simulation
-	std::cout << "Initializing simulation state ..." << std::endl;
+	if (MPI_Context::isMaster()) std::cout << "Initializing simulation state ..." << std::endl;
 
 	// remove preceding path from filename and file suffix, keep only file name itself
 	const auto sepPos = inputFilename.find_last_of("/\\");
@@ -48,7 +54,7 @@ int main(int argc, char** argv) {
 	assert_decl(int start_particles = countParticlesInDomain(universe));
 #endif
 
-	std::cout << "Running simulation..." << std::endl;
+	if (MPI_Context::isMaster()) std::cout << "Running simulation..." << std::endl;
 
 	// -- run the simulation --
 
@@ -62,7 +68,7 @@ int main(int argc, char** argv) {
 	assert_eq(start_particles, end_particles) << "[Error]: Periodic boundary conditions on particles were not preserved!";
 #endif
 
-	std::cout << "Simulation finished successfully, producing output data..." << std::endl;
+	if (MPI_Context::isMaster()) std::cout << "Simulation finished successfully, producing output data..." << std::endl;
 
 	std::string outputFilename = baseName + ".out";
 	outputNumberOfParticlesPerCell(universe.cells, outputFilename);

@@ -6,6 +6,8 @@
 #include "ipic3d/app/universe.h"
 #include "ipic3d/app/simulator.h"
 
+#include "ipic3d/app/mpi_context.h"
+
 namespace ipic3d {
 
 	using namespace allscale::utils;
@@ -63,7 +65,7 @@ namespace ipic3d {
 		initProperties.driftVelocity.push_back(0);
 
 		// initialize universe
-		std::cout << "Creating Particles ..." << std::endl;
+		if (MPI_Context::isMaster()) std::cout << "Creating Particles ..." << std::endl;
 		auto universe = createUniverseFromDistribution(universeProperties, initProperties, numParticles, dist);
 
 		// -- run the simulation --
@@ -133,11 +135,11 @@ namespace ipic3d {
 
 	int processBenchmark(const std::string& config) {
 
-		std::cout << "Processing benchmark " << config << "\n";
+		if (MPI_Context::isMaster()) std::cout << "Processing benchmark " << config << "\n";
 
 		// utility for help messages
-		auto showHelp = []() {
-			std::cout << "Benchmark designation: :X:N\n"
+		auto showHelp = [&]() {
+			if (MPI_Context::isMaster()) std::cout << "Benchmark designation: :X:N\n"
 				<< "      X ... benchmark type:\n"
 				<< "           U ... uniform\n"
 				<< "           C ... cluster\n"
