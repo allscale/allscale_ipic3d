@@ -190,13 +190,20 @@ namespace ipic3d {
 
 			forEachLocalCell([&](auto pos) {
 				TransferDirection::forEach([&](auto direction){
+
+					// index particles to be exported
 					auto neighborPosition = direction.step(pos, size);
 					int targetRank = getRankOf(neighborPosition);
 					if(targetRank != rank) {
 						const auto& particles = buffers.getBuffer(neighborPosition, direction.inverse());
 						auto& targetVector = transfers[targetRank][neighborPosition];
 						targetVector.insert(targetVector.end(), particles.cbegin(), particles.cend());
+
+						// clear old buffer state
+						buffers.getBuffer(pos,direction).clear();
 					}
+
+
 				});
 			});
 
@@ -230,6 +237,7 @@ namespace ipic3d {
 				auto& buffer = archive.getBuffer();
 				MPI_Isend(const_cast<char*>(&buffer[0]), buffer.size(), MPI_BYTE, serializer.first, 0, MPI_COMM_WORLD, &sendRequests[sendIndex++]);
 			}
+
 
 			// receive a message from all our neighbors
 			for(int i = 0; i < transfers.size(); ++i) {
