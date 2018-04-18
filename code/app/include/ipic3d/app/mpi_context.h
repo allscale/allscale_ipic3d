@@ -178,9 +178,6 @@ namespace ipic3d {
 		}
 
 		static void exchangeBuffers(TransferBuffers& buffers) {
-			static std::atomic<int> flag{0};
-			assert_eq(flag.load(), 0);
-			flag.store(1);
 
 			auto& instance = getInstance();
 			auto& size = instance.grid_size;
@@ -259,9 +256,6 @@ namespace ipic3d {
 
 			// wait for all sent messages to complete
 			MPI_Waitall(transfers.size(), sendRequests, MPI_STATUSES_IGNORE);
-
-			assert_eq(flag.load(), 1);
-			flag.store(0);
 		}
 
 	};
