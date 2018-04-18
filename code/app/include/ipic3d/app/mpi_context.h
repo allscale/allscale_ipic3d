@@ -134,6 +134,27 @@ namespace ipic3d {
 			forEachLocalCell<Body,true>(body);
 		}
 
+		template<typename Body, bool parallel = false>
+		static void forEachLocalFieldEntry(const Body& body) {
+			auto& instance = getInstance();
+			auto& size = instance.grid_size;
+			// iterate through cells ..
+//			#pragma omp parallel for if(parallel) collapse(3)
+			for(int i=0; i<size.x+1; i++) {
+				for(int j=0; j<size.y+1; j++) {
+					for(int k=0; k<size.z+1; k++) {
+						// .. invoke the operation (all field elements are currently local)
+						body(grid_size_t{i,j,k});
+					}
+				}
+			}
+		}
+
+		template<typename Body>
+		static void pforEachLocalFieldEntry(const Body& body) {
+			forEachLocalCell<Body,true>(body);
+		}
+
 	};
 
 } // end namespace ipic3d

@@ -1,13 +1,13 @@
 #pragma once
 
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/algorithm/pfor.h"
-#include "allscale/api/user/algorithm/preduce.h"
 
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/init_properties.h"
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
+
+#include "ipic3d/app/mpi_context.h"
 
 namespace ipic3d {
 
@@ -67,7 +67,7 @@ namespace ipic3d {
 				// Dipole's Center
 				auto objectCenter = universeProperties.objectCenter;
 
-				pfor(start, workingFieldSize, [=,&fields](const utils::Coordinate<3>& cur) {
+				MPI_Context::forEachLocalFieldEntry([&](const utils::Coordinate<3>& cur) {
 
 					// TODO: required to work around an allscalecc frontend bug
 					// should be removed once the issue in the compiler is resolved
@@ -124,7 +124,7 @@ namespace ipic3d {
 		// the 3-D force fields
 		BcField bcfield(fieldSize);
 
-		pfor(start, workingFieldSize, [=,&field,&bcfield](const utils::Coordinate<3>& cur) {
+		MPI_Context::forEachLocalFieldEntry([&](const utils::Coordinate<3>& cur) {
 			// init magnetic field at centers
 			interpN2C(cur, field, bcfield);
 		});
@@ -143,7 +143,7 @@ namespace ipic3d {
 		// the 3D current density
 		CurrentDensity currentDensity(densitySize);
 
-		pfor(start, densitySize, [=,&currentDensity](const utils::Coordinate<3>& cur) {
+		MPI_Context::forEachLocalFieldEntry([&](const utils::Coordinate<3>& cur) {
 
 			// initialize current density on nodes
 			currentDensity[cur].J = { 0.0, 0.0, 0.0 };
@@ -450,7 +450,9 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::algorithm::preduce(fieldStart, fieldEnd, map, reduce, init).get();
+		assert_not_implemented() << "TODO: implement for MPI";
+		return 0;
+//		return allscale::api::user::algorithm::preduce(fieldStart, fieldEnd, map, reduce, init).get();
 	} 
 
 	/**
@@ -461,7 +463,7 @@ namespace ipic3d {
 		assert_le(field.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large field at this time";
 
 		// output field values
-		allscale::api::user::algorithm::async([=,&field]() {
+		{
 			auto& manager = allscale::api::core::FileIOManager::getInstance();
 			auto text = manager.createEntry(outputFilename);
 			auto out = manager.openOutputStream(text);
@@ -482,7 +484,8 @@ namespace ipic3d {
 			}
 			out << "\n";
 			manager.close(out);
-		}).wait();
+		}
+
 		//allscale::api::user::algorithm::pfor(field.size(), [&](const auto& index) {
 		//	streamObject.atomic([&](auto& out) {
 		//		// write index
@@ -493,7 +496,7 @@ namespace ipic3d {
 		//});
 
 		// output bc field values
-		allscale::api::user::algorithm::async([=,&bcField]() {
+		{
 			auto& manager = allscale::api::core::FileIOManager::getInstance();
 			auto text = manager.createEntry(outputFilename);
 			auto out = manager.openOutputStream(text);
@@ -514,7 +517,8 @@ namespace ipic3d {
 			}
 			out << "\n";
 			manager.close(out);
-		}).wait();
+		}
+
 		//allscale::api::user::algorithm::pfor(bcField.size(), [&](const auto& index) {
 		//	streamObject.atomic([&](auto& out) {
 		//		// write index

@@ -5,9 +5,6 @@
 
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
-#include "allscale/api/user/algorithm/pfor.h"
-#include "allscale/api/user/algorithm/async.h"
-#include "allscale/api/user/algorithm/preduce.h"
 #include "allscale/utils/static_grid.h"
 
 #include "ipic3d/app/field.h"
@@ -18,6 +15,8 @@
 #include "ipic3d/app/utils/points.h"
 #include "ipic3d/app/vector.h"
 #include "ipic3d/app/ziggurat_normal_distribution.h"
+
+#include "ipic3d/app/mpi_context.h"
 
 namespace ipic3d {
 
@@ -87,7 +86,9 @@ namespace ipic3d {
 		coordinate_type zero(0);
 		coordinate_type full(cells.size());
 
-		return allscale::api::user::algorithm::preduce(zero, full, fold, reduce, init).get();
+		assert_not_implemented() << "TODO: implement for MPI";
+		return 0;
+//		return allscale::api::user::algorithm::preduce(zero, full, fold, reduce, init).get();
 	}
 
 	namespace distribution {
@@ -303,7 +304,7 @@ namespace ipic3d {
 			std::cout << "Submitting particles " << p << " - " << (p+current_patch) << " ... \n";
 
 			// distribute particles randomly
-			pfor(properties.size, [=,&cells](const auto& pos) {
+			MPI_Context::pforEachLocalCell([&](const auto& pos) {
 
 				// get targeted cell
 				auto& cell = cells[pos];
@@ -346,7 +347,7 @@ namespace ipic3d {
 		std::cout << "  particles / cell: " << particlesPerCell << " (+1)\n";
 
 		// initialize each cell in parallel
-		pfor(properties.size, [=,&cells](const auto& pos) {
+		MPI_Context::pforEachLocalCell([&](const auto& pos) {
 
 			// get targeted cell
 			auto& cell = cells[pos];
@@ -401,8 +402,6 @@ namespace ipic3d {
 		// compute number of particles to be added for the uniform distribution
 		unsigned totalParticlesPerCell = initProperties.particlesPerCell[0].x * initProperties.particlesPerCell[0].y * initProperties.particlesPerCell[0].z;
 
-		const utils::Coordinate<3> zero = 0;							// a zero constant (coordinate [0,0,0])
-
 		// pre-compute values for computing q
 		double q_factor = params.qom[0] / fabs(params.qom[0]);
 		q_factor = q_factor * (properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z) / totalParticlesPerCell;
@@ -412,7 +411,7 @@ namespace ipic3d {
 		auto particlesPerCell = initProperties.particlesPerCell[0];
 	
 		// TODO: return this as a treeture
-		allscale::api::user::algorithm::pfor(zero, properties.size, [=,&cells](const utils::Coordinate<3>& pos) {
+		MPI_Context::pforEachLocalCell([&](const utils::Coordinate<3>& pos) {
 
 			Cell& cell = cells[pos];
 			auto cellOrigin = getOriginOfCell(pos, properties);
@@ -922,7 +921,9 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
+		assert_not_implemented() << "TODO: implement for MPI";
+		return 0;
+//		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
 	} 
 
 	/** 
@@ -936,7 +937,9 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
+		assert_not_implemented() << "TODO: implement for MPI";
+		return 0;
+//		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
 	}
 
 	/**
@@ -953,7 +956,9 @@ namespace ipic3d {
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
 		auto init = []() { return 0.0; };
 
-		return allscale::api::user::algorithm::preduce(coordinate_type(0), cells.size(), map, reduce, init).get();
+		assert_not_implemented() << "TODO: implement for MPI";
+		return 0;
+//		return allscale::api::user::algorithm::preduce(coordinate_type(0), cells.size(), map, reduce, init).get();
 	} 
 
 	/**
@@ -965,7 +970,7 @@ namespace ipic3d {
 
 
 		// output particles per cell
-		allscale::api::user::algorithm::async([=,&cells]() {
+		{
 			auto& manager = allscale::api::core::FileIOManager::getInstance();
 			auto text = manager.createEntry(outputFilename);
 			auto out = manager.openOutputStream(text);
@@ -987,7 +992,7 @@ namespace ipic3d {
 			out << "\n";
 
 			manager.close(out);
-		}).wait();
+		}
 
 		//allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
 		//	streamObject.atomic([&](auto& out) { 
