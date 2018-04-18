@@ -973,18 +973,18 @@ namespace ipic3d {
 			// output dimensions
 			out << cells.size() << "\n";
 
+			std::uint64_t total = 0;
 			for(std::int64_t i = 0; i < cells.size().x; ++i) {
 				for(std::int64_t j = 0; j < cells.size().y; ++j) {
 					for(std::int64_t k = 0; k < cells.size().z; ++k) {
 						coordinate_type p{i,j,k};
 						out << p.x << "," << p.y << "," << p.z << ":";
 						out << cells[p].particles.size() << "\n";
+						total += cells[p].particles.size();
 					}
 				}
 			}
-
-			//});
-			out << "\n";
+			out << "\nTotal: " << total << "\n";
 
 			manager.close(out);
 		}).wait();
