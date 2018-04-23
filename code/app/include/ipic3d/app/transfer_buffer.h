@@ -71,7 +71,14 @@ namespace ipic3d {
 		}
 
 		coordinate_type step(const coordinate_type& position, const coordinate_type& boundaries) const {
-			return ((position + getDelta()) + boundaries) % boundaries;
+			auto dX = getDeltaX();
+			auto dY = getDeltaY();
+			auto dZ = getDeltaZ();
+			return coordinate_type {
+				(dX == 0) ? position.x : ((0 < position.x && position.x < boundaries.x - 1) ? (position.x + dX) : (position.x + dX + boundaries.x) % boundaries.x),
+				(dY == 0) ? position.y : ((0 < position.y && position.y < boundaries.y - 1) ? (position.y + dY) : (position.y + dY + boundaries.y) % boundaries.y),
+				(dZ == 0) ? position.z : ((0 < position.z && position.z < boundaries.z - 1) ? (position.z + dZ) : (position.z + dZ + boundaries.z) % boundaries.z),
+			};
 		}
 
 		template<typename Body>

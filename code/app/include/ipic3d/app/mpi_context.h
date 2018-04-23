@@ -125,7 +125,6 @@ namespace ipic3d {
 
 		static int getRankOf(const grid_size_t& pos) {
 			auto& instance = getInstance();
-			auto& size = instance.grid_size;
 			auto& distribution = instance.distribution;
 			return distribution[flattenCellCoordinates(pos)];
 		}
@@ -134,7 +133,6 @@ namespace ipic3d {
 		static void forEachLocalCell(const Body& body) {
 			auto& instance = getInstance();
 			auto& size = instance.grid_size;
-			auto& dist = instance.distribution;
 			int rank = instance.rank;
 			// iterate through cells ..
 //			#pragma omp parallel for if(parallel) collapse(3)
@@ -142,7 +140,7 @@ namespace ipic3d {
 				for(int y=0; y<size.y; y++) {
 					for(int z=0; z<size.z; z++) {
 						// .. and if it is local ..
-						if (dist[flattenCellCoordinates(x, y, z)] == rank) {
+						if (getRankOf({x,y,z}) == rank) {
 							// .. invoke the operation
 							body(grid_size_t{x,y,z});
 						}
@@ -186,44 +184,34 @@ namespace ipic3d {
 			// sort all particles to export into the list of neighbors
 
 			// mapping from rank to target cells containing the particles to transfer
-			std::map<int, std::map<coordinate_type, std::vector<Particle>>> transfers;
+			std::map<int, std::vector<std::pair<coordinate_type, const std::vector<Particle>*>>> transfers;
 
 			forEachLocalCell([&](auto pos) {
 				TransferDirection::forEach([&](auto direction){
-
 					// index particles to be exported
 					auto neighborPosition = direction.step(pos, size);
 					int targetRank = getRankOf(neighborPosition);
 					if(targetRank != rank) {
+						transfers[targetRank];	// creates at least an empty list for this target rank
 						const auto& particles = buffers.getBuffer(neighborPosition, direction.inverse());
-						auto& targetVector = transfers[targetRank][neighborPosition];
-						targetVector.insert(targetVector.end(), particles.cbegin(), particles.cend());
-
+						if (!particles.empty()) {
+							transfers[targetRank].push_back({neighborPosition,&particles});
+						}
 						// clear old buffer state
-						buffers.getBuffer(pos,direction).clear();
+						auto& buffer = buffers.getBuffer(pos,direction);
+						if (!buffer.empty()) buffer.clear();
 					}
-
-
 				});
 			});
-
-//			if(isMaster()) {
-//				for(auto& outer : transfers) {
-//					std::cout << "Target Rank: " << outer.first << std::endl;
-//					for(auto& inner : outer.second) {
-//						std::cout << "  Target Cell: " << inner.first << std::endl;
-//						std::cout << "    Particles: " << inner.second << std::endl;
-//					}
-//				}
-//			}
 
 			std::map<int, allscale::utils::ArchiveWriter> serializers;
 			for(const auto& transfer : transfers) {
 				auto& out = serializers[transfer.first];
 				out.write<std::size_t>(transfer.second.size());
 				for(const auto& entry : transfer.second) {
+					assert_false(entry.second.empty());
 					out.write<coordinate_type>(entry.first);
-					out.write<std::vector<Particle>>(entry.second);
+					out.write<std::vector<Particle>>(*entry.second);
 				}
 			}
 
@@ -237,7 +225,6 @@ namespace ipic3d {
 				auto& buffer = archive.getBuffer();
 				MPI_Isend(const_cast<char*>(&buffer[0]), buffer.size(), MPI_BYTE, serializer.first, 0, MPI_COMM_WORLD, &sendRequests[sendIndex++]);
 			}
-
 
 			// receive a message from all our neighbors
 			for(int i = 0; i < transfers.size(); ++i) {
@@ -256,6 +243,7 @@ namespace ipic3d {
 				for(std::size_t j = 0; j < numberOfCells; ++j) {
 					auto cellPosition = reader.read<coordinate_type>();
 					auto particles = reader.read<std::vector<Particle>>();
+					assert_false(particles.empty());
 					assert_eq(instance.getRankOf(cellPosition), rank) << "For cell position: " << cellPosition;
 					auto& targetVector = buffers.getBuffer(cellPosition, TransferDirection(0, 0, 0));
 					targetVector.insert(targetVector.end(), particles.cbegin(), particles.cend());
