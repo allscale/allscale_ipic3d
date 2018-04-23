@@ -94,6 +94,74 @@ namespace ipic3d {
 			return flattenCellCoordinates(size.x, size.y, size.z);
 		}
 
+	private:
+
+		static int minDivisior(int x) {
+			for(int d=2; ; d++) {
+				if (x%d == 0) return d;
+			}
+			return x;
+		}
+
+		static void initDistribution(int level, int beginRank, int endRank, const coordinate_type& min, const coordinate_type& max) {
+			auto& distribution = getInstance().distribution;
+
+			// if only one rank left => base case
+			if (beginRank + 1 == endRank) {
+
+				int counter = 0;
+
+				// fill with minRank
+				for(int x=min.x; x<max.x; x++) {
+					for(int y=min.y; y<max.y; y++) {
+						for(int z=min.z; z<max.z; z++) {
+							auto pos = flattenCellCoordinates(x, y, z);
+							distribution[pos] = beginRank;
+							counter++;
+						}
+					}
+				}
+
+				// Distribution debugging:
+//				if (isMaster()) std::cout << "Assigning " << min << " - " << max << " to rank " << beginRank << " - total of " << counter << " cells\n";
+
+				return;
+			}
+
+			// need to split further
+			int splitDim = level % 3;
+
+			// compute number of fragments
+			int numRanks = endRank - beginRank;
+			int fragments = minDivisior(numRanks);
+
+			int l = max[splitDim] - min[splitDim];
+			int share = l / fragments;
+
+			int i = 0;
+			int curBegin = min[splitDim];
+			int curEnd = curBegin + share + ((l % share > i) ? 1 : 0);
+			while(curBegin < max[splitDim]) {
+
+				auto curMin = min;
+				auto curMax = max;
+				curMin[splitDim] = curBegin;
+				curMax[splitDim] = curEnd;
+
+				auto curBeginRank = beginRank + i*(numRanks/fragments);
+				auto curEndRank = curBeginRank + (numRanks/fragments);
+				initDistribution(level+1,curBeginRank, curEndRank, curMin, curMax);
+
+				// compute next sub-fragment of region
+				i++;
+				curBegin = curEnd;
+				curEnd = curBegin + share + ((l % share > i) ? 1 : 0);
+			}
+
+		}
+
+	public:
+
 		static void initCellDistribution(const grid_size_t& size) {
 
 			auto& instance = getInstance();
@@ -110,16 +178,8 @@ namespace ipic3d {
 			// create the distribution 'cube'
 			distribution.resize(size.x * size.y * size.z);
 
-			// setup distribution (for now, super stupid)
-			for(int x=0; x<size.x; x++) {
-				for(int y=0; y<size.y; y++) {
-					for(int z=0; z<size.z; z++) {
-						// TODO: find some better distribution
-						auto pos = flattenCellCoordinates(x, y, z);
-						distribution[pos] = pos % group_size;
-					}
-				}
-			}
+			// initialize recursive
+			initDistribution(0,0,group_size, 0, size);
 
 		}
 
