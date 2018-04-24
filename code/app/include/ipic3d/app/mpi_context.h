@@ -269,7 +269,7 @@ namespace ipic3d {
 				auto& out = serializers[transfer.first];
 				out.write<std::size_t>(transfer.second.size());
 				for(const auto& entry : transfer.second) {
-					assert_false(entry.second.empty());
+					assert_false(entry.second->empty());
 					out.write<coordinate_type>(entry.first);
 					out.write<std::vector<Particle>>(*entry.second);
 				}
