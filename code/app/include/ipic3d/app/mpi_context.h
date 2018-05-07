@@ -289,12 +289,17 @@ namespace ipic3d {
 			// receive a message from all our neighbors
 			for(int i = 0; i < transfers.size(); ++i) {
 				MPI_Status status;
-				MPI_Message message;
-				MPI_Mprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &message, &status);
+
+				// M-version of API not supported by intel MPI
+				int flag = 0;
+				while (!flag) {
+					MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
+				}
+
 				int size;
 				MPI_Get_count(&status, MPI_BYTE, &size);
 				std::vector<char> buffer(size);
-				MPI_Mrecv(&buffer[0], size, MPI_BYTE, &message, MPI_STATUS_IGNORE);
+				MPI_Recv(&buffer[0], size, MPI_BYTE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
 				allscale::utils::Archive archive(buffer);
 				allscale::utils::ArchiveReader reader(archive);
