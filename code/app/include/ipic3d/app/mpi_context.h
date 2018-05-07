@@ -14,6 +14,162 @@
 
 namespace ipic3d {
 
+	namespace partitioning {
+
+
+		namespace detail {
+
+			std::size_t flattenCellCoordinates(const allscale::utils::Vector<int64_t,3>& size, const int64_t x, const int64_t y, const int64_t z) {
+				return (x*size.y + y)*size.z + z;
+			}
+
+			// --- Binary splitting distribution ---
+
+			inline int minDivisior(int x) {
+				for(int d=2; ; d++) {
+					if (x%d == 0) return d;
+				}
+				return x;
+			}
+
+			inline void initDistribution(std::vector<int>& distribution, const allscale::utils::Vector<int64_t,3>& fullSize, int level, int beginRank, int endRank, const coordinate_type& min, const coordinate_type& max) {
+
+				// if only one rank left => base case
+				if (beginRank + 1 == endRank) {
+
+					int counter = 0;
+
+					// fill with minRank
+					for(int x=min.x; x<max.x; x++) {
+						for(int y=min.y; y<max.y; y++) {
+							for(int z=min.z; z<max.z; z++) {
+								auto pos = flattenCellCoordinates(fullSize,x, y, z);
+								distribution[pos] = beginRank;
+								counter++;
+							}
+						}
+					}
+
+					// Distribution debugging:
+	//				if (isMaster()) std::cout << "Assigning " << min << " - " << max << " to rank " << beginRank << " - total of " << counter << " cells\n";
+
+					return;
+				}
+
+				// need to split further
+				int splitDim = level % 3;
+
+				// compute number of fragments
+				int numRanks = endRank - beginRank;
+				int fragments = minDivisior(numRanks);
+
+				int l = max[splitDim] - min[splitDim];
+				int share = l / fragments;
+				int excess = l % fragments;
+
+				int i = 0;
+				int curBegin = min[splitDim];
+				int curEnd = curBegin + share + ((i < excess) ? 1 : 0);
+				while(curBegin < max[splitDim]) {
+
+					auto curMin = min;
+					auto curMax = max;
+					curMin[splitDim] = curBegin;
+					curMax[splitDim] = curEnd;
+
+					auto curBeginRank = beginRank + i*(numRanks/fragments);
+					auto curEndRank = curBeginRank + (numRanks/fragments);
+					initDistribution(distribution,fullSize,level+1,curBeginRank, curEndRank, curMin, curMax);
+
+					// compute next sub-fragment of region
+					i++;
+					curBegin = curEnd;
+					curEnd = curBegin + share + ((i < excess) ? 1 : 0);
+				}
+
+			}
+
+		} // end namespace detail
+
+		inline std::vector<int> partitionSpaceBinary(int ranks, const allscale::utils::Vector<int64_t,3>& size) {
+			auto res = std::vector<int>(size.x * size.y * size.z);
+
+			// initialize recursive
+			detail::initDistribution(res,size,0,0,ranks,0,size);
+
+			// done
+			return res;
+		}
+
+		// --- Z Curve distribution ---
+
+		inline int interleave(int x, int y, int z) {
+			int res = 0;
+			for(int i=7; i>=0; i--) {
+				res = res | ((x >> i) & 0x1);
+				res = res << 1;
+
+				res = res | ((y >> i) & 0x1);
+				res = res << 1;
+
+				res = res | ((z >> i) & 0x1);
+				res = res << 1;
+			}
+			return res;
+		}
+
+		inline std::vector<int> partitionSpaceZCurve(int ranks, const allscale::utils::Vector<int64_t,3>& size) {
+			auto res = std::vector<int>(size.x * size.y * size.z);
+
+			using Point = allscale::utils::Vector<int64_t,3>;
+
+			assert_lt(size.x,256);
+			assert_lt(size.y,256);
+			assert_lt(size.z,256);
+
+			// assign z-curve values
+			std::vector<std::pair<int,Point>> points(res.size());
+			for(int x = 0; x<size.x; x++) {
+				for(int y = 0; y<size.y; y++) {
+					for(int z = 0; z<size.z; z++) {
+						int val = interleave(x,y,z);
+						points[detail::flattenCellCoordinates(size,x,y,z)] = std::make_pair(val,Point(x,y,z));
+					}
+				}
+			}
+
+			// sort points by value
+			std::sort(points.begin(), points.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+
+			// partition
+			int fragment = res.size() / ranks;
+			int excess = res.size() % ranks;
+
+			int i = 0;
+			std::size_t curBegin = 0;
+			std::size_t curEnd = curBegin + fragment + (i < excess ? 1 : 0);
+			while(curBegin < res.size()) {
+				for(std::size_t j=curBegin; j<curEnd; j++) {
+					auto pos = points[j].second;
+					res[detail::flattenCellCoordinates(size,pos.x,pos.y,pos.z)] = i;
+				}
+
+				i++;
+				curBegin = curEnd;
+				curEnd = curBegin + fragment + (i < excess ? 1 : 0);
+			}
+
+			// done
+			return res;
+		}
+
+
+		inline std::vector<int> partitionSpace(int ranks, const allscale::utils::Vector<int64_t,3>& size) {
+//			return partitionSpaceBinary(ranks,size);
+			return partitionSpaceZCurve(ranks,size);
+		}
+	}
+
 	/**
 	 * A global management context of MPI related information
 	 * within ipic3d instances.
@@ -94,74 +250,6 @@ namespace ipic3d {
 			return flattenCellCoordinates(size.x, size.y, size.z);
 		}
 
-	private:
-
-		static int minDivisior(int x) {
-			for(int d=2; ; d++) {
-				if (x%d == 0) return d;
-			}
-			return x;
-		}
-
-		static void initDistribution(int level, int beginRank, int endRank, const coordinate_type& min, const coordinate_type& max) {
-			auto& distribution = getInstance().distribution;
-
-			// if only one rank left => base case
-			if (beginRank + 1 == endRank) {
-
-				int counter = 0;
-
-				// fill with minRank
-				for(int x=min.x; x<max.x; x++) {
-					for(int y=min.y; y<max.y; y++) {
-						for(int z=min.z; z<max.z; z++) {
-							auto pos = flattenCellCoordinates(x, y, z);
-							distribution[pos] = beginRank;
-							counter++;
-						}
-					}
-				}
-
-				// Distribution debugging:
-//				if (isMaster()) std::cout << "Assigning " << min << " - " << max << " to rank " << beginRank << " - total of " << counter << " cells\n";
-
-				return;
-			}
-
-			// need to split further
-			int splitDim = level % 3;
-
-			// compute number of fragments
-			int numRanks = endRank - beginRank;
-			int fragments = minDivisior(numRanks);
-
-			int l = max[splitDim] - min[splitDim];
-			int share = l / fragments;
-
-			int i = 0;
-			int curBegin = min[splitDim];
-			int curEnd = curBegin + share + ((l % share > i) ? 1 : 0);
-			while(curBegin < max[splitDim]) {
-
-				auto curMin = min;
-				auto curMax = max;
-				curMin[splitDim] = curBegin;
-				curMax[splitDim] = curEnd;
-
-				auto curBeginRank = beginRank + i*(numRanks/fragments);
-				auto curEndRank = curBeginRank + (numRanks/fragments);
-				initDistribution(level+1,curBeginRank, curEndRank, curMin, curMax);
-
-				// compute next sub-fragment of region
-				i++;
-				curBegin = curEnd;
-				curEnd = curBegin + share + ((l % share > i) ? 1 : 0);
-			}
-
-		}
-
-	public:
-
 		static void initCellDistribution(const grid_size_t& size) {
 
 			auto& instance = getInstance();
@@ -176,10 +264,7 @@ namespace ipic3d {
 			grid_size = size;
 
 			// create the distribution 'cube'
-			distribution.resize(size.x * size.y * size.z);
-
-			// initialize recursive
-			initDistribution(0,0,group_size, 0, size);
+			distribution = partitioning::partitionSpace(group_size,size);
 
 		}
 
@@ -287,7 +372,7 @@ namespace ipic3d {
 			}
 
 			// receive a message from all our neighbors
-			for(int i = 0; i < transfers.size(); ++i) {
+			for(std::size_t i = 0; i < transfers.size(); ++i) {
 				MPI_Status status;
 
 				// M-version of API not supported by intel MPI
