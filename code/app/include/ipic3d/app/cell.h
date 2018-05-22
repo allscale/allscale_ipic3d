@@ -58,6 +58,14 @@ namespace ipic3d {
 	}
 
 	/**
+	 * Computes the coordinates of a cell the given particle should be located in.
+	 */
+	utils::Coordinate<3> getCellCoordinates(const UniverseProperties& universeProperties, const Particle& p) {
+		auto cordf = elementwiseDivision((p.position - universeProperties.origin),universeProperties.cellWidth);
+		return { std::int64_t(cordf.x), std::int64_t(cordf.y), std::int64_t(cordf.z) };
+	}
+
+	/**
 	 * Tests whether a given particle is within the particle universe.
 	 * @param universeProperties the properties of this universe
 	 * @param p the particle to be tested
