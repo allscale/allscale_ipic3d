@@ -40,6 +40,43 @@ namespace ipic3d {
 	// declaration
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields);
 
+	FieldNode getDipoleFieldAt(const Vector3<double>& location, const InitProperties& initProperties, const UniverseProperties& universeProperties) {
+
+		auto driftVel = initProperties.driftVelocity;
+		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
+		auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
+
+		// radius of the planet
+		double a = universeProperties.planetRadius;
+
+		FieldNode res;
+
+		// initialize electrical field
+		res.E = ebc;
+
+		// initialize magnetic field
+		res.B = initProperties.magneticFieldAmplitude;
+
+		// -- add earth model --
+
+		auto diff = location - universeProperties.objectCenter;
+
+		double r2 = allscale::utils::sumOfSquares(diff);
+
+		// Compute dipolar field B_ext
+		if (r2 > a*a) {
+			auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
+			res.Bext.x = 3.0 * diff.x * diff.z * fac1;
+			res.Bext.y = 3.0 * diff.y * diff.z * fac1;
+			res.Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
+		} else { // no field inside the planet
+			res.Bext = { 0.0, 0.0, 0.0 };
+		}
+
+		// done
+		return res;
+	}
+
 	// definition
 	Field initFields(const InitProperties& initProperties, const UniverseProperties& universeProperties) {
 
@@ -57,47 +94,14 @@ namespace ipic3d {
 
 			case UseCase::Dipole: {
 
-				auto driftVel = initProperties.driftVelocity;
-				assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
-				auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
-
-				// radius of the planet
-				double a = universeProperties.planetRadius;
-
-				// Dipole's Center
-				auto objectCenter = universeProperties.objectCenter;
-
 				pfor(start, workingFieldSize, [=,&fields](const utils::Coordinate<3>& cur) {
-
-					// TODO: required to work around an allscalecc frontend bug
-					// should be removed once the issue in the compiler is resolved
-					fields[cur].Bext = { 0.0, 0.0, 0.0 };
-
-					// initialize electrical field
-					fields[cur].E = ebc;
-
-					// initialize magnetic field
-					fields[cur].B = initProperties.magneticFieldAmplitude;
-
-					// -- add earth model --
 
 					// Node coordinates
 					// pos-start due to the fact that we have a ghost field
 					auto location = getLocationForFields(cur-start, universeProperties);
 
-					auto diff = location - objectCenter;
-
-					double r2 = allscale::utils::sumOfSquares(diff);
-
-					// Compute dipolar field B_ext
-					if (r2 > a*a) {
-						auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
-						fields[cur].Bext.x = 3.0 * diff.x * diff.z * fac1;
-						fields[cur].Bext.y = 3.0 * diff.y * diff.z * fac1;
-						fields[cur].Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
-					} else { // no field inside the planet
-						fields[cur].Bext = { 0.0, 0.0, 0.0 };
-					}
+					// init current field cell
+					fields[cur] = getDipoleFieldAt(location, initProperties, universeProperties);
 
 				});
 

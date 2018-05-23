@@ -15,7 +15,11 @@ using namespace allscale::api::user::algorithm;
 using namespace ipic3d;
 
 
-void traceParticle(Particle p, int T, const UniverseProperties& config, const Field& field) {
+
+// --- tracing particles ---
+
+
+void traceParticle(Particle p, int T, const UniverseProperties& config, const InitProperties& fieldProperties) {
 
 	// extract some properties
 	auto dt = config.dt;
@@ -52,8 +56,10 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const Fi
 				for(int j=0; j<2; j++) {
 					for(int k=0; k<2; k++) {
 						utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
-						Es[i][j][k] = field[cur].E;
-						Bs[i][j][k] = field[cur].B;
+						Vector3<double> loc = universeLow + elementwiseProduct(config.cellWidth, cur);
+						auto fieldNode = getDipoleFieldAt(loc, fieldProperties, config);
+						Es[i][j][k] = fieldNode.E;
+						Bs[i][j][k] = fieldNode.B;
 					}
 				}
 			}
@@ -115,11 +121,10 @@ int main(int argc, char** argv) {
 	// create a field
 	InitProperties initProps;
 	initProps.driftVelocity.push_back(0);
-	Field field = initFields(initProps, config);
 
 	// run simulation
 	auto start = std::chrono::high_resolution_clock::now();
-	pfor(0,N,[&,T](int){
+	pfor(0,N,[&,T,config,initProps](int){
 
 		// create a particle
 		Particle p;		// TODO: define initial position and velocity
@@ -127,7 +132,7 @@ int main(int argc, char** argv) {
 		p.velocity = { 10, 10, 10 };
 
 		// trace its trajectory
-		traceParticle(p,T,config,field);
+		traceParticle(p,T,config,initProps);
 	});
 	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << "Simulation Finished" << std::endl;
