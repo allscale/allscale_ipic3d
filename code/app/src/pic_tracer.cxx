@@ -14,78 +14,19 @@ using namespace allscale::utils;
 using namespace allscale::api::user::algorithm;
 using namespace ipic3d;
 
-///**
-// * This function updates the position of all particles within a cell for a single
-// * time step, considering the given field as a driving force.
-// *
-// * @param universeProperties the properties of this universe
-// * @param cell the cell whose particles are moved
-// * @param pos the coordinates of this cell in the grid
-// * @param field the most recently computed state of the surrounding force fields
-// */
-//void moveParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
-//
-//	assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
-//
-//	// quick-check
-//	if (cell.particles.empty()) return;
-//
-//	// -- move the particles in space --
-//
-//	// extract forces
-//	// TODO: move this to some C++ structure
-//	Vector3<double> Es[2][2][2];
-//	Vector3<double> Bs[2][2][2];
-//	for(int i=0; i<2; i++) {
-//		for(int j=0; j<2; j++) {
-//			for(int k=0; k<2; k++) {
-//				utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
-//				Es[i][j][k] = field[cur].E;
-//				Bs[i][j][k] = field[cur].B;
-//			}
-//		}
-//	}
-//
-//	const auto cellOrigin = getOriginOfCell(pos, universeProperties);
-//
-//	double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
-//
-//	// update particles
-////		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
-//	for(std::size_t i=0; i<cell.particles.size(); ++i) {
-//		Particle& p = cell.particles[i];
-//		// Docu: https://www.particleincell.com/2011/vxb-rotation/
-//		// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
-//
-//		// get the fractional distance of the particle from the cell origin
-//		const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
-//
-//		// interpolate
-//		auto E = trilinearInterpolationF2P(Es, relPos, vol);
-//		auto B = trilinearInterpolationF2P(Bs, relPos, vol);
-//
-//		// update velocity
-//		p.updateVelocity(E, B, universeProperties.dt);
-//
-//		// update position
-//		p.updatePosition(universeProperties.dt);
-//	}
-////		});
-//
-//}
 
-
-
-void traceParticle(int T, const UniverseProperties& config, const Field& field) {
+void traceParticle(Particle p, int T, const UniverseProperties& config, const Field& field) {
 
 	// extract some properties
 	auto dt = config.dt;
 	auto cellWidth = config.cellWidth;
 
-	// create a particle
-	Particle p;		// TODO: define initial position and velocity
-
 	double vol = config.cellWidth.x * config.cellWidth.y * config.cellWidth.z;
+
+	// get universe size
+	auto universeSize = elementwiseProduct(config.cellWidth, config.size);
+	auto universeLow  = config.origin;
+	auto universeHigh = config.origin + universeSize;
 
 	// get the currently active cell position
 	utils::Coordinate<3> pos = { -1, -1, -1 };
@@ -130,8 +71,15 @@ void traceParticle(int T, const UniverseProperties& config, const Field& field) 
 
 		// update position
 		p.updatePosition(dt);
+
+		// support wrap-around
+		for(std::size_t i=0; i<3; i++) {
+			if (p.position[i] > universeHigh[i]) p.position[i] -= universeSize[i];
+			if (p.position[i] < universeLow[i])  p.position[i] += universeSize[i];
+		}
 	}
 }
+
 
 int main(int argc, char** argv) {
 
@@ -162,6 +110,8 @@ int main(int argc, char** argv) {
 	config.size = { 64, 64, 64 };
 	config.FieldOutputCycle = 0;
 
+	config.useCase = UseCase::Dipole;
+
 	// create a field
 	InitProperties initProps;
 	initProps.driftVelocity.push_back(0);
@@ -170,8 +120,14 @@ int main(int argc, char** argv) {
 	// run simulation
 	auto start = std::chrono::high_resolution_clock::now();
 	pfor(0,N,[&,T](int){
-		// simulate one particle
-		traceParticle(T,config,field);
+
+		// create a particle
+		Particle p;		// TODO: define initial position and velocity
+		p.position = {  1,  1,  1 };
+		p.velocity = { 10, 10, 10 };
+
+		// trace its trajectory
+		traceParticle(p,T,config,field);
 	});
 	auto end = std::chrono::high_resolution_clock::now();
 	std::cout << "Simulation Finished" << std::endl;
