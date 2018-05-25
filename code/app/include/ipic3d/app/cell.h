@@ -551,6 +551,10 @@ namespace ipic3d {
 	T trilinearInterpolationF2P(const T corners[2][2][2], const Vector3<double>& pos, const double vol) {
 		T res = T(0);
 
+		assert_le(0,pos.x); assert_le(pos.x,1);
+		assert_le(0,pos.y); assert_le(pos.y,1);
+		assert_le(0,pos.z); assert_le(pos.z,1);
+
 		for(int i = 0; i < 2; ++i) {
 			for(int j = 0; j < 2; ++j) {
 				for(int k = 0; k < 2; ++k) {
