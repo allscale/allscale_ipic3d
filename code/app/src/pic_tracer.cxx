@@ -150,9 +150,9 @@ int main(int argc, char** argv) {
 	// ----- load and parse simulation parameters ------
 
 	// parameters
-	int N = 1000 * 1000;		// < number of particles
-	int T = 1000;				// < number of time steps
-	int S = 1000;				// < number of time steps between frames
+	int N = 1000;		// < number of particles
+	int T = 10;				// < number of time steps
+	int S = 10;				// < number of time steps between frames
 
 	// take command line parameters
 	if (argc > 1) {
@@ -177,14 +177,15 @@ int main(int argc, char** argv) {
 
 	// set up relevant universe properties
 	UniverseProperties config;
-	config.dt = 0.01;
-	config.cellWidth = 10;
+	config.dt = 0.015; // 0.15
+	config.cellWidth = 10; // TODO: more realistic
 //	config.size = { 64, 64, 64 };
 	config.size = { 16, 16, 16 };
 	config.FieldOutputCycle = 0;
 
 	config.useCase = UseCase::Dipole;
-	config.magneticField = { 0, 0, 1 };
+	// initial magnetic field: B0 in the inputs
+	config.magneticField = { 0, 0, 0.0001 };
 
 	// create a field
 	InitProperties initProps;
@@ -194,19 +195,21 @@ int main(int argc, char** argv) {
 	auto start = std::chrono::high_resolution_clock::now();
 
 	// Old pfor-based version in case AllScale compiler will be unable to compile reduction
-//		pfor(0,N,[&,T,config,initProps](int){
-//
-//			// create a particle
-//			Particle p;		// TODO: define initial position and velocity
-//			p.position = {  1,  1,  1 };
-//			p.velocity = { 10, 10, 10 };
-//
-//			// trace its trajectory
-//			traceParticle(p,T,config,initProps);
-//		});
+	#if 0
+	pfor(0,N,[&,T,config,initProps](int){
 
+		// create a particle
+		Particle p;		// TODO: define initial position and velocity
+		p.position = {  1,  1,  1 };
+		p.velocity = { 10, 10, 10 };
+
+		// trace its trajectory
+		traceParticle(p,T,config,initProps);
+	});
+	#endif
 
 	// the block size to be used
+	// TODO: how do we use the block size? does it connect to T and S?
 	int B = 1000;		// the blocking factor ..
 
 	// a map operator for a range of elements
@@ -216,6 +219,7 @@ int main(int argc, char** argv) {
 		// create a random particle generator
 		auto low = config.origin;
 		auto hig = low + elementwiseProduct(config.cellWidth,config.size);
+		// TODO: need to have the same particle distribution as in the initCells in cells.h
 		distribution::uniform<> next(
 				low,hig, // within the universe
 				// speeds are constant
@@ -251,18 +255,19 @@ int main(int argc, char** argv) {
 	std::cout << "Throughput: " << (T * N) / s << " particles/s \n";
 
 	// save result
-	for(int t=0; t<num_frames; t++) {
-		std::cout << "t=" << t << "\n";
-		for(int x=0; x<config.size.x;x++) {
-			for(int y=0; y<config.size.y;y++) {
-				for(int z=0; z<config.size.z;z++) {
-					std::cout << res.get(0,x,y,z) << " ";
-				}
-				std::cout << "\n";
-			}
-			std::cout << "\n";
-		}
-	}
+//	// TODO: uncomment
+//	for(int t=0; t<num_frames; t++) {
+//		std::cout << "t=" << t << "\n";
+//		for(int x=0; x<config.size.x;x++) {
+//			for(int y=0; y<config.size.y;y++) {
+//				for(int z=0; z<config.size.z;z++) {
+//					std::cout << res.get(0,x,y,z) << " ";
+//				}
+//				std::cout << "\n";
+//			}
+//			std::cout << "\n";
+//		}
+//	}
 
 	// be done
 	return EXIT_SUCCESS;

@@ -68,7 +68,7 @@ namespace ipic3d {
 		// physical point of origin corresponds to the front lower left corner
 		// 		by defaul it is {0, 0, 0}
 		Vector3<double> origin; 
-		// magnetic field
+		// initial magnetic field
 		Vector3<double> magneticField;
 		int FieldOutputCycle;
 		std::string outputFileBaseName;
