@@ -71,7 +71,6 @@ private:
 
 // --- tracing particles ---
 
-
 void traceParticle(Particle p, int T, const UniverseProperties& config, const InitProperties& fieldProperties, int frame_interval, ParticleCount& res) {
 
 	// extract some properties
@@ -118,11 +117,6 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const In
 			}
 		}
 
-		// register particle in cell if necessary
-		if (t % frame_interval == 0) {
-			res.increment(t/frame_interval, pos);
-		}
-
 		// get the fractional distance of the particle from the cell origin
 		const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), cellWidth);
 
@@ -130,16 +124,37 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const In
 		auto E = trilinearInterpolationF2P(Es, relPos, vol);
 		auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
-		// update velocity
-		p.updateVelocity(E,B,dt);
+		// adaptive sub-cycling for computing velocity
+		double B_mag = allscale::utils::sumOfSquares(B);
+		double dt_sub = M_PI * config.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
+		int sub_cycles = int(dt / dt_sub) + 1;
+		dt_sub = dt / double(sub_cycles);
 
-		// update position
-		p.updatePosition(dt);
+		for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
+			// update velocity
+			p.updateVelocity(E,B,dt_sub);
 
-		// support wrap-around
+			// update position
+			p.updatePosition(dt_sub);
+		}
+
+		// support wrap-around -- periodic boundary conditions
 		for(std::size_t i=0; i<3; i++) {
 			if (p.position[i] > universeHigh[i]) p.position[i] -= universeSize[i];
 			if (p.position[i] < universeLow[i])  p.position[i] += universeSize[i];
+		}
+
+		// remove particles from inside the sphere
+		//   In fact, we just stop computing
+		auto diff = p.position - config.objectCenter;
+		double r2 = allscale::utils::sumOfSquares(diff);
+		if (r2 < config.planetRadius * config.planetRadius) {
+			return;
+		}
+
+		// register particle in cell if necessary
+		if (t % frame_interval == 0) {
+			res.increment(t/frame_interval, pos);
 		}
 	}
 }
@@ -177,8 +192,8 @@ int main(int argc, char** argv) {
 
 	// set up relevant universe properties
 	UniverseProperties config;
-	config.dt = 0.015; // 0.15
-	config.cellWidth = 10; // TODO: more realistic
+	config.dt = 0.15; 
+	config.cellWidth = 0.625;
 //	config.size = { 64, 64, 64 };
 	config.size = { 16, 16, 16 };
 	config.FieldOutputCycle = 0;
@@ -189,7 +204,7 @@ int main(int argc, char** argv) {
 
 	// create a field
 	InitProperties initProps;
-	initProps.driftVelocity.push_back(0);
+	initProps.driftVelocity.push_back( {0.02, 0.0, 0.0} ); // TODO: try with zeros as well
 
 	// run simulation
 	auto start = std::chrono::high_resolution_clock::now();

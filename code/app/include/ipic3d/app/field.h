@@ -46,18 +46,15 @@ namespace ipic3d {
 		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
 		auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
 
-		// radius of the planet
-		double a = universeProperties.planetRadius;
-
 		FieldNode res;
 
 		// initialize electrical field
 		res.E = ebc;
 
-		// initialize magnetic field
-		res.B = initProperties.magneticFieldAmplitude;
-
 		// -- add earth model --
+
+		// radius of the planet
+		double a = universeProperties.planetRadius;
 
 		auto diff = location - universeProperties.objectCenter;
 
@@ -72,6 +69,9 @@ namespace ipic3d {
 		} else { // no field inside the planet
 			res.Bext = { 0.0, 0.0, 0.0 };
 		}
+
+		// initialize magnetic field
+		res.B = initProperties.magneticFieldAmplitude;
 
 		// done
 		return res;
