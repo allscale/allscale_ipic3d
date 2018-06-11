@@ -71,7 +71,7 @@ namespace ipic3d {
 		}
 
 		// initialize magnetic field
-		res.B = initProperties.magneticFieldAmplitude;
+		res.B = initProperties.magneticFieldAmplitude + res.Bext;
 
 		// done
 		return res;

@@ -166,8 +166,8 @@ int main(int argc, char** argv) {
 
 	// parameters
 	int N = 1000;		// < number of particles
-	int T = 10;				// < number of time steps
-	int S = 10;				// < number of time steps between frames
+	int T = 1000;				// < number of time steps
+	int S = 100;				// < number of time steps between frames
 
 	// take command line parameters
 	if (argc > 1) {
@@ -197,6 +197,13 @@ int main(int argc, char** argv) {
 //	config.size = { 64, 64, 64 };
 	config.size = { 16, 16, 16 };
 	config.FieldOutputCycle = 0;
+
+	// these parameters are required for computations
+	config.planetRadius = 0.5;
+	config.objectCenter = {6.0, 5.0, 5.0};
+	config.origin.x = config.objectCenter.x - config.size.x * config.cellWidth.x / 2.0; 
+	config.origin.y = config.objectCenter.y - config.size.y * config.cellWidth.y / 2.0; 
+	config.origin.z = config.objectCenter.z - config.size.z * config.cellWidth.z / 2.0; 
 
 	config.useCase = UseCase::Dipole;
 	// initial magnetic field: B0 in the inputs
