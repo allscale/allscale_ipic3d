@@ -246,6 +246,30 @@ namespace ipic3d {
 
 		};
 
+		template<typename SpeciesGen = species::electron>
+		struct uniform_pos_normal_speed : public generic_particle_generator<vector::uniform,vector::normal,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::uniform,vector::normal,SpeciesGen>;
+
+			uniform_pos_normal_speed(
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+
+			uniform_pos_normal_speed(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+
+		};
+
 		template<typename Distribution>
 		class spherical {
 

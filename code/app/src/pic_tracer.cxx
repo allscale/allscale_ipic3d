@@ -235,11 +235,11 @@ int main(int argc, char** argv) {
 		auto low = config.origin;
 		auto hig = low + elementwiseProduct(config.cellWidth,config.size);
 		// TODO: need to have the same particle distribution as in the initCells in cells.h
-		distribution::uniform<> next(
+		distribution::uniform_pos_normal_speed<> next(
 				low,hig, // within the universe
-				// speeds are constant
-				Vector3<double> { -0.2, -0.2, -0.2},
-				Vector3<double> { +0.2, +0.2, +0.2},
+				// speeds are normal distributed
+				Vector3<double> {  0.2,  0.0,  0.0},  // mean value
+				Vector3<double> { 0.02, 0.02, 0.02},  // variance
 				a*b
 		);
 
