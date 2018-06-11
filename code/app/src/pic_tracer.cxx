@@ -238,8 +238,8 @@ int main(int argc, char** argv) {
 		distribution::uniform_pos_normal_speed<> next(
 				low,hig, // within the universe
 				// speeds are normal distributed
-				Vector3<double> {  0.2,  0.0,  0.0},  // mean value
-				Vector3<double> { 0.02, 0.02, 0.02},  // variance
+				Vector3<double> { 0.02,  0.0,   0.0},   // mean value
+				Vector3<double> { 0.045, 0.045, 0.045}, // variance
 				a*b
 		);
 
