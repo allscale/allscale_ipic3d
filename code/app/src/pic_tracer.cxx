@@ -1,6 +1,8 @@
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 #include "allscale/api/user/algorithm/pfor.h"
@@ -278,19 +280,24 @@ int main(int argc, char** argv) {
 	std::cout << "Throughput: " << (T * N) / s << " particles/s \n";
 
 	// save result
-//	// TODO: uncomment
-//	for(int t=0; t<num_frames; t++) {
-//		std::cout << "t=" << t << "\n";
-//		for(int x=0; x<config.size.x;x++) {
-//			for(int y=0; y<config.size.y;y++) {
-//				for(int z=0; z<config.size.z;z++) {
-//					std::cout << res.get(0,x,y,z) << " ";
-//				}
-//				std::cout << "\n";
-//			}
-//			std::cout << "\n";
-//		}
-//	}
+	{
+		// use the current time to create a unique file name
+		auto timeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+		auto resultFile = std::string("result_") + std::to_string(timeStamp) + ".csv";
+
+		// open file and dump results
+		auto out = std::fstream(resultFile.c_str(), std::ios_base::out);
+		out << "t,x,y,z,density\n";
+		for(int t=0; t<num_frames; t++) {
+			for(int x=0; x<config.size.x;x++) {
+				for(int y=0; y<config.size.y;y++) {
+					for(int z=0; z<config.size.z;z++) {
+						out << t << "," << x << "," << y << "," << z << "," << res.get(t,x,y,z) << "\n";
+					}
+				}
+			}
+		}
+	}
 
 	// be done
 	return EXIT_SUCCESS;
