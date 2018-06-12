@@ -130,6 +130,7 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const In
 		double B_mag = allscale::utils::sumOfSquares(B);
 		double dt_sub = M_PI * config.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
 		int sub_cycles = int(dt / dt_sub) + 1;
+		sub_cycles = std::min(sub_cycles,100);
 		dt_sub = dt / double(sub_cycles);
 
 		for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
@@ -168,7 +169,7 @@ int main(int argc, char** argv) {
 
 	// parameters
 	int N = 1000*1000;		// < number of particles
-	int T = 6000;				// < number of time steps
+	int T = 1000;				// < number of time steps
 	int S = 500;				// < number of time steps between frames
 
 	// take command line parameters
@@ -185,7 +186,7 @@ int main(int argc, char** argv) {
 	}
 
 	// some derived parameters
-	int num_frames = T / S;
+	int num_frames = T / S + 1;
 
 	// print some introduction and summary information
 
@@ -194,10 +195,10 @@ int main(int argc, char** argv) {
 
 	// set up relevant universe properties
 	UniverseProperties config;
-	config.dt = 0.15; 
-	config.cellWidth = 0.625;
+	config.dt = 0.15;
 //	config.size = { 64, 64, 64 };
-	config.size = { 16, 16, 16 };
+	config.size = { 128, 128, 128 };
+	config.cellWidth = double(10)/config.size.x;
 	config.FieldOutputCycle = 0;
 
 	// these parameters are required for computations
@@ -218,20 +219,6 @@ int main(int argc, char** argv) {
 
 	// run simulation
 	auto start = std::chrono::high_resolution_clock::now();
-
-	// Old pfor-based version in case AllScale compiler will be unable to compile reduction
-	#if 0
-	pfor(0,N,[&,T,config,initProps](int){
-
-		// create a particle
-		Particle p;		// TODO: define initial position and velocity
-		p.position = {  1,  1,  1 };
-		p.velocity = { 10, 10, 10 };
-
-		// trace its trajectory
-		traceParticle(p,T,config,initProps);
-	});
-	#endif
 
 	// the block size to be used
 	// TODO: how do we use the block size? does it connect to T and S?
@@ -258,7 +245,7 @@ int main(int argc, char** argv) {
 			Particle p = next();
 
 			// trace its trajectory
-			traceParticle(p,T,config,initProps,S,res);
+			traceParticle(p,T+1,config,initProps,S,res);
 		}
 		return res;
 	};
@@ -277,22 +264,28 @@ int main(int argc, char** argv) {
 	// print performance summary
 	double s = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / (1e9);
 	std::cout << "Simulation took " << s << "s\n";
-	std::cout << "Throughput: " << (T * N) / s << " particles/s \n";
+	std::cout << "Throughput: " << ((T+1) * N) / s << " particles/s \n";
 
 	// save result
 	{
 		// use the current time to create a unique file name
 		auto timeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-		auto resultFile = std::string("result_") + std::to_string(timeStamp) + ".csv";
-
-		// open file and dump results
-		auto out = std::fstream(resultFile.c_str(), std::ios_base::out);
-		out << "t,x,y,z,density\n";
 		for(int t=0; t<num_frames; t++) {
+
+			// generate file name
+			char fileName[50];
+			std::sprintf(fileName,"result_%ld.csv.%06d", timeStamp,t);
+
+			// open file and dump results
+			auto out = std::fstream(fileName, std::ios_base::out);
+			out << "t,x,y,z,density\n";
 			for(int x=0; x<config.size.x;x++) {
 				for(int y=0; y<config.size.y;y++) {
 					for(int z=0; z<config.size.z;z++) {
-						out << t << "," << x << "," << y << "," << z << "," << res.get(t,x,y,z) << "\n";
+						double dx = x * config.cellWidth.x;
+						double dy = y * config.cellWidth.y;
+						double dz = z * config.cellWidth.z;
+						out << t << "," << dx << "," << dy << "," << dz << "," << res.get(t,x,y,z) << "\n";
 					}
 				}
 			}
