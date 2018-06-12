@@ -168,8 +168,8 @@ int main(int argc, char** argv) {
 
 	// parameters
 	int N = 1000*1000;		// < number of particles
-	int T = 1000;				// < number of time steps
-	int S = 100;				// < number of time steps between frames
+	int T = 6000;				// < number of time steps
+	int S = 500;				// < number of time steps between frames
 
 	// take command line parameters
 	if (argc > 1) {
