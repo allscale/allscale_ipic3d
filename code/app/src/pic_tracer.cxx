@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
 	// ----- load and parse simulation parameters ------
 
 	// parameters
-	int N = 1000;		// < number of particles
+	int N = 1000*1000;		// < number of particles
 	int T = 1000;				// < number of time steps
 	int S = 100;				// < number of time steps between frames
 
@@ -206,11 +206,12 @@ int main(int argc, char** argv) {
 	config.origin.z = config.objectCenter.z - config.size.z * config.cellWidth.z / 2.0; 
 
 	config.useCase = UseCase::Dipole;
-	// initial magnetic field: B0 in the inputs
-	config.magneticField = { 0, 0, 0.0001 };
 
 	// create a field
 	InitProperties initProps;
+	// initial magnetic field: B0 in the inputs
+	initProps.magneticField = { 0, 0, 0.0001 };
+	initProps.externalMagneticField = { 0, 0, 2.0 };
 	initProps.driftVelocity.push_back( {0.02, 0.0, 0.0} ); // TODO: try with zeros as well
 
 	// run simulation

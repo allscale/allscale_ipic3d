@@ -44,7 +44,7 @@ namespace ipic3d {
 
 		auto driftVel = initProperties.driftVelocity;
 		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
-		auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
+		auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticField);
 
 		FieldNode res;
 
@@ -62,7 +62,7 @@ namespace ipic3d {
 
 		// Compute dipolar field B_ext
 		if (r2 > a*a) {
-			auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
+			auto fac1 =  -initProperties.externalMagneticField.z * pow(a, 3) / pow(r2, 2.5);
 			res.Bext.x = 3.0 * diff.x * diff.z * fac1;
 			res.Bext.y = 3.0 * diff.y * diff.z * fac1;
 			res.Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
@@ -71,7 +71,7 @@ namespace ipic3d {
 		}
 
 		// initialize magnetic field
-		res.B = initProperties.magneticFieldAmplitude + res.Bext;
+		res.B = initProperties.magneticField + res.Bext;
 
 		// done
 		return res;

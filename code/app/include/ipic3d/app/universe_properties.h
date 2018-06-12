@@ -68,15 +68,13 @@ namespace ipic3d {
 		// physical point of origin corresponds to the front lower left corner
 		// 		by defaul it is {0, 0, 0}
 		Vector3<double> origin; 
-		// initial magnetic field
-		Vector3<double> magneticField;
 		int FieldOutputCycle;
 		std::string outputFileBaseName;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::Dipole, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1.0, 1.0, 1.0},
 			const double dt = 1.0, const double speedOfLight = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, 
-			const Vector3<double>& magneticField = {0.0, 0.0, 0.0}, const int FieldOutputCycle = 1)
-	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), magneticField(magneticField), FieldOutputCycle(FieldOutputCycle) {
+			const int FieldOutputCycle = 1)
+	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), FieldOutputCycle(FieldOutputCycle) {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 			assert_true(size.x == size.y && size.y == size.z) << "Expected sizes of universe to be equal (=cubic universe), but got " << size.x << ", " << size.y << ", " << size.z;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
@@ -93,7 +91,6 @@ namespace ipic3d {
 			speedOfLight( params.c ),
 			planetRadius( params.planetRadius ),
 			objectCenter({ params.objectCenter.x, params.objectCenter.y, params.objectCenter.z }),
-			magneticField({ params.B0.x, params.B0.y, params.B0.z }),
 			FieldOutputCycle ( params.FieldOutputCycle ) 
 		{
 			origin.x = params.objectCenter.x - params.ncells.x * params.dspace.x / 2.0;
@@ -111,7 +108,6 @@ namespace ipic3d {
 			out << "\tPlanet radius: " << props.planetRadius << std::endl;
 			out << "\tObject center: " << props.objectCenter << std::endl;
 			out << "\tOrigin of the domain: " << props.origin << std::endl;
-			out << "\tMagnetic field: " << props.magneticField << std::endl;
 			out << "\tField's output cycle: " << props.FieldOutputCycle<< std::endl;
 			return out;
 		}

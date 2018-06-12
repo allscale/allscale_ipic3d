@@ -18,13 +18,20 @@ namespace ipic3d {
 		// initialize universe properties
 		UniverseProperties universeProperties = UniverseProperties(params);
 
-
 		// verify dipole init
-		// to cover the else statement
-		universeProperties.useCase = UseCase::Dipole;
-		universeProperties.planetRadius = 1000; 
 		Field fields = initFields(initProperties, universeProperties);
 
+		utils::Coordinate<3> pos{2, 2, 2};
+		EXPECT_NEAR(fields[pos].Bext.x, -0.0009123559809416308, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.y, -0.0009123559809416308, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.z, 0.0, 1e-15);
+
+		EXPECT_NEAR(fields[pos].B.x, -0.0009123559809416308, 1e-10);
+		EXPECT_NEAR(fields[pos].B.y, -0.0009123559809416308, 1e-10);
+		EXPECT_NEAR(fields[pos].B.z, 0.0001, 1e-10);
+
+		universeProperties.planetRadius = 1000; 
+		fields = initFields(initProperties, universeProperties);
 		auto start = utils::Coordinate<3>(1);
 		auto end = universeProperties.size + coordinate_type(2);
 		allscale::api::user::algorithm::pfor(start, end, [&](const utils::Coordinate<3>& cur) {
@@ -291,12 +298,12 @@ namespace ipic3d {
 		// verify for the Dipole case
 		utils::Coordinate<3> pos{1, 2, 4};
 
-		EXPECT_NEAR(fields[pos].Bext.x, -2.74633e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].Bext.y, -2.40304e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].Bext.z, 1.44183e-08, 1e-10);
-		EXPECT_NEAR(fields[pos].B.x, 0.0, 1e-10);
-		EXPECT_NEAR(fields[pos].B.y, 0.0, 1e-10);
-		EXPECT_NEAR(fields[pos].B.z, 0.0001, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.x, -0.00054926697, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.y, -0.00048060860, 1e-10);
+		EXPECT_NEAR(fields[pos].Bext.z,  0.00028836516, 1e-10);
+		EXPECT_NEAR(fields[pos].B.x, -0.00054926697, 1e-10);
+		EXPECT_NEAR(fields[pos].B.y, -0.00048060860, 1e-10);
+		EXPECT_NEAR(fields[pos].B.z,  0.00038836516, 1e-10);
 
 		allscale::api::user::algorithm::pfor(start, end, [&](const utils::Coordinate<3>& cur) {
 			EXPECT_NEAR(fields[cur].E.x, -0.0, 1e-06);

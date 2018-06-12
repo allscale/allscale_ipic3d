@@ -15,7 +15,8 @@ namespace ipic3d {
 		EXPECT_EQ(1, properties.numSteps);
 		EXPECT_EQ(std::vector<Vu>{}, properties.particlesPerCell);
 		EXPECT_EQ(std::vector<Vd>{}, properties.driftVelocity);
-		EXPECT_EQ((Vd{0,0,0}), properties.magneticFieldAmplitude);
+		EXPECT_EQ((Vd{0,0,0}), properties.magneticField);
+		EXPECT_EQ((Vd{0,0,0}), properties.externalMagneticField);
     }
 
 	TEST(InitProperties, Printable) {
