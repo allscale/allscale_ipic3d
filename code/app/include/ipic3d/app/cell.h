@@ -145,7 +145,9 @@ namespace ipic3d {
 					: x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
 
 				Vector3<double> operator()() {
-					return { x(randGen), y(randGen), z(randGen) };
+					return { 
+						x(randGen), y(randGen), z(randGen) 
+					};
 				}
 
 			};

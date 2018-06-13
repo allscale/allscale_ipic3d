@@ -22,19 +22,19 @@ K = K*e;   % convert to Joule
 % Find corresponding speed:
 v_mod = c/sqrt(1+(m*c^2)/K) 
 % initial position: equatorial plane 4Re from Earth
-x0 = 4*Re*rand(); 
+x0 = 4*Re; %*rand(); 
 y0 = 0; 
 z0 = 0;
 
-pitch_angle = 30.0 * rand() %  initial angle between velocity and mag.field (degrees)
+pitch_angle = 30.0; % * rand() %  initial angle between velocity and mag.field (degrees)
 
 % initial velocity
 u0 = 0.0;
-v0 = v_mod*sin(pitch_angle*pi/180)*rand();
-w0 = v_mod*cos(pitch_angle*pi/180)*rand();
+v0 = v_mod; %*sin(pitch_angle*pi/180); %*rand();
+w0 = v_mod; %*cos(pitch_angle*pi/180); %*rand();
 
 dt = 0.01;
-tfin = 250 % in s
+tfin = 250; % in s
 time = 0:dt:tfin;
 %[x_sol,t] = lsode('Newton_Lorenz',[x0 ;y0; z0; u0; v0; w0],time); % solve equation of motion *** Octave ***
 %[t,x_sol] = ode45('Newton_Lorenz',time,[x0 ;y0; z0; u0; v0; w0]) % use this for *** Matlab ****

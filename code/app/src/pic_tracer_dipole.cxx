@@ -241,21 +241,20 @@ int main(int argc, char** argv) {
 	double K = 1e7 * e; // kinetic energy in Joule
  	double m = 1.672621777e-27; // Proton mass (kg) 
 	double v_mod = config.speedOfLight / sqrt(1.0 + (m * config.speedOfLight*config.speedOfLight) / K);
-	double pitch_angle = 30;
 
 	// a map operator for a range of elements
 	auto map = [=](int a, int b){
 		ParticleCount res(num_frames,config.size);
 
 		// create a random particle generator
-		auto low = config.origin;
-		auto hig = low + elementwiseProduct(config.cellWidth,config.size);
+		auto low = 1.5 * config.planetRadius; //config.origin;
+		auto hig = (config.origin + elementwiseProduct(config.cellWidth,config.size)) / 2.0;
 		// TODO: need to have the same particle distribution as in the initCells in cells.h
 		distribution::uniform_pos_normal_speed<> next(
 				low,hig, // within the universe
 				// speeds are normal distributed
 				Vector3<double> { 0.0, 0.0, 0.0},   // mean value
-				Vector3<double> { 0.0, v_mod * sin(pitch_angle * M_PI / 180), v_mod * cos(pitch_angle * M_PI / 180)}, // variance
+				Vector3<double> { 0.0, v_mod, v_mod}, // variance
 				a*b
 		);
 
