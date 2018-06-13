@@ -169,8 +169,9 @@ int main(int argc, char** argv) {
 
 	// parameters
 	int N = 1000*1000;		// < number of particles
-	int T = 1000;				// < number of time steps
-	int S = 500;				// < number of time steps between frames
+	int T = 1000;			// < number of time steps
+	int S = 10;				// < number of time steps between frames
+	int R = 16;				// < the grid resolution
 
 	// take command line parameters
 	if (argc > 1) {
@@ -185,19 +186,22 @@ int main(int argc, char** argv) {
 		S = atoi(argv[3]);
 	}
 
+	if (argc > 4) {
+		R = atoi(argv[4]);
+	}
+
 	// some derived parameters
 	int num_frames = T / S + 1;
 
 	// print some introduction and summary information
 
 	std::cout << "----- particle-in-cell tracer -----\n";
-	std::cout << "Tracing " << N << " particles for " << T << " time steps recording a snapshot every " << S << " time steps ...\n";
+	std::cout << "Tracing " << N << " particles for " << T << " time steps in a " << R << "^3 grid recording a snapshot every " << S << " time steps ...\n";
 
 	// set up relevant universe properties
 	UniverseProperties config;
 	config.dt = 0.15;
-//	config.size = { 64, 64, 64 };
-	config.size = { 128, 128, 128 };
+	config.size = { R, R, R };
 	config.cellWidth = double(10)/config.size.x;
 	config.FieldOutputCycle = 0;
 
