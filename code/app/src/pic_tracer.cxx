@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
 	// parameters
 	int N = 1000*1000;		// < number of particles
 	int T = 1000;			// < number of time steps
-	int S = 10;				// < number of time steps between frames
+	int S = 100;			// < number of time steps between frames
 	int R = 16;				// < the grid resolution
 
 	// take command line parameters
