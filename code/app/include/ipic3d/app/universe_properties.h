@@ -59,6 +59,8 @@ namespace ipic3d {
 		Vector3<double> cellWidth;
 		// The timestep
 		double dt;
+		// Tesla
+		double B0;
 		// Speed of light
 		double speedOfLight;
 		// planet radius
@@ -104,6 +106,7 @@ namespace ipic3d {
 			out << "\tSize: " << props.size << std::endl;
 			out << "\tCell width: " << props.cellWidth << std::endl;
 			out << "\tTimestep: " << props.dt << std::endl;
+			out << "\tTesla: " << props.B0 << std::endl;
 			out << "\tSpeed of light: " << props.speedOfLight << std::endl;
 			out << "\tPlanet radius: " << props.planetRadius << std::endl;
 			out << "\tObject center: " << props.objectCenter << std::endl;

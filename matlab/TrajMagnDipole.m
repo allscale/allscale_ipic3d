@@ -22,16 +22,16 @@ K = K*e;   % convert to Joule
 % Find corresponding speed:
 v_mod = c/sqrt(1+(m*c^2)/K) 
 % initial position: equatorial plane 4Re from Earth
-x0 = 4*Re; 
+x0 = 4*Re*rand(); 
 y0 = 0; 
 z0 = 0;
 
-pitch_angle = 30.0 %  initial angle between velocity and mag.field (degrees)
+pitch_angle = 30.0 * rand() %  initial angle between velocity and mag.field (degrees)
 
 % initial velocity
 u0 = 0.0;
-v0 = v_mod*sin(pitch_angle*pi/180);
-w0 = v_mod*cos(pitch_angle*pi/180);
+v0 = v_mod*sin(pitch_angle*pi/180)*rand();
+w0 = v_mod*cos(pitch_angle*pi/180)*rand();
 
 dt = 0.01;
 tfin = 250 % in s
@@ -59,24 +59,50 @@ for i = 1:1:tfin/dt
 	Ey = 0.0;
 	Ez = 0.0;
 
-    B_sq=Bx*Bx+By*By+Bz*Bz;
-    f1=tan(qom*(dt/2)*sqrt(B_sq))/sqrt(B_sq);
-    f2=2*f1/(1+f1.^2*B_sq);
+%    B_sq=Bx*Bx+By*By+Bz*Bz;
+%    f1=tan(qom*(dt/2)*sqrt(B_sq))/sqrt(B_sq);
+%    f2=2*f1/(1+f1.^2*B_sq);
+%
+%    vxstar2 = x_sol(i,4)+qom*Ex*0.5*dt;
+%    vystar2 = x_sol(i,5)+qom*Ey*0.5*dt;
+%    vzstar2 = x_sol(i,6)+qom*Ez*0.5*dt;
+%
+%    vxpr = vxstar2+f1*(vystar2*Bz-By*vzstar2);
+%	vypr = vystar2+f1*(-vxstar2*Bz+vzstar2*Bx);
+%    vzpr = vzstar2+f1*(vxstar2*By-vystar2*Bx);
+%	vxplus = vxstar2+f2*(vypr*Bz-vzpr*By);
+%	vyplus = vystar2+f2*(-vxpr*Bz+vzpr*Bx);
+%	vzplus = vzstar2+f2*(vxpr*By-vypr*Bx);       
+%	
+%    x_sol(i+1,4) = vxplus+qom*0.5*dt*Ex;
+%    x_sol(i+1,5) = vyplus+qom*0.5*dt*Ey;
+%	x_sol(i+1,6) = vzplus+qom*0.5*dt*Ez;
 
-    vxstar2 = x_sol(i,4)+qom*Ex*0.5*dt;
-    vystar2 = x_sol(i,5)+qom*Ey*0.5*dt;
-    vzstar2 = x_sol(i,6)+qom*Ez*0.5*dt;
+	k = qom * 0.5 * dt;
+	tx = k * Bx;
+	ty = k * By;
+	tz = k * Bz;
+    t_mag2 = tx * tx + ty * ty + tz * tz;
 
-    vxpr = vxstar2+f1*(vystar2*Bz-By*vzstar2);
-	vypr = vystar2+f1*(-vxstar2*Bz+vzstar2*Bx);
-    vzpr = vzstar2+f1*(vxstar2*By-vystar2*Bx);
-	vxplus = vxstar2+f2*(vypr*Bz-vzpr*By);
-	vyplus = vystar2+f2*(-vxpr*Bz+vzpr*Bx);
-	vzplus = vzstar2+f2*(vxpr*By-vypr*Bx);       
-	
-    x_sol(i+1,4) = vxplus+qom*0.5*dt*Ex;
-    x_sol(i+1,5) = vyplus+qom*0.5*dt*Ey;
-	x_sol(i+1,6) = vzplus+qom*0.5*dt*Ez;
+	sx = (2.0 * tx) / (1.0 + t_mag2);
+	sy = (2.0 * ty) / (1.0 + t_mag2);
+	sz = (2.0 * tz) / (1.0 + t_mag2);
+
+	v_minusx = x_sol(i,4) + k * Ex;
+	v_minusy = x_sol(i,5) + k * Ey;
+	v_minusz = x_sol(i,6) + k * Ez;
+
+	v_primex = v_minusx + (v_minusy * tz - v_minusz * ty);
+	v_primey = v_minusy + (v_minusz * tx - v_minusx * tz);
+	v_primez = v_minusz + (v_minusx * ty - v_minusy * tx);
+
+	v_plusx = v_minusx + (v_primey * sz - v_primez * sy);
+	v_plusy = v_minusy + (v_primez * sx - v_primex * sz);
+	v_plusz = v_minusz + (v_primex * sy - v_primey * sx);
+
+	x_sol(i+1,4) = v_plusx + k * Ex;
+	x_sol(i+1,5) = v_plusy + k * Ey;
+	x_sol(i+1,6) = v_plusz + k * Ez;
 
 	x_sol(i+1,1) = x_sol(i,1) + x_sol(i+1,4) * dt; % dx/dt = u
 	x_sol(i+1,2) = x_sol(i,2) + x_sol(i+1,5) * dt; % dy/dt = v
