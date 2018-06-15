@@ -152,6 +152,36 @@ namespace ipic3d {
 
 			};
 
+			// a generator for uniformly distributed vector3 instances
+			class uniform_r {
+				Vector3<double> R1;
+				Vector3<double> R2;
+
+				std::uniform_real_distribution<> rho1;
+				std::uniform_real_distribution<> rho2;
+				std::uniform_real_distribution<> rho3;
+
+				std::minstd_rand randGen;
+
+			public:
+
+				uniform_r(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed)
+					: R1(min), R2(max), rho1(0.0,1.0), rho2(0.0,1.0), rho3(0.0,1.0), randGen(seed) {}
+
+				Vector3<double> operator()() {
+					double rh1 = rho1(randGen);
+					double rh2 = rho2(randGen);
+					double rh3 = rho3(randGen);
+					double nu = (1.0 - 2.0 * rh2);
+					return { 
+						pow(pow(R1.x,3)+(pow(R2.x,3)-pow(R1.x,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * cos(2.0*M_PI*rh3),
+						pow(pow(R1.y,3)+(pow(R2.y,3)-pow(R1.y,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * sin(2.0*M_PI*rh3),
+						pow(pow(R1.z,3)+(pow(R2.z,3)-pow(R1.z,3))*rh1,1.0/3.0) * nu
+					};
+				}
+
+			};
+
 			// a generator for normal distributed vector3 instances
 			class normal {
 
@@ -262,6 +292,30 @@ namespace ipic3d {
 			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
 
 			uniform_pos_normal_speed(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+
+		};
+
+		template<typename SpeciesGen = species::electron>
+		struct uniform_pos_normal_speed_r : public generic_particle_generator<vector::uniform_r,vector::normal,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::uniform_r,vector::normal,SpeciesGen>;
+
+			uniform_pos_normal_speed_r(
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+
+			uniform_pos_normal_speed_r(
 					const SpeciesGen& speciesGen,
 					const Vector3<double>& minVel,
 					const Vector3<double>& maxVel,

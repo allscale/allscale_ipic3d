@@ -73,7 +73,7 @@ private:
 
 // --- tracing particles ---
 
-void traceParticle(Particle p, int T, const UniverseProperties& config, const InitProperties& fieldProperties, int frame_interval, ParticleCount& res) {
+void traceParticle(Particle p, int T, const UniverseProperties& config, int frame_interval, ParticleCount& res) {
 
 	// extract some properties
 	auto dt = config.dt;
@@ -88,46 +88,29 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const In
 
 	// get the currently active cell position
 	utils::Coordinate<3> pos = { -1, -1, -1 };
-//	auto cellOrigin = getOriginOfCell(pos, config);
 
-//	// initialize extracted field parameters
-//	Vector3<double> Es[2][2][2];
-//	Vector3<double> Bs[2][2][2];
+	p.position += config.objectCenter;
+//	// exclude generated particles from the earth
+//	auto diff = p.position - config.objectCenter;
+//	double r2 = allscale::utils::sumOfSquares(diff);
+//	if (r2 < 1.5625 * config.planetRadius * config.planetRadius) { 
+//		return;
+//	}
+
+	for(std::size_t i=0; i<3; i++) {
+		if (p.position[i] > universeHigh[i]) return;
+		if (p.position[i] < universeLow[i])  return;
+	}
 
 	// simulate particle for the given number of time steps
 	for(int t=0; t<T; t++) {
 
-//		// if the cell coordinate has changed
+		// if the cell coordinate has changed
 		auto pos = getCellCoordinates(config,p);
-//		if (pos != curPos) {
-//
-//			// update position and cell origin
-//			pos = curPos;
-//			cellOrigin = getOriginOfCell(pos,config);
-//
-//			// update Es and Bs based on current cell position
-//			for(int i=0; i<2; i++) {
-//				for(int j=0; j<2; j++) {
-//					for(int k=0; k<2; k++) {
-//						utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
-//						Vector3<double> loc = universeLow + elementwiseProduct(config.cellWidth, cur);
-//						auto fieldNode = getDipoleFieldAt(loc, fieldProperties, config);
-//						Es[i][j][k] = fieldNode.E;
-//						Bs[i][j][k] = fieldNode.B;
-//					}
-//				}
-//			}
-//		}
-//
-//		// get the fractional distance of the particle from the cell origin
-//		const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), cellWidth);
-//
-//		// interpolate forces
-//		auto E = trilinearInterpolationF2P(Es, relPos, vol);
-//		auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
 		// calculate 3 Cartesian components of the magnetic field
 		double fac1 =  -config.B0 * pow(config.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
+		//double fac1 =  -config.B0 * pow(config.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
 		Vector3<double> E, B;
 		E = {0.0, 0.0, 0.0};
 		B.x = 3.0 * p.position.x * p.position.z * fac1;
@@ -138,8 +121,7 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const In
 		double B_mag = allscale::utils::sumOfSquares(B);
 		double dt_sub = M_PI * config.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
 		int sub_cycles = int(dt / dt_sub) + 1;
-		sub_cycles = std::min(sub_cycles,100);
-		sub_cycles = sub_cycles > 100 ? 100 : sub_cycles;
+		sub_cycles = std::min(sub_cycles, 1);
 		dt_sub = dt / double(sub_cycles);
 
 		for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
@@ -177,9 +159,9 @@ int main(int argc, char** argv) {
 	// ----- load and parse simulation parameters ------
 
 	// parameters
-	int N = 1000;		// < number of particles
-	int T = 1000;		// < number of time steps
-	int S = 100;		// < number of time steps between frames
+	int N = 1000*10;		// < number of particles
+	int T = 100;		// < number of time steps
+	int S = 10;		// < number of time steps between frames
 	int R = 16;			// resolution of the result grid
 
 	// take command line parameters
@@ -219,19 +201,12 @@ int main(int argc, char** argv) {
 	config.FieldOutputCycle = 0;
 
 	// these parameters are required for computations
-	config.objectCenter = {6.0 * config.planetRadius, 5.0 * config.planetRadius, 5.0 * config.planetRadius};
+	config.objectCenter = {5.0 * config.planetRadius, 5.0 * config.planetRadius, 5.0 * config.planetRadius};
 	config.origin.x = config.objectCenter.x - config.size.x * config.cellWidth.x / 2.0; 
 	config.origin.y = config.objectCenter.y - config.size.y * config.cellWidth.y / 2.0; 
 	config.origin.z = config.objectCenter.z - config.size.z * config.cellWidth.z / 2.0; 
 
 	config.useCase = UseCase::Dipole;
-
-	// create a field
-	InitProperties initProps;
-	// initial magnetic field: B0 in the inputs
-	initProps.magneticField = { 0, 0, 0.0001 };
-	initProps.externalMagneticField = { 0, 0, 2.0 };
-	initProps.driftVelocity.push_back( {0.02, 0.0, 0.0} ); // TODO: try with zeros as well
 
 	// run simulation
 	auto start = std::chrono::high_resolution_clock::now();
@@ -244,18 +219,25 @@ int main(int argc, char** argv) {
 	double e = 1.602176565e-19; // Elementary charge (Coulomb)  
 	double K = 1e7 * e; // kinetic energy in Joule
  	double m = 1.672621777e-27; // Proton mass (kg) 
-	double v_mod = config.speedOfLight / sqrt(1.0 + (m * config.speedOfLight*config.speedOfLight) / K);
+	double v_mod = config.speedOfLight / sqrt(1.0 + (m * config.speedOfLight * config.speedOfLight) / K);
 
 	// a map operator for a range of elements
 	auto map = [=](int a, int b){
 		ParticleCount res(num_frames,config.size);
 
 		// create a random particle generator
-		auto low = 1.5 * config.planetRadius; //config.origin;
-		auto hig = (config.origin + elementwiseProduct(config.cellWidth,config.size)) / 2.0;
-		// TODO: need to have the same particle distribution as in the initCells in cells.h
-		distribution::uniform_pos_normal_speed<> next(
-				low,hig, // within the universe
+		double low0 = 1.25 * config.planetRadius, hig0 = 2.0 * config.planetRadius;
+//		auto R1 = Vector3<double>{config.objectCenter.x + low0, config.objectCenter.y + low0, config.objectCenter.z + low0}; //config.origin;
+//		auto R2 = Vector3<double>{config.objectCenter.x + hig0, config.objectCenter.y + hig0, config.objectCenter.z + hig0}; //config.origin;
+		auto R1 = Vector3<double>{low0, low0, low0}; //config.origin;
+		auto R2 = Vector3<double>{hig0, hig0, hig0}; //config.origin;
+		//auto hig = (config.origin + elementwiseProduct(config.cellWidth,config.size)) / 2.0;
+//		auto low = config.origin + elementwiseProduct(config.cellWidth,config.size) / 4.0;
+//		auto hig = low + elementwiseProduct(config.cellWidth,config.size) / 2.0;
+		auto low = Vector3<double>{config.objectCenter.x - hig0, config.objectCenter.y - hig0, config.objectCenter.z - hig0};
+		auto hig = Vector3<double>{config.objectCenter.x + hig0, config.objectCenter.y + hig0, config.objectCenter.z + hig0};
+		distribution::uniform_pos_normal_speed_r<> next(
+				R1, R2, // within the universe
 				// speeds are normal distributed
 				Vector3<double> { 0.0, 0.0, 0.0},   // mean value
 				Vector3<double> { 0.0, v_mod, v_mod}, // variance
@@ -265,10 +247,11 @@ int main(int argc, char** argv) {
 		for(int i=a*B; i<b*B && i < N; i++) {
 			// create a particle
 			Particle p = next();
+			p.q = e;
 			p.qom = e / m;
 
 			// trace its trajectory
-			traceParticle(p,T+1,config,initProps,S,res);
+			traceParticle(p,T+1,config,S,res);
 		}
 		return res;
 	};
