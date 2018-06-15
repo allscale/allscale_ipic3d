@@ -26,22 +26,22 @@ v_mod = c/sqrt(1+(m*c^2)/K)
 %x0 = 4*Re*rand(); 
 %y0 = 0.0; 
 %z0 = 0.0;
-R1=1.25*Re;% + 5.0*Re;
-R2=3*Re;% + 5.0 * Re;
+R1=1.25*Re;
+R2=5*Re;
 rho=rand(3);
 nu=(1-2*rho(2));
 x0 = (R1^3+(R2^3-R1^3)*rho(1))^(1/3)*(1-nu^2)^(1/2)*cos(2*pi*rho(3));
 y0 = (R1^3+(R2^3-R1^3)*rho(1))^(1/3)*(1-nu^2)^(1/2)*sin(2*pi*rho(3));
 z0 = (R1^3+(R2^3-R1^3)*rho(1))^(1/3)*nu;
-pitch_angle = 30.0; % * rand() %  initial angle between velocity and mag.field (degrees)
+%pitch_angle = 30.0 * rand() %  initial angle between velocity and mag.field (degrees)
 
 % initial velocity
 u0 = v_mod;
-v0 = v_mod; %*sin(pitch_angle*pi/180); %*rand();
-w0 = v_mod; %*cos(pitch_angle*pi/180); %*rand();
+v0 = v_mod;%*sin(pitch_angle*pi/180)*rand();
+w0 = v_mod;%*cos(pitch_angle*pi/180)*rand();
 
 dt = 0.01;
-tfin = 50; % in s
+tfin = 250; % in s
 time = 0:dt:tfin;
 %[x_sol,t] = lsode('Newton_Lorenz',[x0 ;y0; z0; u0; v0; w0],time); % solve equation of motion *** Octave ***
 %[t,x_sol] = ode45('Newton_Lorenz',time,[x0 ;y0; z0; u0; v0; w0]) % use this for *** Matlab ****

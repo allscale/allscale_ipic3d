@@ -160,8 +160,8 @@ int main(int argc, char** argv) {
 
 	// parameters
 	int N = 1000*1000;		// < number of particles
-	int T = 2000;		// < number of time steps
-	int S = 100;		// < number of time steps between frames
+	int T = 500;		// < number of time steps
+	int S = 20;		// < number of time steps between frames
 	int R = 16;			// resolution of the result grid
 
 	// take command line parameters
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
 	config.speedOfLight = 299792458;
 	config.size = { R, R, R };
 	config.planetRadius = 6378137; // meter (Earth radius) 
-	config.cellWidth = (10.0 / config.size.x) * config.planetRadius;
+	config.cellWidth = (20.0 / config.size.x) * config.planetRadius;
 
 	config.FieldOutputCycle = 0;
 
@@ -227,18 +227,14 @@ int main(int argc, char** argv) {
 		ParticleCount res(num_frames,config.size);
 
 		// create a random particle generator
-		double low0 = 1.25 * config.planetRadius, hig0 = 3.0 * config.planetRadius; //config.size.x * config.cellWidth.x / 2.0; //3.0 * config.planetRadius;
-//		auto R1 = Vector3<double>{config.objectCenter.x + low0, config.objectCenter.y + low0, config.objectCenter.z + low0}; //config.origin;
-//		auto R2 = Vector3<double>{config.objectCenter.x + hig0, config.objectCenter.y + hig0, config.objectCenter.z + hig0}; //config.origin;
-		auto R1 = Vector3<double>{low0, low0, low0}; //config.origin;
-		auto R2 = Vector3<double>{hig0, hig0, hig0}; //config.origin;
-		//auto hig = (config.origin + elementwiseProduct(config.cellWidth,config.size)) / 2.0;
-//		auto low = config.origin + elementwiseProduct(config.cellWidth,config.size) / 4.0;
-//		auto hig = low + elementwiseProduct(config.cellWidth,config.size) / 2.0;
-//		auto low = Vector3<double>{config.objectCenter.x - hig0, config.objectCenter.y - hig0, config.objectCenter.z - hig0};
-//		auto hig = Vector3<double>{config.objectCenter.x + hig0, config.objectCenter.y + hig0, config.objectCenter.z + hig0};
-		distribution::uniform_pos_normal_speed_r<> next(
-				R1, R2, // within the universe
+//		double low0 = 1.25 * config.planetRadius, hig0 = 5.0 * config.planetRadius; //config.size.x * config.cellWidth.x / 2.0; //3.0 * config.planetRadius;
+//		auto R1 = Vector3<double>{low0, low0, low0}; //config.origin;
+//		auto R2 = Vector3<double>{hig0, hig0, hig0}; //config.origin;
+		auto low = config.origin + elementwiseProduct(config.cellWidth,config.size) / 8.0;
+		auto hig = low + 0.75 * elementwiseProduct(config.cellWidth,config.size);
+		distribution::uniform_pos_normal_speed<> next(
+				//R1, R2, // within the universe
+				low, hig,
 				// speeds are normal distributed
 				Vector3<double> { 0.0, 0.0, 0.0},   // mean value
 				Vector3<double> { v_mod, v_mod, v_mod}, // variance
