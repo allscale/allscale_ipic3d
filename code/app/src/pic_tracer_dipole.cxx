@@ -121,7 +121,7 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, int fram
 		double B_mag = allscale::utils::sumOfSquares(B);
 		double dt_sub = M_PI * config.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
 		int sub_cycles = int(dt / dt_sub) + 1;
-		sub_cycles = std::min(sub_cycles, 1);
+		sub_cycles = std::min(sub_cycles, 100);
 		dt_sub = dt / double(sub_cycles);
 
 		for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
@@ -159,9 +159,9 @@ int main(int argc, char** argv) {
 	// ----- load and parse simulation parameters ------
 
 	// parameters
-	int N = 1000*10;		// < number of particles
-	int T = 100;		// < number of time steps
-	int S = 10;		// < number of time steps between frames
+	int N = 1000*1000;		// < number of particles
+	int T = 2000;		// < number of time steps
+	int S = 100;		// < number of time steps between frames
 	int R = 16;			// resolution of the result grid
 
 	// take command line parameters
@@ -201,7 +201,8 @@ int main(int argc, char** argv) {
 	config.FieldOutputCycle = 0;
 
 	// these parameters are required for computations
-	config.objectCenter = {5.0 * config.planetRadius, 5.0 * config.planetRadius, 5.0 * config.planetRadius};
+	//config.objectCenter = {5.0 * config.planetRadius, 5.0 * config.planetRadius, 5.0 * config.planetRadius};
+	config.objectCenter = {0.0, 0.0, 0.0};
 	config.origin.x = config.objectCenter.x - config.size.x * config.cellWidth.x / 2.0; 
 	config.origin.y = config.objectCenter.y - config.size.y * config.cellWidth.y / 2.0; 
 	config.origin.z = config.objectCenter.z - config.size.z * config.cellWidth.z / 2.0; 
@@ -226,7 +227,7 @@ int main(int argc, char** argv) {
 		ParticleCount res(num_frames,config.size);
 
 		// create a random particle generator
-		double low0 = 1.25 * config.planetRadius, hig0 = 2.0 * config.planetRadius;
+		double low0 = 1.25 * config.planetRadius, hig0 = 3.0 * config.planetRadius; //config.size.x * config.cellWidth.x / 2.0; //3.0 * config.planetRadius;
 //		auto R1 = Vector3<double>{config.objectCenter.x + low0, config.objectCenter.y + low0, config.objectCenter.z + low0}; //config.origin;
 //		auto R2 = Vector3<double>{config.objectCenter.x + hig0, config.objectCenter.y + hig0, config.objectCenter.z + hig0}; //config.origin;
 		auto R1 = Vector3<double>{low0, low0, low0}; //config.origin;
@@ -234,13 +235,13 @@ int main(int argc, char** argv) {
 		//auto hig = (config.origin + elementwiseProduct(config.cellWidth,config.size)) / 2.0;
 //		auto low = config.origin + elementwiseProduct(config.cellWidth,config.size) / 4.0;
 //		auto hig = low + elementwiseProduct(config.cellWidth,config.size) / 2.0;
-		auto low = Vector3<double>{config.objectCenter.x - hig0, config.objectCenter.y - hig0, config.objectCenter.z - hig0};
-		auto hig = Vector3<double>{config.objectCenter.x + hig0, config.objectCenter.y + hig0, config.objectCenter.z + hig0};
+//		auto low = Vector3<double>{config.objectCenter.x - hig0, config.objectCenter.y - hig0, config.objectCenter.z - hig0};
+//		auto hig = Vector3<double>{config.objectCenter.x + hig0, config.objectCenter.y + hig0, config.objectCenter.z + hig0};
 		distribution::uniform_pos_normal_speed_r<> next(
 				R1, R2, // within the universe
 				// speeds are normal distributed
 				Vector3<double> { 0.0, 0.0, 0.0},   // mean value
-				Vector3<double> { 0.0, v_mod, v_mod}, // variance
+				Vector3<double> { v_mod, v_mod, v_mod}, // variance
 				a*b
 		);
 
