@@ -159,10 +159,10 @@ int main(int argc, char** argv) {
 	// ----- load and parse simulation parameters ------
 
 	// parameters
-	int N = 1000*1000;		// < number of particles
-	int T = 500;		// < number of time steps
-	int S = 20;		// < number of time steps between frames
-	int R = 16;			// resolution of the result grid
+	int N = 16*1000*1000;		// < number of particles
+	int T = 150;		// < number of time steps
+	int S = 5;		// < number of time steps between frames
+	int R = 64;			// resolution of the result grid
 
 	// take command line parameters
 	if (argc > 1) {
@@ -227,14 +227,14 @@ int main(int argc, char** argv) {
 		ParticleCount res(num_frames,config.size);
 
 		// create a random particle generator
-//		double low0 = 1.25 * config.planetRadius, hig0 = 5.0 * config.planetRadius; //config.size.x * config.cellWidth.x / 2.0; //3.0 * config.planetRadius;
-//		auto R1 = Vector3<double>{low0, low0, low0}; //config.origin;
-//		auto R2 = Vector3<double>{hig0, hig0, hig0}; //config.origin;
-		auto low = config.origin + elementwiseProduct(config.cellWidth,config.size) / 8.0;
-		auto hig = low + 0.75 * elementwiseProduct(config.cellWidth,config.size);
-		distribution::uniform_pos_normal_speed<> next(
-				//R1, R2, // within the universe
-				low, hig,
+		double low0 = 1.25 * config.planetRadius, hig0 = 5.0 * config.planetRadius; //config.size.x * config.cellWidth.x / 2.0; //3.0 * config.planetRadius;
+		auto R1 = Vector3<double>{low0, low0, low0}; //config.origin;
+		auto R2 = Vector3<double>{hig0, hig0, hig0}; //config.origin;
+//		auto low = config.origin + elementwiseProduct(config.cellWidth,config.size) / 4.0;
+//		auto hig = low + 0.5 * elementwiseProduct(config.cellWidth,config.size);
+		distribution::uniform_pos_normal_speed_r<> next(
+				R1, R2, // within the universe
+//				low, hig,
 				// speeds are normal distributed
 				Vector3<double> { 0.0, 0.0, 0.0},   // mean value
 				Vector3<double> { v_mod, v_mod, v_mod}, // variance
