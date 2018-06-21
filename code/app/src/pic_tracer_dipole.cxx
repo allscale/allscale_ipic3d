@@ -213,8 +213,7 @@ int main(int argc, char** argv) {
 	auto start = std::chrono::high_resolution_clock::now();
 
 	// the block size to be used
-	// TODO: how do we use the block size? does it connect to T and S?
-	int B = 1000;		// the blocking factor ..
+	int B = std::max(1000, N/1000);		// the blocking factor (for performance reasons)
 
 	// values to initialize particles 
 	double e = 1.602176565e-19; // Elementary charge (Coulomb)  
@@ -267,7 +266,7 @@ int main(int argc, char** argv) {
 	// print performance summary
 	double s = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / (1e9);
 	std::cout << "Simulation took " << s << "s\n";
-	std::cout << "Throughput: " << ((T+1) * N) / s << " particles/s \n";
+	std::cout << "Throughput: " << ((T+1) * double(N)) / s << " particles/s \n";
 
 	// save result
 	{
