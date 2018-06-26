@@ -15,6 +15,7 @@ namespace ipic3d {
 	    EXPECT_EQ((coordinate_type{1, 1, 1}), properties.size);
 	    EXPECT_EQ((V{1.0, 1.0, 1.0}), properties.cellWidth);
 	    EXPECT_EQ(1.0, properties.dt);
+		EXPECT_EQ(0.0, properties.B0);
 	    EXPECT_EQ(1.0, properties.speedOfLight);
 	    EXPECT_EQ(0.0, properties.planetRadius);
 	    EXPECT_EQ((V{0.0, 0.0, 0.0}), properties.objectCenter);
@@ -22,12 +23,13 @@ namespace ipic3d {
 	    EXPECT_EQ(1, properties.FieldOutputCycle);
 
 
-		UniverseProperties properties2(UseCase::Dipole, { 3,3,3 }, { 0.2,0.3,0.4 }, 5.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, 100);
+		UniverseProperties properties2(UseCase::Dipole, { 3,3,3 }, { 0.2,0.3,0.4 }, 5.0, 2.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, 100);
 
 		EXPECT_EQ(UseCase::Dipole, properties2.useCase);
 		EXPECT_EQ((coordinate_type{ 3,3,3 }), properties2.size);
 		EXPECT_EQ((V{ 0.2,0.3,0.4 }), properties2.cellWidth);
 		EXPECT_EQ(5.0, properties2.dt);
+		EXPECT_EQ(2.0, properties2.B0);
 		EXPECT_EQ(13.0, properties2.speedOfLight);
 		EXPECT_EQ(42.0, properties2.planetRadius);
 		EXPECT_EQ((V{ 0.7,0.8,0.9 }), properties2.objectCenter);
