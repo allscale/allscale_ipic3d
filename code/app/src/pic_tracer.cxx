@@ -73,29 +73,23 @@ private:
 
 // --- tracing particles ---
 
-void traceParticle(Particle p, int T, const UniverseProperties& config, int frame_interval, ParticleCount& res) {
+void traceParticle(Particle p, int T, const UniverseProperties& config, const InitProperties& init, int frame_interval, ParticleCount& res) {
 
 	// extract some properties
 	auto dt = config.dt;
-	//auto cellWidth = config.cellWidth;
-
-	//double vol = config.cellWidth.x * config.cellWidth.y * config.cellWidth.z;
 
 	// get universe size
 	auto universeSize = elementwiseProduct(config.cellWidth, config.size);
 	auto universeLow  = config.origin;
 	auto universeHigh = config.origin + universeSize;
 
-	// get the currently active cell position
-	//utils::Coordinate<3> pos = { -1, -1, -1 };
-
 	p.position += config.objectCenter;
-//	// exclude generated particles from the earth
-//	auto diff = p.position - config.objectCenter;
-//	double r2 = allscale::utils::sumOfSquares(diff);
-//	if (r2 < 1.5625 * config.planetRadius * config.planetRadius) { 
-//		return;
-//	}
+	// exclude generated particles from the earth
+	auto diff = p.position - config.objectCenter;
+	double r2 = allscale::utils::sumOfSquares(diff);
+	if (r2 < config.planetRadius * config.planetRadius) { 
+		return;
+	}
 
 	for(std::size_t i=0; i<3; i++) {
 		if (p.position[i] > universeHigh[i]) return;
@@ -109,8 +103,7 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, int fram
 		auto pos = getCellCoordinates(config,p);
 
 		// calculate 3 Cartesian components of the magnetic field
-		double fac1 =  -config.B0 * pow(config.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
-		//double fac1 =  -config.B0 * pow(config.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
+		double fac1 =  -init.externalMagneticField.z * pow(config.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
 		Vector3<double> E, B;
 		E = {0.0, 0.0, 0.0};
 		B.x = 3.0 * p.position.x * p.position.z * fac1;
@@ -161,7 +154,7 @@ int main(int argc, char** argv) {
 	// parameters
 	int N = 16*1000*1000;		// < number of particles
 	int T = 150;		// < number of time steps
-	int S = 5;		// < number of time steps between frames
+	int S = 50;		// < number of time steps between frames
 	int R = 64;			// resolution of the result grid
 
 	// take command line parameters
@@ -192,12 +185,10 @@ int main(int argc, char** argv) {
 	// set up relevant universe properties
 	UniverseProperties config;
 	config.dt = 0.01;
-	config.B0 = 3.07e-5;
 	config.speedOfLight = 299792458;
 	config.size = { R, R, R };
 	config.planetRadius = 6378137; // meter (Earth radius) 
 	config.cellWidth = (20.0 / config.size.x) * config.planetRadius;
-
 	config.FieldOutputCycle = 0;
 
 	// these parameters are required for computations
@@ -206,6 +197,9 @@ int main(int argc, char** argv) {
 	config.origin.x = config.objectCenter.x - config.size.x * config.cellWidth.x / 2.0; 
 	config.origin.y = config.objectCenter.y - config.size.y * config.cellWidth.y / 2.0; 
 	config.origin.z = config.objectCenter.z - config.size.z * config.cellWidth.z / 2.0; 
+
+	InitProperties init;
+	init.externalMagneticField = {0.0, 0.0, 3.07e-5};
 
 	config.useCase = UseCase::Dipole;
 
@@ -235,8 +229,8 @@ int main(int argc, char** argv) {
 				R1, R2, // within the universe
 //				low, hig,
 				// speeds are normal distributed
-				Vector3<double> { 0.0, 0.0, 0.0},   // mean value
-				Vector3<double> { v_mod, v_mod, v_mod}, // variance
+				Vector3<double> {0.0, 0.0, 0.0},   // mean value
+				Vector3<double> {v_mod, v_mod, v_mod}, // variance
 				a*b
 		);
 
@@ -247,7 +241,7 @@ int main(int argc, char** argv) {
 			p.qom = e / m;
 
 			// trace its trajectory
-			traceParticle(p,T+1,config,S,res);
+			traceParticle(p,T+1,config,init,S,res);
 		}
 		return res;
 	};

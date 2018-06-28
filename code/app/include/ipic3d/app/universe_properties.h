@@ -35,8 +35,8 @@ namespace ipic3d {
 		// TODO: check and rename all these fields
 
 		// Earth parameters
-		static const double Re = 6378137.0; 		// meter (Earth radius)
-		static const double B0 = 3.07e-5; 			// Tesla
+		static const double Re = 6378137.0; 		// Earth radius in meters
+		static const double B1 = 3.07e-5; 			// External magnetic field in Tesla
 		// Other parameters
 		static const double e = 1.602176565e-19; 	// Elementary charge (Coulomb)
 		static const double m = 1.672621777e-27; 	// Proton mass (kg)
@@ -59,8 +59,6 @@ namespace ipic3d {
 		Vector3<double> cellWidth;
 		// The timestep
 		double dt;
-		// Tesla
-		double B0;
 		// Speed of light
 		double speedOfLight;
 		// planet radius
@@ -74,9 +72,9 @@ namespace ipic3d {
 		std::string outputFileBaseName;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::Dipole, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1.0, 1.0, 1.0},
-			const double dt = 1.0, const double B0 = 0.0, const double speedOfLight = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, 
+			const double dt = 1.0, const double speedOfLight = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, 
 			const int FieldOutputCycle = 1)
-	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), B0(B0), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), FieldOutputCycle(FieldOutputCycle) {
+	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), FieldOutputCycle(FieldOutputCycle) {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 			assert_true(size.x == size.y && size.y == size.z) << "Expected sizes of universe to be equal (=cubic universe), but got " << size.x << ", " << size.y << ", " << size.z;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
@@ -90,7 +88,6 @@ namespace ipic3d {
 			size({ params.ncells.x, params.ncells.y, params.ncells.z }),
 			cellWidth({ params.dspace.x, params.dspace.y, params.dspace.z }),
 			dt(params.dt),
-			B0(0.0), // TODO: this must be fixed - params holds a Vector3<double> for B0, but UniverseProperties only a single double?
 			speedOfLight( params.c ),
 			planetRadius( params.planetRadius ),
 			objectCenter({ params.objectCenter.x, params.objectCenter.y, params.objectCenter.z }),
@@ -107,7 +104,6 @@ namespace ipic3d {
 			out << "\tSize: " << props.size << std::endl;
 			out << "\tCell width: " << props.cellWidth << std::endl;
 			out << "\tTimestep: " << props.dt << std::endl;
-			out << "\tTesla: " << props.B0 << std::endl;
 			out << "\tSpeed of light: " << props.speedOfLight << std::endl;
 			out << "\tPlanet radius: " << props.planetRadius << std::endl;
 			out << "\tObject center: " << props.objectCenter << std::endl;
