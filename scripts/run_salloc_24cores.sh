@@ -3,10 +3,10 @@
 # The name of the script is myjob
 #SBATCH -J myjob
 
-#SBATCH -A 2017-21
+#SBATCH -A 2018-23
 
 # 100 hours wall-clock time will be given to this job
-#SBATCH -t 03:20:00
+#SBATCH -t 04:30:00
 
 # Get an email once it is ready
 #SBATCH --mail-type=ALL 
