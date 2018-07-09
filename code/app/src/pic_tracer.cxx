@@ -135,7 +135,7 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const In
 		//   In fact, we just stop computing
 		auto diff = p.position - config.objectCenter;
 		double r2 = allscale::utils::sumOfSquares(diff);
-		if (r2 < config.planetRadius * config.planetRadius) {
+		if (r2 <= config.planetRadius * config.planetRadius) {
 			return;
 		}
 
@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
 	config.FieldOutputCycle = 0;
 
 	// these parameters are required for computations
-	//config.objectCenter = {5.0 * config.planetRadius, 5.0 * config.planetRadius, 5.0 * config.planetRadius};
+	//config.objectCenter = {6.0 * config.planetRadius, 5.0 * config.planetRadius, 5.0 * config.planetRadius};
 	config.objectCenter = {0.0, 0.0, 0.0};
 	config.origin.x = config.objectCenter.x - config.size.x * config.cellWidth.x / 2.0; 
 	config.origin.y = config.objectCenter.y - config.size.y * config.cellWidth.y / 2.0; 
