@@ -696,21 +696,20 @@ namespace ipic3d {
 			B.y = 3.0 * p.position.y * p.position.z * fac1;
 			B.z = (2.0 * pow(p.position.z, 2) - pow(p.position.x, 2) - pow(p.position.y, 2)) * fac1;
 				
-//			// adaptive sub-cycling for computing velocity
-//			double B_mag = allscale::utils::sumOfSquares(B);
-//			double dt_sub = M_PI * properties.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
-//			int sub_cycles = int(properties.dt / dt_sub) + 1;
-//			sub_cycles = std::min(sub_cycles, 100);
-//			dt_sub = properties.dt / double(sub_cycles);
-//
-//			for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
-				double dt_sub = properties.dt;
+			// adaptive sub-cycling for computing velocity
+			double B_mag = allscale::utils::sumOfSquares(B);
+			double dt_sub = M_PI * properties.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
+			int sub_cycles = int(properties.dt / dt_sub) + 1;
+			sub_cycles = std::min(sub_cycles, 100);
+			dt_sub = properties.dt / double(sub_cycles);
+
+			for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
 				// update velocity
 				p.updateVelocity(E, B, dt_sub);
 
 				// update position
 				p.updatePosition(dt_sub);
-//			}
+			}
 		}
 //		});
 
