@@ -66,17 +66,17 @@ namespace ipic3d {
 	}
 
 	/**
-	 * Tests whether a given particle is within the particle universe.
+	 * Tests whether a given particle is within the universe.
 	 * @param universeProperties the properties of this universe
 	 * @param p the particle to be tested
 	 * @return true if the particle is inside, false otherwise
 	 */
 	bool isInsideUniverse(const UniverseProperties& universeProperties, const Particle& p) {
-		Vector3<double> zero = 0;
+		Vector3<double> zero = universeProperties.origin;
 		Vector3<double> size {
-			universeProperties.size.x * universeProperties.cellWidth.x,
-			universeProperties.size.y * universeProperties.cellWidth.y,
-			universeProperties.size.z * universeProperties.cellWidth.z
+			universeProperties.origin.x + universeProperties.size.x * universeProperties.cellWidth.x,
+			universeProperties.origin.y + universeProperties.size.y * universeProperties.cellWidth.y,
+			universeProperties.origin.z + universeProperties.size.z * universeProperties.cellWidth.z
 		};
 		return zero.dominatedBy(p.position) && p.position.strictlyDominatedBy(size);
 	}
@@ -371,6 +371,9 @@ namespace ipic3d {
 
 		// get a private copy of the distribution generator
 		auto next = dist;
+		
+		double e = 1.602176565e-19; // Elementary charge (Coulomb)  
+ 		double m = 1.672621777e-27; // Proton mass (kg) 
 
 		// just some info about the progress
 		std::cout << "Sorting in particles ...\n";
@@ -385,6 +388,8 @@ namespace ipic3d {
 			for(std::uint64_t i=0; i<current_patch; ++i) {
 				auto cur = next();
 				while(!isInsideUniverse(properties,cur)) cur = next();
+				cur.q = e;
+				cur.qom = e / m;
 				particles[i] = cur;
 			}
 
@@ -397,9 +402,8 @@ namespace ipic3d {
 				auto& cell = cells[pos];
 
 				// get cell corners
-				auto& width = properties.cellWidth;
-				Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
-				Vector3<double> hig = low + width;
+				auto low = getOriginOfCell(pos, properties);
+				auto hig = low + properties.cellWidth;
 
 				// filter out local particles
 				for(const auto& cur : particles) {
@@ -548,19 +552,6 @@ namespace ipic3d {
 					}
 				}
 			}
-	
-//			// print particles position and velocity
-//			if (0) {
-//				for(const auto& p : cell.particles) {
-//					std::cout << p.position.x << " ";
-//					std::cout << p.position.y << " ";
-//					std::cout << p.position.z << " ";
-//					std::cout << p.velocity.x << " ";
-//					std::cout << p.velocity.y << " ";
-//					std::cout << p.velocity.z << "\n";
-//				}
-//
-//			}
 
 		});
 
@@ -651,57 +642,75 @@ namespace ipic3d {
 	 * This function updates the position of all particles within a cell for a single
 	 * time step, considering the given field as a driving force.
 	 *
-	 * @param universeProperties the properties of this universe
+	 * @param properties the properties of this universe
 	 * @param cell the cell whose particles are moved
 	 * @param pos the coordinates of this cell in the grid
 	 * @param field the most recently computed state of the surrounding force fields
 	 */
-	void moveParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
+	void moveParticles(const UniverseProperties& properties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
 
-		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+		assert_true(pos.dominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
 
 		// quick-check
 		if (cell.particles.empty()) return;
 
 		// -- move the particles in space --
 
-		// extract forces
-		// TODO: move this to some C++ structure
-		Vector3<double> Es[2][2][2];
-		Vector3<double> Bs[2][2][2];
-		for(int i=0; i<2; i++) {
-			for(int j=0; j<2; j++) {
-				for(int k=0; k<2; k++) {
-					utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
-					Es[i][j][k] = field[cur].E;
-					Bs[i][j][k] = field[cur].B;
-				}
-			}
-		}
+//		// extract forces
+//		// TODO: move this to some C++ structure
+//		Vector3<double> Es[2][2][2];
+//		Vector3<double> Bs[2][2][2];
+//		for(int i=0; i<2; i++) {
+//			for(int j=0; j<2; j++) {
+//				for(int k=0; k<2; k++) {
+//					utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
+//					Es[i][j][k] = field[cur].E;
+//					Bs[i][j][k] = field[cur].B;
+//				}
+//			}
+//		}
 
-		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
+		//const auto cellOrigin = getOriginOfCell(pos, properties);
 
-		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		//double vol = properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z;
 
 		// update particles
 //		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
-		for(std::size_t i=0; i<cell.particles.size(); ++i) {
+		for(std::size_t i = 0; i < cell.particles.size(); ++i) {
 			Particle& p = cell.particles[i];
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
-			// get the fractional distance of the particle from the cell origin
-			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+//			// get the fractional distance of the particle from the cell origin
+//			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (properties.cellWidth));
+//
+//			// interpolate
+//			auto E = trilinearInterpolationF2P(Es, relPos, vol);
+//			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
-			// interpolate
-			auto E = trilinearInterpolationF2P(Es, relPos, vol);
-			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
+			// calculate 3 Cartesian components of the magnetic field
+			double fac1 =  -properties.externalMagneticField.z * pow(properties.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
+			Vector3<double> E, B;
+			E = {0.0, 0.0, 0.0};
+			B.x = 3.0 * p.position.x * p.position.z * fac1;
+			B.y = 3.0 * p.position.y * p.position.z * fac1;
+			B.z = (2.0 * pow(p.position.z, 2) - pow(p.position.x, 2) - pow(p.position.y, 2)) * fac1;
+				
+//			// adaptive sub-cycling for computing velocity
+//			double B_mag = allscale::utils::sumOfSquares(B);
+//			double dt_sub = M_PI * properties.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
+//			int sub_cycles = int(properties.dt / dt_sub) + 1;
+//			sub_cycles = std::min(sub_cycles, 100);
+//			dt_sub = properties.dt / double(sub_cycles);
+//
+//			for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
+				double dt_sub = properties.dt;
+				// update velocity
+				p.updateVelocity(E, B, dt_sub);
 
-			// update velocity
-			p.updateVelocity(E, B, universeProperties.dt);
-
-			// update position
-			p.updatePosition(universeProperties.dt);
+				// update position
+				p.updatePosition(dt_sub);
+//			}
 		}
 //		});
 
@@ -864,6 +873,13 @@ namespace ipic3d {
 					p.velocity *= (-1);
 				}
 
+				// remove particles from inside the sphere
+				auto diff = p.position - universeProperties.objectCenter;
+				double r2 = allscale::utils::sumOfSquares(diff);
+				if (r2 <= universeProperties.planetRadius * universeProperties.planetRadius) {
+					continue;
+				}
+						
 				// recompute potentially new relative position
 				relPos = p.position - getCenterOfCell(pos, universeProperties);
 
@@ -884,7 +900,9 @@ namespace ipic3d {
 
 			// actually transfer particles
 			for(std::size_t i = 0; i<cell.particles.size(); ++i) {
-				targets[i]->push_back(cell.particles[i]);
+				if (targets[i]) {
+					targets[i]->push_back(cell.particles[i]);
+				}
 			}
 
 		}

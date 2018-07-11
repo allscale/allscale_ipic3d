@@ -73,7 +73,7 @@ private:
 
 // --- tracing particles ---
 
-void traceParticle(Particle p, int T, const UniverseProperties& config, const InitProperties& init, int frame_interval, ParticleCount& res) {
+void traceParticle(Particle p, int T, const UniverseProperties& config, int frame_interval, ParticleCount& res) {
 
 	// extract some properties
 	auto dt = config.dt;
@@ -103,7 +103,7 @@ void traceParticle(Particle p, int T, const UniverseProperties& config, const In
 		auto pos = getCellCoordinates(config,p);
 
 		// calculate 3 Cartesian components of the magnetic field
-		double fac1 =  -init.externalMagneticField.z * pow(config.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
+		double fac1 =  -config.externalMagneticField.z * pow(config.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
 		Vector3<double> E, B;
 		E = {0.0, 0.0, 0.0};
 		B.x = 3.0 * p.position.x * p.position.z * fac1;
@@ -197,9 +197,7 @@ int main(int argc, char** argv) {
 	config.origin.x = config.objectCenter.x - config.size.x * config.cellWidth.x / 2.0; 
 	config.origin.y = config.objectCenter.y - config.size.y * config.cellWidth.y / 2.0; 
 	config.origin.z = config.objectCenter.z - config.size.z * config.cellWidth.z / 2.0; 
-
-	InitProperties init;
-	init.externalMagneticField = {0.0, 0.0, 3.07e-5};
+	config.externalMagneticField = {0.0, 0.0, 3.07e-5};
 
 	config.useCase = UseCase::Dipole;
 
@@ -241,7 +239,7 @@ int main(int argc, char** argv) {
 			p.qom = e / m;
 
 			// trace its trajectory
-			traceParticle(p,T+1,config,init,S,res);
+			traceParticle(p,T+1,config,S,res);
 		}
 		return res;
 	};

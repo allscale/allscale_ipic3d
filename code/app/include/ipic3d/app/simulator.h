@@ -61,7 +61,7 @@ namespace ipic3d {
 	
 	// write output depending on the set frequency
 	template<typename StreamObject>
-	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
+	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject, char* fileName) {
 		if ( universe.properties.FieldOutputCycle > 0 && ((cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps)) ) {
 			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
 			auto getB = [](const auto& field, const auto& index) { return (field[index].B + field[index].Bext); };
@@ -79,6 +79,28 @@ namespace ipic3d {
 				<< Benergy << "\t" 
 				<< totalParticlesKineticEnergy 
 				<< "\n";
+		}
+
+		if ( universe.properties.ParticleOutputCycle > 0 && ( (cycle == 0) || ((cycle+1) % universe.properties.ParticleOutputCycle == 0) ) ) {
+			int t = (cycle+1) / universe.properties.ParticleOutputCycle;
+			std::cout << cycle << ' ' << t << '\n';
+			char fileNamet[50];
+			std::sprintf(fileNamet, "%s%06d", fileName, t);
+
+			// open file and dump results
+			auto out = std::fstream(fileNamet, std::ios_base::out);
+			out << "t,x,y,z,density\n";
+			for(int x = 0; x < universe.properties.size.x; x++) {
+				for(int y = 0; y < universe.properties.size.y; y++) {
+					for(int z = 0; z < universe.properties.size.z; z++) {
+						double dx = x * universe.properties.cellWidth.x;
+						double dy = y * universe.properties.cellWidth.y;
+						double dz = z * universe.properties.cellWidth.z;
+						
+						out << t << "," << dx << "," << dy << "," << dz << "," << universe.cells[coordinate_type{x,y,z}].particles.size() << "\n";
+					}
+				}
+			}
 		}
 	}
 
@@ -120,6 +142,11 @@ namespace ipic3d {
 		auto outtxt = manager.openOutputStream(logFile);
 
 		writeOutputHeader(outtxt);
+
+		// use the current time to create a unique file name
+		auto timeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+		char fileName[50];
+		std::sprintf(fileName,"result_%ld.csv.", timeStamp);
 #endif
 
 		// -- run the simulation --
@@ -131,7 +158,7 @@ namespace ipic3d {
 
 #ifdef ENABLE_DEBUG_OUTPUT
 			// write output to a file: total energy, momentum, E and B total energy
-			writeOutputData(i, numSteps, universe, outtxt);
+			writeOutputData(i, numSteps, universe, outtxt, fileName);
 #endif
 
 			// STEP 1: collect particle contributions
@@ -204,9 +231,9 @@ namespace ipic3d {
 		};
 
 		struct default_particle_mover {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, TransferBuffers& particleTransfers) const {
-				moveParticles(universeProperties,cell,pos,field);
-				exportParticles(universeProperties,cell,pos,particleTransfers);
+			void operator()(const UniverseProperties& properties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, TransferBuffers& particleTransfers) const {
+				moveParticles(properties, cell, pos, field);
+				exportParticles(properties, cell, pos, particleTransfers);
 			}
 		};
 	}

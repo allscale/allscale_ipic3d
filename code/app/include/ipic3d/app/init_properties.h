@@ -25,15 +25,12 @@ namespace ipic3d {
 		// initial magnetic field
 		Vector3<double> magneticField;
 
-		// initial exteranal magnetic field
-		Vector3<double> externalMagneticField;
-
 		// charge density defined on nodes
 		double rhoInit;
 
 		InitProperties(const unsigned numSteps = 1, const std::vector<Vector3<unsigned>>& particlesPerCell = {},
-			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticField = { 0,0,0 }, const Vector3<double>& externalMagneticField = { 0,0,0 }, const double rhoInit = 1.0)
-			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticField(magneticField), externalMagneticField(externalMagneticField), rhoInit(rhoInit) {}
+			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticField = { 0,0,0 }, const double rhoInit = 1.0)
+			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticField(magneticField), rhoInit(rhoInit) {}
 
 		InitProperties(const Parameters& params) {
 
@@ -48,7 +45,6 @@ namespace ipic3d {
 			}
 
 			magneticField = { params.B0.x, params.B0.y, params.B0.z };
-			externalMagneticField = { params.B1.x, params.B1.y, params.B1.z };
 
 			rhoInit = params.rhoInit[0];
 		}
@@ -59,7 +55,6 @@ namespace ipic3d {
 			out << "\tNumber of particles per cell: " << props.particlesPerCell << std::endl;
 			out << "\tDrift velocity: " << props.driftVelocity << std::endl;
 			out << "\tMagnetic fielde: " << props.magneticField << std::endl;
-			out << "\tExternal magnetic fielde: " << props.externalMagneticField << std::endl;
 			out << "\tCharge density: " << props.rhoInit << std::endl;
 			return out;
 		}
