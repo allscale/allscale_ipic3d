@@ -647,7 +647,7 @@ namespace ipic3d {
 	 * @param pos the coordinates of this cell in the grid
 	 * @param field the most recently computed state of the surrounding force fields
 	 */
-	void moveParticles(const UniverseProperties& properties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
+	void moveParticles(const UniverseProperties& properties, Cell& cell, const utils::Coordinate<3>& pos, const Field& /*field*/) {
 
 		assert_true(pos.dominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
 
