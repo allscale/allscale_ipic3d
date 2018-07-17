@@ -49,14 +49,14 @@ int main(int argc, char** argv) {
 	universeProperties.outputFileBaseName = baseName;
 	universeProperties.dt = 0.01;
 	universeProperties.speedOfLight = 299792458;
-	int R = 16;
-	universeProperties.size = { R, R, R };
+	//int R = 16;
+	//universeProperties.size = { R, R, R };
 	universeProperties.planetRadius = 6378137; // meter (Earth radius) 
-	universeProperties.cellWidth = (20.0 / universeProperties.size.x) * universeProperties.planetRadius;
-	universeProperties.FieldOutputCycle = 0;
+	universeProperties.cellWidth *= universeProperties.planetRadius;
+	//universeProperties.FieldOutputCycle = 0;
 
 	// these parameters are required for computations
-	universeProperties.ParticleOutputCycle = 10;
+	//universeProperties.ParticleOutputCycle = 10;
 
 	auto universeSize = elementwiseProduct(universeProperties.cellWidth, universeProperties.size);
 	universeProperties.objectCenter = { 0.0, 0.0, 0.0 };
@@ -74,8 +74,6 @@ int main(int argc, char** argv) {
 	double v_mod = universeProperties.speedOfLight / sqrt(1.0 + (m * universeProperties.speedOfLight * universeProperties.speedOfLight) / K);
 	auto low = universeProperties.origin + 0.125 * universeSize;
 	auto hig = low + 0.75 * universeSize;
-	std::cout << universeProperties.origin << " " << universeProperties.size << " " << universeProperties.cellWidth << " " << universeSize << "\n"; 
-	std::cout << low << " " << hig << '\n';
 	auto dist = distribution::uniform_pos_normal_speed<> ( 
 			low, hig,
 			Vector3<double> { 0, 0, 0 }, // mean value
@@ -92,8 +90,7 @@ int main(int argc, char** argv) {
 
 	// -- run the simulation --
 
-	simulateSteps(150, universe);
-	//simulateSteps(params.ncycles, universe);
+	simulateSteps(params.ncycles, universe);
 
 	// ----- finish ------
 
@@ -105,9 +102,9 @@ int main(int argc, char** argv) {
 
 	std::cout << "Simulation finished successfully, producing output data..." << std::endl;
 
-	//std::string outputFilename = baseName + ".out";
-	//outputNumberOfParticlesPerCell(universe.cells, outputFilename);
-	//outputFieldGrids(universe.field, universe.bcfield, outputFilename);
+	std::string outputFilename = baseName + ".out";
+	outputNumberOfParticlesPerCell(universe.cells, outputFilename);
+	outputFieldGrids(universe.field, universe.bcfield, outputFilename);
 
 	// be done
 	return EXIT_SUCCESS;
