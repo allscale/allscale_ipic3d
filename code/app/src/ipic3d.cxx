@@ -104,7 +104,6 @@ int main(int argc, char** argv) {
 
 	std::string outputFilename = baseName + ".out";
 	outputNumberOfParticlesPerCell(universe.cells, outputFilename);
-	outputFieldGrids(universe.field, universe.bcfield, outputFilename);
 
 	// be done
 	return EXIT_SUCCESS;
