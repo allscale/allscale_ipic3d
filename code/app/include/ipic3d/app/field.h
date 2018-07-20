@@ -40,6 +40,43 @@ namespace ipic3d {
 	// declaration
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields);
 
+	FieldNode getDipoleFieldAt(const Vector3<double>& location, const InitProperties& initProperties, const UniverseProperties& universeProperties) {
+
+		auto driftVel = initProperties.driftVelocity;
+		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
+		auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticField);
+
+		FieldNode res;
+
+		// initialize electrical field
+		res.E = ebc;
+
+		// -- add earth model --
+
+		// radius of the planet
+		double a = universeProperties.planetRadius;
+
+		auto diff = location - universeProperties.objectCenter;
+
+		double r2 = allscale::utils::sumOfSquares(diff);
+
+		// Compute dipolar field B_ext
+		if (r2 > a*a) {
+			auto fac1 =  -universeProperties.externalMagneticField.z * pow(a, 3) / pow(r2, 2.5);
+			res.Bext.x = 3.0 * diff.x * diff.z * fac1;
+			res.Bext.y = 3.0 * diff.y * diff.z * fac1;
+			res.Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
+		} else { // no field inside the planet
+			res.Bext = { 0.0, 0.0, 0.0 };
+		}
+
+		// initialize magnetic field
+		res.B = initProperties.magneticField + res.Bext;
+
+		// done
+		return res;
+	}
+
 	// definition
 	Field initFields(const InitProperties& initProperties, const UniverseProperties& universeProperties) {
 
@@ -57,47 +94,14 @@ namespace ipic3d {
 
 			case UseCase::Dipole: {
 
-				auto driftVel = initProperties.driftVelocity;
-				assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
-				auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
-
-				// radius of the planet
-				double a = universeProperties.planetRadius;
-
-				// Dipole's Center
-				auto objectCenter = universeProperties.objectCenter;
-
-				pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
-
-					// TODO: required to work around an allscalecc frontend bug
-					// should be removed once the issue in the compiler is resolved
-					fields[cur].Bext = { 0.0, 0.0, 0.0 };
-
-					// initialize electrical field
-					fields[cur].E = ebc;
-
-					// initialize magnetic field
-					fields[cur].B = initProperties.magneticFieldAmplitude;
-
-					// -- add earth model --
+				pfor(start, workingFieldSize, [=,&fields](const utils::Coordinate<3>& cur) {
 
 					// Node coordinates
 					// pos-start due to the fact that we have a ghost field
 					auto location = getLocationForFields(cur-start, universeProperties);
 
-					auto diff = location - objectCenter;
-
-					double r2 = allscale::utils::sumOfSquares(diff);
-
-					// Compute dipolar field B_ext
-					if (r2 > a*a) {
-						auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
-						fields[cur].Bext.x = 3.0 * diff.x * diff.z * fac1;
-						fields[cur].Bext.y = 3.0 * diff.y * diff.z * fac1;
-						fields[cur].Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
-					} else { // no field inside the planet
-						fields[cur].Bext = { 0.0, 0.0, 0.0 };
-					}
+					// init current field cell
+					fields[cur] = getDipoleFieldAt(location, initProperties, universeProperties);
 
 				});
 
@@ -124,7 +128,7 @@ namespace ipic3d {
 		// the 3-D force fields
 		BcField bcfield(fieldSize);
 
-		pfor(start, workingFieldSize, [&](const utils::Coordinate<3>& cur) {
+		pfor(start, workingFieldSize, [=,&field,&bcfield](const utils::Coordinate<3>& cur) {
 			// init magnetic field at centers
 			interpN2C(cur, field, bcfield);
 		});
@@ -143,7 +147,7 @@ namespace ipic3d {
 		// the 3D current density
 		CurrentDensity currentDensity(densitySize);
 
-		pfor(start, densitySize, [&](const utils::Coordinate<3>& cur) {
+		pfor(start, densitySize, [=,&currentDensity](const utils::Coordinate<3>& cur) {
 
 			// initialize current density on nodes
 			currentDensity[cur].J = { 0.0, 0.0, 0.0 };
@@ -457,54 +461,72 @@ namespace ipic3d {
 	/**
 	* This function outputs all field values
 	*/
-	template<typename StreamObject>
-	void outputFieldGrids(const Field& field, const BcField& bcField, StreamObject& streamObject) {
-
-
+	void outputFieldGrids(const Field& field, const BcField& bcField, const std::string& outputFilename) {
 		// TODO: implement output facilities for large problems
 		assert_le(field.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large field at this time";
 
-		// output dimensions
-		streamObject << field.size() << "\n";
-
-		coordinate_type start(1);
-
 		// output field values
-		allscale::api::user::algorithm::pfor(start, field.size() - coordinate_type(1), [&](const auto& index) {
-			streamObject.atomic([&](auto& out) {
-				// write index
-				out << index.x << "," << index.y << "," << index.z << ":";
-				// write data
-				out << field[index].E << "|" << field[index].B << "|" << field[index].Bext << "\n";
-			});
-		});
+		allscale::api::user::algorithm::async([=, &field]() {
+			auto& manager = allscale::api::core::FileIOManager::getInstance();
+			auto text = manager.createEntry(outputFilename);
+			auto out = manager.openOutputStream(text);
 
-		streamObject << "\n";
+			// output dimensions
+			out << field.size() << "\n";
 
-		// output dimensions
-		streamObject << bcField.size() << "\n";
+			for(std::int64_t i = 0; i < field.size().x; ++i) {
+				for(std::int64_t j = 0; j < field.size().y; ++j) {
+					for(std::int64_t k = 0; k < field.size().z; ++k) {
+						coordinate_type p{ i,j,k };
+						// write index
+						out << p.x << "," << p.y << "," << p.z << ":";
+						// write data
+						out << field[p].E << "|" << field[p].B << "|" << field[p].Bext << "\n";
+					}
+				}
+			}
+			out << "\n";
+			manager.close(out);
+		}).wait();
+		//allscale::api::user::algorithm::pfor(field.size(), [&](const auto& index) {
+		//	streamObject.atomic([&](auto& out) {
+		//		// write index
+		//		out << index.x << "," << index.y << "," << index.z << ":";
+		//		// write data
+		//		out << field[index].E << "|" << field[index].B << "|" << field[index].Bext << "\n";
+		//	});
+		//});
 
 		// output bc field values
-		allscale::api::user::algorithm::pfor(start, bcField.size() - coordinate_type(1), [&](const auto& index) {
-			streamObject.atomic([&](auto& out) {
-				// write index
-				out << index.x << "," << index.y << "," << index.z << ":";
-				out << bcField[index].Bc << "\n"; 
-			});
-		});
+		allscale::api::user::algorithm::async([=, &bcField]() {
+			auto& manager = allscale::api::core::FileIOManager::getInstance();
+			auto text = manager.createEntry(outputFilename);
+			auto out = manager.openOutputStream(text);
 
-		streamObject << "\n";
-	}
+			// output dimensions
+			out << bcField.size() << "\n";
 
-	/**
-	* This function outputs all field values using AllScale IO
-	*/
-	void outputFieldGrids(const Field& field, const BcField& bcField, std::string& filename) {
-		auto& manager = allscale::api::core::FileIOManager::getInstance();
-		auto text = manager.createEntry(filename);
-		auto out = manager.openOutputStream(text);
-		outputFieldGrids(field, bcField, out);
-		manager.close(out);
+			for(std::int64_t i = 0; i < bcField.size().x; ++i) {
+				for(std::int64_t j = 0; j < bcField.size().y; ++j) {
+					for(std::int64_t k = 0; k < bcField.size().z; ++k) {
+						coordinate_type p{ i,j,k };
+						// write index
+						out << p.x << "," << p.y << "," << p.z << ":";
+						// write data
+						out << bcField[p].Bc << "\n";
+					}
+				}
+			}
+			out << "\n";
+			manager.close(out);
+		}).wait();
+		//allscale::api::user::algorithm::pfor(bcField.size(), [&](const auto& index) {
+		//	streamObject.atomic([&](auto& out) {
+		//		// write index
+		//		out << index.x << "," << index.y << "," << index.z << ":";
+		//		out << bcField[index].Bc << "\n"; 
+		//	});
+		//});
 	}
 
 } // end namespace ipic3d

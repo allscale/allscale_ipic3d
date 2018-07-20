@@ -35,8 +35,8 @@ namespace ipic3d {
 		// TODO: check and rename all these fields
 
 		// Earth parameters
-		static const double Re = 6378137.0; 		// meter (Earth radius)
-		static const double B0 = 3.07e-5; 			// Tesla
+		static const double Re = 6378137.0; 		// Earth radius in meters
+		static const double B1 = 3.07e-5; 			// External magnetic field in Tesla
 		// Other parameters
 		static const double e = 1.602176565e-19; 	// Elementary charge (Coulomb)
 		static const double m = 1.672621777e-27; 	// Proton mass (kg)
@@ -68,37 +68,40 @@ namespace ipic3d {
 		// physical point of origin corresponds to the front lower left corner
 		// 		by defaul it is {0, 0, 0}
 		Vector3<double> origin; 
-		// magnetic field
-		Vector3<double> magneticField;
+		// initial exteranal magnetic field
+		Vector3<double> externalMagneticField;
 		int FieldOutputCycle;
+		int ParticleOutputCycle;
 		std::string outputFileBaseName;
 
 	    UniverseProperties(const UseCase& useCase = UseCase::Dipole, const coordinate_type& size = {1, 1, 1}, const Vector3<double>& cellWidth = {1.0, 1.0, 1.0},
-			const double dt = 1.0, const double speedOfLight = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, 
-			const Vector3<double>& magneticField = {0.0, 0.0, 0.0}, const int FieldOutputCycle = 1)
-	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), magneticField(magneticField), FieldOutputCycle(FieldOutputCycle) {
+			const double dt = 1.0, const double speedOfLight = 1.0, const double planetRadius = 0.0, const Vector3<double>& objectCenter = { 0.0, 0.0, 0.0 }, const Vector3<double>& origin = { 0.0, 0.0, 0.0 }, const Vector3<double>& externalMagneticField = { 0,0,0 }, const int FieldOutputCycle = 100, const int ParticleOutputCycle = 100)
+	        : useCase(useCase), size(size), cellWidth(cellWidth), dt(dt), speedOfLight(speedOfLight), planetRadius(planetRadius), objectCenter(objectCenter), origin(origin), externalMagneticField(externalMagneticField), FieldOutputCycle(FieldOutputCycle), ParticleOutputCycle(ParticleOutputCycle) {
 		    assert_true(size.x > 0 && size.y > 0 && size.z > 0) << "Expected positive non-zero universe size, but got " << size;
 			assert_true(size.x == size.y && size.y == size.z) << "Expected sizes of universe to be equal (=cubic universe), but got " << size.x << ", " << size.y << ", " << size.z;
 		    assert_true(cellWidth.x > 0 && cellWidth.y > 0 && cellWidth.z > 0) << "Expected positive non-zero cell widths, but got " << cellWidth;
 		    assert_lt(0, dt) << "Expected positive non-zero time step, but got " << dt;
 		    assert_lt(0, speedOfLight) << "Expected positive non-zero speed of light, but got " << speedOfLight;
 		    assert_le(0, planetRadius) << "Expected positive or zero object radius, but got " << planetRadius;
+		    assert_le(0, FieldOutputCycle) << "Expected positive or zero object field output cycle, but got " << FieldOutputCycle;
+		    assert_le(0, ParticleOutputCycle) << "Expected positive or zero object particle output cycle, but got " << ParticleOutputCycle;
 	    }
 
 		UniverseProperties(const Parameters& params)
 			: useCase(params.useCase),
 			size({ params.ncells.x, params.ncells.y, params.ncells.z }),
 			cellWidth({ params.dspace.x, params.dspace.y, params.dspace.z }),
-			dt( params.dt ),
+			dt(params.dt),
 			speedOfLight( params.c ),
 			planetRadius( params.planetRadius ),
 			objectCenter({ params.objectCenter.x, params.objectCenter.y, params.objectCenter.z }),
-			magneticField({ params.B0.x, params.B0.y, params.B0.z }),
-			FieldOutputCycle ( params.FieldOutputCycle ) 
+			FieldOutputCycle ( params.FieldOutputCycle ),
+			ParticleOutputCycle ( params.ParticlesOutputCycle ) 
 		{
 			origin.x = params.objectCenter.x - params.ncells.x * params.dspace.x / 2.0;
 			origin.y = params.objectCenter.y - params.ncells.y * params.dspace.y / 2.0;
 			origin.z = params.objectCenter.z - params.ncells.z * params.dspace.z / 2.0;
+			externalMagneticField = { params.B1.x, params.B1.y, params.B1.z };
 		}
 
 	    friend std::ostream& operator<<(std::ostream& out, const UniverseProperties& props) {
@@ -111,8 +114,9 @@ namespace ipic3d {
 			out << "\tPlanet radius: " << props.planetRadius << std::endl;
 			out << "\tObject center: " << props.objectCenter << std::endl;
 			out << "\tOrigin of the domain: " << props.origin << std::endl;
-			out << "\tMagnetic field: " << props.magneticField << std::endl;
-			out << "\tField's output cycle: " << props.FieldOutputCycle<< std::endl;
+			out << "\tExternal magnetic field: " << props.externalMagneticField << std::endl;
+			out << "\tFields output cycle: " << props.FieldOutputCycle<< std::endl;
+			out << "\tParticles output cycle: " << props.ParticleOutputCycle<< std::endl;
 			return out;
 		}
 

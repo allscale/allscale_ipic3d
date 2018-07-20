@@ -9,6 +9,8 @@ set -e
 # set the number of threads to use to 4 if not set to something else already
 export NPROC="${NPROC:-4}"
 
+# set a cpu time limit (in seconds)
+ulimit -t 3600
 
 # default to "test" problem case if no other case was specified, print usage if requested
 CASE="test"
@@ -23,7 +25,15 @@ if [ "$#" -eq 1 ]; then
 	CASE="$1"
 fi
 
+REFERENCE_PATH="@PROJECT_SOURCE_DIR@/../outputs/${CASE}.out"
+
 echo "RESULT CHECK: Checking for problem case \"${CASE}\""
+
+# check if reference file present and not empty
+if [ ! -s "$REFERENCE_PATH" ] ; then
+	echo "RESULT CHECK: [FAILED] File $REFERENCE_PATH is missing or empty!"
+	exit 1
+fi
 
 # prepare additional arguments
 if [ ! -z "$RUNNING_IN_ALLSCALE_RUNTIME" ]; then
@@ -31,11 +41,11 @@ if [ ! -z "$RUNNING_IN_ALLSCALE_RUNTIME" ]; then
 fi
 
 # run application
-NUM_WORKERS="$NPROC" @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp $ADDITIONAL_ARGUMENTS
+NUM_WORKERS="$NPROC" /usr/bin/time -v @PROJECT_BINARY_DIR@/app/ipic3d @PROJECT_SOURCE_DIR@/../inputs/${CASE}.inp $ADDITIONAL_ARGUMENTS
 
 # compare output
 set +e
-bash -c "diff <(sort ${CASE}.out) <(sort @PROJECT_SOURCE_DIR@/../outputs/${CASE}.static.out)"
+bash -c "diff <(sort ${CASE}.out) <(sort $REFERENCE_PATH)"
 RETVAL=$?
 set -e
 

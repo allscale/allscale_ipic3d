@@ -6,15 +6,17 @@
 #include "allscale/api/core/io.h"
 #include "allscale/api/user/data/grid.h"
 #include "allscale/api/user/algorithm/pfor.h"
+#include "allscale/api/user/algorithm/async.h"
 #include "allscale/api/user/algorithm/preduce.h"
 #include "allscale/utils/static_grid.h"
 
-#include "ipic3d/app/vector.h"
-#include "ipic3d/app/particle.h"
 #include "ipic3d/app/field.h"
+#include "ipic3d/app/parameters.h"
+#include "ipic3d/app/particle.h"
+#include "ipic3d/app/transfer_buffer.h"
 #include "ipic3d/app/universe_properties.h"
 #include "ipic3d/app/utils/points.h"
-#include "ipic3d/app/parameters.h"
+#include "ipic3d/app/vector.h"
 #include "ipic3d/app/ziggurat_normal_distribution.h"
 
 namespace ipic3d {
@@ -56,17 +58,25 @@ namespace ipic3d {
 	}
 
 	/**
-	 * Tests whether a given particle is within the particle universe.
+	 * Computes the coordinates of a cell the given particle should be located in.
+	 */
+	utils::Coordinate<3> getCellCoordinates(const UniverseProperties& universeProperties, const Particle& p) {
+		auto cordf = elementwiseDivision((p.position - universeProperties.origin),universeProperties.cellWidth);
+		return { std::int64_t(cordf.x), std::int64_t(cordf.y), std::int64_t(cordf.z) };
+	}
+
+	/**
+	 * Tests whether a given particle is within the universe.
 	 * @param universeProperties the properties of this universe
 	 * @param p the particle to be tested
 	 * @return true if the particle is inside, false otherwise
 	 */
 	bool isInsideUniverse(const UniverseProperties& universeProperties, const Particle& p) {
-		Vector3<double> zero = 0;
+		Vector3<double> zero = universeProperties.origin;
 		Vector3<double> size {
-			universeProperties.size.x * universeProperties.cellWidth.x,
-			universeProperties.size.y * universeProperties.cellWidth.y,
-			universeProperties.size.z * universeProperties.cellWidth.z
+			universeProperties.origin.x + universeProperties.size.x * universeProperties.cellWidth.x,
+			universeProperties.origin.y + universeProperties.size.y * universeProperties.cellWidth.y,
+			universeProperties.origin.z + universeProperties.size.z * universeProperties.cellWidth.z
 		};
 		return zero.dominatedBy(p.position) && p.position.strictlyDominatedBy(size);
 	}
@@ -135,7 +145,39 @@ namespace ipic3d {
 					: x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
 
 				Vector3<double> operator()() {
-					return { x(randGen), y(randGen), z(randGen) };
+					return { 
+						x(randGen), y(randGen), z(randGen) 
+					};
+				}
+
+			};
+
+			// a generator for uniformly distributed vector3 instances
+			class uniform_r {
+				Vector3<double> R1;
+				Vector3<double> R2;
+
+				std::uniform_real_distribution<> rho1;
+				std::uniform_real_distribution<> rho2;
+				std::uniform_real_distribution<> rho3;
+
+				std::minstd_rand randGen;
+
+			public:
+
+				uniform_r(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed)
+					: R1(min), R2(max), rho1(0.0,1.0), rho2(0.0,1.0), rho3(0.0,1.0), randGen(seed) {}
+
+				Vector3<double> operator()() {
+					double rh1 = rho1(randGen);
+					double rh2 = rho2(randGen);
+					double rh3 = rho3(randGen);
+					double nu = (1.0 - 2.0 * rh2);
+					return { 
+						pow(pow(R1.x,3)+(pow(R2.x,3)-pow(R1.x,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * cos(2.0*M_PI*rh3),
+						pow(pow(R1.y,3)+(pow(R2.y,3)-pow(R1.y,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * sin(2.0*M_PI*rh3),
+						pow(pow(R1.z,3)+(pow(R2.z,3)-pow(R1.z,3))*rh1,1.0/3.0) * nu
+					};
 				}
 
 			};
@@ -236,6 +278,54 @@ namespace ipic3d {
 
 		};
 
+		template<typename SpeciesGen = species::electron>
+		struct uniform_pos_normal_speed : public generic_particle_generator<vector::uniform,vector::normal,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::uniform,vector::normal,SpeciesGen>;
+
+			uniform_pos_normal_speed(
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+
+			uniform_pos_normal_speed(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+
+		};
+
+		template<typename SpeciesGen = species::electron>
+		struct uniform_pos_normal_speed_r : public generic_particle_generator<vector::uniform_r,vector::normal,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::uniform_r,vector::normal,SpeciesGen>;
+
+			uniform_pos_normal_speed_r(
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+
+			uniform_pos_normal_speed_r(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+
+		};
+
 		template<typename Distribution>
 		class spherical {
 
@@ -281,20 +371,74 @@ namespace ipic3d {
 
 		// get a private copy of the distribution generator
 		auto next = dist;
-
-		// generate list of particles
-		std::vector<Particle> particles(numParticles);
-		for(std::uint64_t i=0; i<numParticles; ++i) {
-			auto cur = next();
-			while(!isInsideUniverse(properties,cur)) cur = next();
-			particles[i] = cur;
-		}
+		
+		double e = 1.602176565e-19; // Elementary charge (Coulomb)  
+ 		double m = 1.672621777e-27; // Proton mass (kg) 
 
 		// just some info about the progress
 		std::cout << "Sorting in particles ...\n";
 
-		// distribute particles randomly
-		pfor(properties.size, [&,numParticles](const auto& pos) {
+		// insert particles in patches (of 4MB each)
+		const std::uint64_t patch_size = (1<<22)/sizeof(Particle);
+		for(std::uint64_t p=0; p<numParticles; p+=patch_size) {
+
+			// generate list of particles
+			auto current_patch = std::min(patch_size,numParticles-p);
+			std::vector<Particle> particles(current_patch);
+			for(std::uint64_t i=0; i<current_patch; ++i) {
+				auto cur = next();
+				while(!isInsideUniverse(properties,cur)) cur = next();
+				cur.q = e;
+				cur.qom = e / m;
+				particles[i] = cur;
+			}
+
+			std::cout << "Submitting particles " << p << " - " << (p+current_patch) << " ... \n";
+
+			// distribute particles randomly
+			pfor(properties.size, [=,&cells](const auto& pos) {
+
+				// get targeted cell
+				auto& cell = cells[pos];
+
+				// get cell corners
+				auto low = getOriginOfCell(pos, properties);
+				auto hig = low + properties.cellWidth;
+
+				// filter out local particles
+				for(const auto& cur : particles) {
+					if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
+						cell.particles.push_back(cur);
+					}
+				}
+
+			});
+
+		}
+
+		// done
+		return cells;
+	}
+
+	Cells initCells(const UniverseProperties& properties, std::uint64_t numParticles, const distribution::uniform<>&) {
+		using allscale::api::user::algorithm::pfor;
+
+		// the 3-D grid of cells
+		auto gridSize = properties.size;
+		Cells cells(gridSize);
+
+		// just some info about the progress
+		std::cout << "Sorting in uniformly distributed particles ...\n";
+
+		// compute particles per cell
+		auto numCells = properties.size.x * properties.size.y * properties.size.z;
+		std::uint64_t particlesPerCell = numParticles / numCells;
+		std::uint64_t remaining = numParticles % numCells;
+
+		std::cout << "  particles / cell: " << particlesPerCell << " (+1)\n";
+
+		// initialize each cell in parallel
+		pfor(properties.size, [=,&cells](const auto& pos) {
 
 			// get targeted cell
 			auto& cell = cells[pos];
@@ -304,11 +448,30 @@ namespace ipic3d {
 			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
 			Vector3<double> hig = low + width;
 
-			// filter out local particles
-			for(const auto& cur : particles) {
-				if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
-					cell.particles.push_back(cur);
-				}
+			// create a uniform distribution
+			auto seed = (uint32_t)(((pos.x * 1023) + pos.y) * 1023 + pos.z);
+
+			// TODO: speeds are hard-coded, actual passed distribution is ignored
+			distribution::uniform<> next(
+					low,hig, // within this box
+					// speeds are constant
+					Vector3<double> { -0.2, -0.2, -0.2},
+					Vector3<double> { +0.2, +0.2, +0.2},
+					seed
+			);
+
+			// get number of particles to be generated in this cell
+			auto numParticles = particlesPerCell;
+
+			// correct for remaining particles (to be evenly balance)
+			std::uint64_t linPos = (pos.x * gridSize.y + pos.y) * gridSize.z + pos.z;
+			if (linPos < remaining) {
+				numParticles += 1;
+			}
+
+			// generate particles
+			for(std::uint64_t i=0; i<numParticles; i++) {
+				cell.particles.push_back(next());
 			}
 
 		});
@@ -316,6 +479,7 @@ namespace ipic3d {
 		// done
 		return cells;
 	}
+
 
 	Cells initCells(const Parameters& params, const InitProperties& initProperties, const UniverseProperties& properties) {
 
@@ -340,7 +504,7 @@ namespace ipic3d {
 		auto particlesPerCell = initProperties.particlesPerCell[0];
 	
 		// TODO: return this as a treeture
-		allscale::api::user::algorithm::pfor(zero, properties.size, [&](const utils::Coordinate<3>& pos) {
+		allscale::api::user::algorithm::pfor(zero, properties.size, [=,&cells](const utils::Coordinate<3>& pos) {
 
 			Cell& cell = cells[pos];
 			auto cellOrigin = getOriginOfCell(pos, properties);
@@ -388,19 +552,6 @@ namespace ipic3d {
 					}
 				}
 			}
-	
-			// print particles position and velocity
-			if (0) {
-				for(const auto& p : cell.particles) {
-					std::cout << p.position.x << " ";
-					std::cout << p.position.y << " ";
-					std::cout << p.position.z << " ";
-					std::cout << p.velocity.x << " ";
-					std::cout << p.velocity.y << " ";
-					std::cout << p.velocity.z << "\n";
-				}
-			
-			}
 
 		});
 
@@ -417,42 +568,45 @@ namespace ipic3d {
 	* @param pos the coordinates of this cell in the grid
 	* @param contributions the density contributions output
 	*/
-	void projectToDensityField(const UniverseProperties& universeProperties, const Cell& cell, const utils::Coordinate<3>& pos, CurrentDensity& density) {
+	void projectToDensityField(const UniverseProperties& universeProperties, const Cells& cells, const utils::Coordinate<3>& pos, CurrentDensity& density) {
 
-		// quick-check
-		if(cell.particles.empty()) return;		// nothing to contribute
-
-		// init aggregated densities of neighboring cells
-		for(int i = 0; i < 2; ++i) {
-			for(int j = 0; j < 2; ++j) {
-				for(int k = 0; k < 2; ++k) {
-					utils::Coordinate<3> cur = 2 * pos + utils::Coordinate<3>{i, j, k};
-					density[cur].J = { 0.0, 0.0, 0.0 };
-				}
-			}
-		}
+		auto Js = Vector3<double>(0.0);
+		auto size = universeProperties.size;
 
 		// aggregate charge density from particles
-		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
-		
-		// TODO: use pfor here, switch loop nest and pfors?
-		for(const auto& p : cell.particles) {
-			// get the fractional distance of the particle from the cell origin
-			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+		for(int i=-1; i<1; i++) {
+			for(int j=-1; j<1; j++) {
+				for(int k=-1; k<1; k++) {
+					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
 
-			// computation of J also includes weights from the particles as for E
-			// TODO: Should be replaced by a call to trilinearInterpolationFP() (after renaming it to trilinearInterpolation only...)
-			for(int i = 0; i < 2; ++i) {
-				for(int j = 0; j < 2; ++j) {
-					for(int k = 0; k < 2; ++k) {
-				    	auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
-					    utils::Coordinate<3> neighborPos = 2 * pos + utils::Coordinate<3>{i, j, k};
-						density[neighborPos].J += (p.q * p.velocity * fac);
+					// adjust particle's position in case it exits the domain
+					auto adjustPosition = [&](const int i) {
+						return cur[i] = ( (cur[i] < 0) ? size[i] - 1 : ((cur[i] >= size[i]) ? 0 : cur[i]) );
+					};
+				
+					cur[0] = adjustPosition(0);
+					cur[1] = adjustPosition(1);
+					cur[2] = adjustPosition(2);
+
+					const auto cellOrigin = getOriginOfCell(cur, universeProperties);
+					for(const auto& p : cells[cur].particles) {
+						// get the fractional distance of the particle from the cell origin
+						const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+
+						// computation of J also includes weights from the particles as for E
+						// despite the fact that we are working right now with multiple cells, so the position of J would be different
+						// 	the formula still works well as it captures position of J in each of those cells. 
+						auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
+						Js += p.q * p.velocity * fac;
 					}
 				}
 			}
 		}
+
+		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		density[pos].J = (Js / vol) / 8.0;
 	}
+
 
 	/**
 	* This function aggregates the density contributions into the current density on the nodes
@@ -489,7 +643,6 @@ namespace ipic3d {
 	*   This is interpolation of fields to particles
 	* Math: http://paulbourke.net/miscellaneous/interpolation/
 	* TODO: Move this to some math utilities header?
-			etd::cout << v_plus << '\n';
 	*
 	* @param corners the 8 surrounding points to interpolate from
 	* @param pos the target position for which to interpolate
@@ -499,162 +652,292 @@ namespace ipic3d {
 	T trilinearInterpolationF2P(const T corners[2][2][2], const Vector3<double>& pos, const double vol) {
 		T res = T(0);
 
-	    for(int i = 0; i < 2; ++i) {
-		    for(int j = 0; j < 2; ++j) {
-			    for(int k = 0; k < 2; ++k) {
-				    auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z);
-				    res += corners[i][j][k] * fac;
-			    }
-		    }
-	    }
+		assert_le(0,pos.x); assert_le(pos.x,1);
+		assert_le(0,pos.y); assert_le(pos.y,1);
+		assert_le(0,pos.z); assert_le(pos.z,1);
 
-	    return res / vol;
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				for(int k = 0; k < 2; ++k) {
+					auto fac = (i == 0 ? (1 - pos.x) : pos.x) * (j == 0 ? (1 - pos.y) : pos.y) * (k == 0 ? (1 - pos.z) : pos.z);
+					res += corners[i][j][k] * fac;
+				}
+			}
+		}
+
+		return res / vol;
 	}
 
 	/**
 	 * This function updates the position of all particles within a cell for a single
 	 * time step, considering the given field as a driving force.
 	 *
-	 * @param universeProperties the properties of this universe
+	 * @param properties the properties of this universe
 	 * @param cell the cell whose particles are moved
 	 * @param pos the coordinates of this cell in the grid
 	 * @param field the most recently computed state of the surrounding force fields
 	 */
-	void moveParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
+	void moveParticles(const UniverseProperties& properties, Cell& cell, const utils::Coordinate<3>& pos, const Field& /*field*/) {
 
-		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+		assert_true(pos.dominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
 
 		// quick-check
 		if (cell.particles.empty()) return;
 
 		// -- move the particles in space --
 
-		// extract forces
-		// TODO: move this to some C++ structure
-		Vector3<double> Es[2][2][2];
-		Vector3<double> Bs[2][2][2];
-		for(int i=0; i<2; i++) {
-			for(int j=0; j<2; j++) {
-				for(int k=0; k<2; k++) {
-					utils::Coordinate<3> cur({pos[0]+i,pos[1]+j,pos[2]+k});
-					cur += utils::Coordinate<3>(1); // shift because of the boundary cells
-					Es[i][j][k] = field[cur].E;
-					Bs[i][j][k] = field[cur].B;
-				}
-			}
-		}
+//		// extract forces
+//		// TODO: move this to some C++ structure
+//		Vector3<double> Es[2][2][2];
+//		Vector3<double> Bs[2][2][2];
+//		for(int i=0; i<2; i++) {
+//			for(int j=0; j<2; j++) {
+//				for(int k=0; k<2; k++) {
+//					utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
+//					Es[i][j][k] = field[cur].E;
+//					Bs[i][j][k] = field[cur].B;
+//				}
+//			}
+//		}
 
-		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
+		//const auto cellOrigin = getOriginOfCell(pos, properties);
 
-        double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		//double vol = properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z;
 
 		// update particles
-		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
+//		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
+		for(std::size_t i = 0; i < cell.particles.size(); ++i) {
+			Particle& p = cell.particles[i];
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
-			// get the fractional distance of the particle from the cell origin
-			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+//			// get the fractional distance of the particle from the cell origin
+//			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (properties.cellWidth));
+//
+//			// interpolate
+//			auto E = trilinearInterpolationF2P(Es, relPos, vol);
+//			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
-			// interpolate
-			auto E = trilinearInterpolationF2P(Es, relPos, vol);
-			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
+			// calculate 3 Cartesian components of the magnetic field
+			double fac1 =  -properties.externalMagneticField.z * pow(properties.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
+			Vector3<double> E, B;
+			E = {0.0, 0.0, 0.0};
+			B.x = 3.0 * p.position.x * p.position.z * fac1;
+			B.y = 3.0 * p.position.y * p.position.z * fac1;
+			B.z = (2.0 * pow(p.position.z, 2) - pow(p.position.x, 2) - pow(p.position.y, 2)) * fac1;
+				
+			// adaptive sub-cycling for computing velocity
+			double B_mag = allscale::utils::sumOfSquares(B);
+			double dt_sub = M_PI * properties.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
+			int sub_cycles = int(properties.dt / dt_sub) + 1;
+			sub_cycles = std::min(sub_cycles, 100);
+			dt_sub = properties.dt / double(sub_cycles);
 
-			// update velocity
-			p.updateVelocity(E, B, universeProperties.dt);
+			for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
+				// update velocity
+				p.updateVelocity(E, B, dt_sub);
 
-			// update position
-			p.updatePosition(universeProperties.dt);
-		});
+				// update position
+				p.updatePosition(dt_sub);
+			}
+		}
+//		});
 
 	}
 
 	/**
-	 * This function extracts all particles which are no longer in the domain of the
-	 * given cell and inserts them into the provided transfer buffers.
-	 *
-	 * @param universeProperties the properties of this universe
-	 * @param cell the cell whose particles are moved
-	 * @param pos the coordinates of this cell in the grid
-	 * @param transfers a grid of buffers to send particles to
-	 */
-	void exportParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+	* This function extracts all particles which are no longer in the domain of the
+	* given cell and inserts them into the provided transfer buffers.
+	*
+	* @param universeProperties the properties of this universe
+	* @param cell the cell whose particles are moved
+	* @param pos the coordinates of this cell in the grid
+	* @param transfers a grid of buffers to send particles to
+	*/
+	void exportParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, TransferBuffers& transfers) {
 
 		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 		// -- migrate particles to other cells if boundaries are crossed --
 
-		// get buffers for particles to be send to neighbors
-		utils::Coordinate<3> size = transfers.size();
-		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
-		allscale::utils::StaticGrid<std::vector<Particle>*,3,3,3> neighbors;
-		for(int i = 0; i<3; i++) {
-			for(int j = 0; j<3; j++) {
-				for(int k = 0; k<3; k++) {
-					// wraps indices both for overflow and underflow (-1 is mapped to size - 1)
-					// implementing periodic boundary conditions
-					auto wrap = [](const auto value, const auto delta, const auto max) {
-						if (delta >= 0)
-							return (value + delta) % max;
-						else
-							return ((value + delta) + max * (-delta)) % max;
-					};
-
-					const auto offset = utils::Coordinate<3>{ i - 1,j - 1,k - 1 } *2;
-					auto targetPos = centerIndex + offset;
-					targetPos[0] = wrap(centerIndex[0], offset[0], size[0]);
-					targetPos[1] = wrap(centerIndex[1], offset[1], size[1]);
-					targetPos[2] = wrap(centerIndex[2], offset[2], size[2]);
-
-					neighbors[{i,j,k}] = &transfers[targetPos];
-				}
-			}
-		}
-
 		// create buffer of remaining particles
 		std::vector<Particle> remaining;
 		remaining.reserve(cell.particles.size());
 
-		// sort out particles
-		std::vector<std::vector<Particle>*> targets(cell.particles.size());
-		allscale::api::user::algorithm::pfor(std::size_t(0), cell.particles.size(),[&](std::size_t index){
-			// get the current particle
-			auto& p = cell.particles[index];
+		{
 
-			// compute relative position
-			Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
-			auto halfWidth = universeProperties.cellWidth / 2.0;
-			if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
+			auto size = universeProperties.size;
 
-				// adjust particle's position in case it exits the domain
+			std::vector<Particle>* neighbors[3][3][3];
+
+			// NOTE: due to an unimplemented feature in the analysis, this loop needs to be unrolled (work in progress)
+
+			//			for(int i = 0; i<3; i++) {
+			//				for(int j = 0; j<3; j++) {
+			//					for(int k = 0; k<3; k++) {
+			//
+			//						// get neighbor cell in this direction (including wrap-around)
+			//						auto neighbor = (pos + utils::Coordinate<3>{ i-1, j-1, k-1 } + size) % size;
+			//
+			//						// index this buffer to the neighboring cell
+			//						auto& buffer = transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
+			//						neighbors[i][j][k] = &buffer;
+			//
+			//						// clear buffer from particles moved in the last iteration
+			//						buffer.clear();
+			//					}
+			//				}
+			//			}
+
+			// -- unroll begin --
+
+			neighbors[0][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, -1 } +size) % size, TransferDirection{ 2, 2, 2 });
+			neighbors[0][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, 0 } +size) % size, TransferDirection{ 2, 2, 1 });
+			neighbors[0][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, 1 } +size) % size, TransferDirection{ 2, 2, 0 });
+
+			neighbors[0][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 0, -1 } +size) % size, TransferDirection{ 2, 1, 2 });
+			neighbors[0][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 0, 0 } +size) % size, TransferDirection{ 2, 1, 1 });
+			neighbors[0][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 0, 1 } +size) % size, TransferDirection{ 2, 1, 0 });
+
+			neighbors[0][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 1, -1 } +size) % size, TransferDirection{ 2, 0, 2 });
+			neighbors[0][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 1, 0 } +size) % size, TransferDirection{ 2, 0, 1 });
+			neighbors[0][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 1, 1 } +size) % size, TransferDirection{ 2, 0, 0 });
+
+
+			neighbors[1][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, -1 } +size) % size, TransferDirection{ 1, 2, 2 });
+			neighbors[1][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, 0 } +size) % size, TransferDirection{ 1, 2, 1 });
+			neighbors[1][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, 1 } +size) % size, TransferDirection{ 1, 2, 0 });
+
+			neighbors[1][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 0, -1 } +size) % size, TransferDirection{ 1, 1, 2 });
+			neighbors[1][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 0, 0 } +size) % size, TransferDirection{ 1, 1, 1 });
+			neighbors[1][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 0, 1 } +size) % size, TransferDirection{ 1, 1, 0 });
+
+			neighbors[1][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 1, -1 } +size) % size, TransferDirection{ 1, 0, 2 });
+			neighbors[1][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 1, 0 } +size) % size, TransferDirection{ 1, 0, 1 });
+			neighbors[1][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 1, 1 } +size) % size, TransferDirection{ 1, 0, 0 });
+
+
+			neighbors[2][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, -1 } +size) % size, TransferDirection{ 0, 2, 2 });
+			neighbors[2][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, 0 } +size) % size, TransferDirection{ 0, 2, 1 });
+			neighbors[2][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, 1 } +size) % size, TransferDirection{ 0, 2, 0 });
+
+			neighbors[2][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 0, -1 } +size) % size, TransferDirection{ 0, 1, 2 });
+			neighbors[2][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 0, 0 } +size) % size, TransferDirection{ 0, 1, 1 });
+			neighbors[2][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 0, 1 } +size) % size, TransferDirection{ 0, 1, 0 });
+
+			neighbors[2][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 1, -1 } +size) % size, TransferDirection{ 0, 0, 2 });
+			neighbors[2][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 1, 0 } +size) % size, TransferDirection{ 0, 0, 1 });
+			neighbors[2][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 1, 1 } +size) % size, TransferDirection{ 0, 0, 0 });
+
+			neighbors[0][0][0]->clear();
+			neighbors[0][0][1]->clear();
+			neighbors[0][0][2]->clear();
+
+			neighbors[0][1][0]->clear();
+			neighbors[0][1][1]->clear();
+			neighbors[0][1][2]->clear();
+
+			neighbors[0][2][0]->clear();
+			neighbors[0][2][1]->clear();
+			neighbors[0][2][2]->clear();
+
+
+			neighbors[1][0][0]->clear();
+			neighbors[1][0][1]->clear();
+			neighbors[1][0][2]->clear();
+
+			neighbors[1][1][0]->clear();
+			neighbors[1][1][1]->clear();
+			neighbors[1][1][2]->clear();
+
+			neighbors[1][2][0]->clear();
+			neighbors[1][2][1]->clear();
+			neighbors[1][2][2]->clear();
+
+
+			neighbors[2][0][0]->clear();
+			neighbors[2][0][1]->clear();
+			neighbors[2][0][2]->clear();
+
+			neighbors[2][1][0]->clear();
+			neighbors[2][1][1]->clear();
+			neighbors[2][1][2]->clear();
+
+			neighbors[2][2][0]->clear();
+			neighbors[2][2][1]->clear();
+			neighbors[2][2][2]->clear();
+
+			// -- unroll end --
+
+			// sort out particles
+			std::vector<std::vector<Particle>*> targets(cell.particles.size());
+			//			allscale::api::user::algorithm::pfor(std::size_t(0),cell.particles.size(),[&](std::size_t index){
+			for(std::size_t index = 0; index<cell.particles.size(); ++index) {
+
+				// get the current particle
+				auto& p = cell.particles[index];
+
+				// compute relative position
+				Vector3<double> relPos = p.position - getCenterOfCell(pos, universeProperties);
+				auto halfWidth = universeProperties.cellWidth / 2.0;
+
+				// if required, "reflect" particle's position and mark that velocity vector should be inverted
+				bool invertVelocity = false;
 				auto adjustPosition = [&](const int i) {
-					return p.position[i] = ((pos[i] == 0) && (relPos[i] < -halfWidth[i])) ? (universeProperties.size[i] * universeProperties.cellWidth[i] + p.position[i]) : (((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) ? p.position[i] - universeProperties.size[i] * universeProperties.cellWidth[i] : p.position[i]);
+					if((pos[i] == 0) && (relPos[i] < -halfWidth[i])) {
+						invertVelocity = true;
+						return p.position[i] + halfWidth[i];
+					} else if((pos[i] == universeProperties.size[i] - 1) && (relPos[i] > halfWidth[i])) {
+						invertVelocity = true;
+						return p.position[i] - halfWidth[i];
+					}
+					return p.position[i];
 				};
-
-				int i = (relPos.x < -halfWidth.x) ? 0 : ((relPos.x > halfWidth.x) ? 2 : 1);
-				int j = (relPos.y < -halfWidth.y) ? 0 : ((relPos.y > halfWidth.y) ? 2 : 1);
-				int k = (relPos.z < -halfWidth.z) ? 0 : ((relPos.z > halfWidth.z) ? 2 : 1);
 
 				p.position[0] = adjustPosition(0);
 				p.position[1] = adjustPosition(1);
 				p.position[2] = adjustPosition(2);
 
-				// send to neighbor cell
-				targets[index] = neighbors[{i,j,k}];
-			} else {
-				// keep particle
-				targets[index] = &remaining;
-			}
-		});
+				if(invertVelocity) {
+					p.velocity *= (-1);
+				}
 
-		// actually transfer particles
-		for(std::size_t i = 0; i<cell.particles.size(); ++i) {
-			targets[i]->push_back(cell.particles[i]);
+				// remove particles from inside the sphere
+				auto diff = p.position - universeProperties.objectCenter;
+				double r2 = allscale::utils::sumOfSquares(diff);
+				if(r2 <= universeProperties.planetRadius * universeProperties.planetRadius) {
+					continue;
+				}
+
+				// recompute potentially new relative position
+				relPos = p.position - getCenterOfCell(pos, universeProperties);
+
+				// send particle to neighboring cell if required
+				if((fabs(relPos.x) > halfWidth.x) || (fabs(relPos.y) > halfWidth.y) || (fabs(relPos.z) > halfWidth.z)) {
+
+					int i = (relPos.x < -halfWidth.x) ? 0 : ((relPos.x > halfWidth.x) ? 2 : 1);
+					int j = (relPos.y < -halfWidth.y) ? 0 : ((relPos.y > halfWidth.y) ? 2 : 1);
+					int k = (relPos.z < -halfWidth.z) ? 0 : ((relPos.z > halfWidth.z) ? 2 : 1);
+
+					targets[index] = neighbors[i][j][k];
+				} else {
+					// keep particle
+					targets[index] = &remaining;
+				}
+				//			});
+			}
+
+			// actually transfer particles
+			for(std::size_t i = 0; i<cell.particles.size(); ++i) {
+				if(targets[i]) {
+					targets[i]->push_back(cell.particles[i]);
+				}
+			}
+
 		}
 
 		// update content
 		cell.particles.swap(remaining);
-
 	}
 
 	/**
@@ -674,7 +957,7 @@ namespace ipic3d {
 		}
 		
 		if (incorrectlyPlacedParticles) {
-			std::cout << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
+			std::cerr << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
 			incorrectlyPlacedParticles = 0;
 			return false;
 		}
@@ -691,28 +974,77 @@ namespace ipic3d {
 	* @param pos the coordinates of this cell in the grid
 	* @param transfers a grid of buffers to import particles from
 	*/
-	void importParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, allscale::api::user::data::Grid<std::vector<Particle>,3>& transfers) {
+	void importParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, TransferBuffers& transfers) {
 
 		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
 
 		// import particles sent to this cell
-		utils::Coordinate<3> size = transfers.size();
-		utils::Coordinate<3> centerIndex = pos * 3 + utils::Coordinate<3>{1,1,1};
-		for(int i = 0; i<3; i++) {
-			for(int j = 0; j<3; j++) {
-				for(int k = 0; k<3; k++) {
-					// iterates through all buffers attached to the cell at the given position
-					auto cur = centerIndex + utils::Coordinate<3>{i-1,j-1,k-1};
-					if (cur[0] < 0 || cur[0] >= size[0]) continue;
-					if (cur[1] < 0 || cur[1] >= size[1]) continue;
-					if (cur[2] < 0 || cur[2] >= size[2]) continue;
 
-					auto& in = transfers[cur];
-					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
-					in.clear();
-				}
-			}
-		}
+//		for(int i = 0; i<3; i++) {
+//			for(int j = 0; j<3; j++) {
+//				for(int k = 0; k<3; k++) {
+//
+//					// skip the center (not relevant)
+////					if (i == 1 && j == 1 && k == 1) continue;
+//
+//					// obtain transfer buffer
+//					auto& in = transfers.getBuffer(pos,TransferDirection(i,j,k));
+//
+//					// import particles
+//					cell.particles.insert(cell.particles.end(), in.begin(), in.end());
+//				}
+//			}
+//		}
+
+
+		// NOTE: due to an unimplemented feature in the analysis, this loop needs to be unrolled (work in progress)
+
+		auto import = [&](const auto& in) {
+			if (in.empty()) return;
+			auto& cur = cell.particles;
+			auto oldSize = cur.size();
+			cur.resize(oldSize + in.size());
+			std::memcpy(&cur[oldSize],&in[0],sizeof(Particle) * in.size());
+		};
+
+		// along all 26 directions (center is not relevant)
+		import(transfers.getBuffer(pos,TransferDirection(0,0,0)));
+		import(transfers.getBuffer(pos,TransferDirection(0,0,1)));
+		import(transfers.getBuffer(pos,TransferDirection(0,0,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(0,1,0)));
+		import(transfers.getBuffer(pos,TransferDirection(0,1,1)));
+		import(transfers.getBuffer(pos,TransferDirection(0,1,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(0,2,0)));
+		import(transfers.getBuffer(pos,TransferDirection(0,2,1)));
+		import(transfers.getBuffer(pos,TransferDirection(0,2,2)));
+
+
+		import(transfers.getBuffer(pos,TransferDirection(1,0,0)));
+		import(transfers.getBuffer(pos,TransferDirection(1,0,1)));
+		import(transfers.getBuffer(pos,TransferDirection(1,0,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(1,1,0)));
+		// skipped: import(transfers.getBuffer(pos,TransferDirection(1,1,1)));
+		import(transfers.getBuffer(pos,TransferDirection(1,1,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(1,2,0)));
+		import(transfers.getBuffer(pos,TransferDirection(1,2,1)));
+		import(transfers.getBuffer(pos,TransferDirection(1,2,2)));
+
+
+		import(transfers.getBuffer(pos,TransferDirection(2,0,0)));
+		import(transfers.getBuffer(pos,TransferDirection(2,0,1)));
+		import(transfers.getBuffer(pos,TransferDirection(2,0,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(2,1,0)));
+		import(transfers.getBuffer(pos,TransferDirection(2,1,1)));
+		import(transfers.getBuffer(pos,TransferDirection(2,1,2)));
+
+		import(transfers.getBuffer(pos,TransferDirection(2,2,0)));
+		import(transfers.getBuffer(pos,TransferDirection(2,2,1)));
+		import(transfers.getBuffer(pos,TransferDirection(2,2,2)));
 
 		// verify correct placement of the particles
 		assert_true(verifyCorrectParticlesPositionInCell(universeProperties, cell, pos));
@@ -766,22 +1098,41 @@ namespace ipic3d {
 	/**
 	* This function outputs the number of particles per cell
 	*/
-	template<typename StreamObject>
-	void outputNumberOfParticlesPerCell(const Cells& cells, StreamObject& streamObject) {
+	void outputNumberOfParticlesPerCell(const Cells& cells, const std::string& outputFilename) {
 		// TODO: implement output facilities for large problems
 		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
-		// output dimensions
-		streamObject << cells.size() << "\n";
 
 		// output particles per cell
-		allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
-			streamObject.atomic([&](auto& out) { 
-				out << index.x << "," << index.y << "," << index.z << ":";
-				out << cells[index].particles.size() << "\n"; });
-		});
+		allscale::api::user::algorithm::async([=,&cells]() {
+			auto& manager = allscale::api::core::FileIOManager::getInstance();
+			auto text = manager.createEntry(outputFilename);
+			auto out = manager.openOutputStream(text);
 
-		streamObject << "\n";
+			// output dimensions
+			out << cells.size() << "\n";
+
+			std::uint64_t total = 0;
+			for(std::int64_t i = 0; i < cells.size().x; ++i) {
+				for(std::int64_t j = 0; j < cells.size().y; ++j) {
+					for(std::int64_t k = 0; k < cells.size().z; ++k) {
+						coordinate_type p{i,j,k};
+						out << p.x << "," << p.y << "," << p.z << ":";
+						out << cells[p].particles.size() << "\n";
+						total += cells[p].particles.size();
+					}
+				}
+			}
+			out << "\nTotal: " << total << "\n";
+
+			manager.close(out);
+		}).wait();
+
+		//allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
+		//	streamObject.atomic([&](auto& out) { 
+		//		out << index.x << "," << index.y << "," << index.z << ":";
+		//		out << cells[index].particles.size() << "\n"; });
+		//});
 	}
 
 	/**
@@ -805,17 +1156,6 @@ namespace ipic3d {
 			}
 		}
 
-	}
-
-	/**
-	* This function outputs the number of particles per cell using AllScale IO
-	*/
-	void outputNumberOfParticlesPerCell(const Cells& cells, const std::string& filename) {
-		auto& manager = allscale::api::core::FileIOManager::getInstance();
-		auto text = manager.createEntry(filename);
-		auto out = manager.openOutputStream(text);
-		outputNumberOfParticlesPerCell(cells, out);
-		manager.close(out);
 	}
 
 	/**

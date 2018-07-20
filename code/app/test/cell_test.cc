@@ -206,13 +206,6 @@ namespace ipic3d {
 		// Create a universe with these properties
 		Universe universe = Universe(properties);
 
-		auto zero = utils::Coordinate<3>(0);
-
-		// init current density
-		allscale::api::user::algorithm::pfor(zero, universe.currentDensity.size(), [&](const utils::Coordinate<3>& pos) {
-			universe.currentDensity[pos].J = {0.0,0.0,0.0};
-		});
-
 		// configure the cell
 		Cell& a = universe.cells[{0,0,0}];
 		Cell& b = universe.cells[{1,0,0}];
@@ -267,24 +260,18 @@ namespace ipic3d {
 		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, g, {0,1,1}) );
 		ASSERT_TRUE( verifyCorrectParticlesPositionInCell(properties, h, {1,1,1}) );
 	
-		auto size = universe.cells.size();
-
-		allscale::api::user::data::Grid<DensityNode, 3> densityContributions(size * 2);
-
+		auto zero = utils::Coordinate<3>(0);
+		auto size = universe.currentDensity.size();
 		// compute current density
 		allscale::api::user::algorithm::pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-			projectToDensityField(properties, universe.cells[pos], pos, densityContributions);
-		});
-
-		allscale::api::user::algorithm::pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
-			aggregateDensityContributions(properties, densityContributions, pos, universe.currentDensity[pos]);
+			projectToDensityField(properties, universe.cells, pos, universe.currentDensity);
 		});
 
 		// verify computed results
-		auto Js = universe.currentDensity[utils::Coordinate<3>({1,1,1})].J;
-		EXPECT_NEAR( Js.x, 1.0952, 1e-4);	
-		EXPECT_NEAR( Js.y, 1.0952, 1e-4);	
-		EXPECT_NEAR( Js.z, 1.0952, 1e-4);	
+		auto Js = universe.currentDensity[utils::Coordinate<3>({ 1,1,1 })].J;
+		EXPECT_NEAR(Js.x, 1.0952, 1e-4);
+		EXPECT_NEAR(Js.y, 1.0952, 1e-4);
+		EXPECT_NEAR(Js.z, 1.0952, 1e-4);
 	}
 		
 	
@@ -330,12 +317,10 @@ namespace ipic3d {
 		h.particles.push_back(p);
 
 		// verify the proper particles count output
-		allscale::api::core::BufferIOManager manager;
-		auto text = manager.createEntry("text");
-		auto out = manager.openOutputStream(text);
-		outputNumberOfParticlesPerCell(universe.cells, out);
-		manager.close(out);
+		outputNumberOfParticlesPerCell(universe.cells, "text");
 
+		auto& manager = allscale::api::core::FileIOManager::getInstance();
+		auto text = manager.createEntry("text");
 		auto in = manager.openInputStream(text);
 		coordinate_type size;
 		char separator;

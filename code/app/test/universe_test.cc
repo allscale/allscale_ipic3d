@@ -19,11 +19,12 @@ namespace ipic3d {
 	    EXPECT_EQ(0.0, properties.planetRadius);
 	    EXPECT_EQ((V{0.0, 0.0, 0.0}), properties.objectCenter);
 	    EXPECT_EQ((V{0.0, 0.0, 0.0}), properties.origin);
-	    EXPECT_EQ((V{0.0, 0.0, 0.0}), properties.magneticField);
-	    EXPECT_EQ(1, properties.FieldOutputCycle);
+		EXPECT_EQ((V{0.0,0.0,0.0}), properties.externalMagneticField);
+	    EXPECT_EQ(100, properties.FieldOutputCycle);
+	    EXPECT_EQ(100, properties.ParticleOutputCycle);
 
 
-		UniverseProperties properties2(UseCase::Dipole, { 3,3,3 }, { 0.2,0.3,0.4 }, 5.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, { -0.1,-0.2,-0.3 }, 100);
+		UniverseProperties properties2(UseCase::Dipole, { 3,3,3 }, { 0.2,0.3,0.4 }, 5.0, 13.0, 42.0, { 0.7,0.8,0.9 }, { -2.2, -2.5, -3.6 }, { 0.0,2.0,3.6 }, 100, 50);
 
 		EXPECT_EQ(UseCase::Dipole, properties2.useCase);
 		EXPECT_EQ((coordinate_type{ 3,3,3 }), properties2.size);
@@ -33,8 +34,9 @@ namespace ipic3d {
 		EXPECT_EQ(42.0, properties2.planetRadius);
 		EXPECT_EQ((V{ 0.7,0.8,0.9 }), properties2.objectCenter);
 		EXPECT_EQ((V{ -2.2,-2.5,-3.6 }), properties2.origin);
-		EXPECT_EQ((V{ -0.1,-0.2,-0.3 }), properties2.magneticField);
+		EXPECT_EQ((V{0.0,2.0,3.6}), properties2.externalMagneticField);
 	    EXPECT_EQ(100, properties2.FieldOutputCycle);
+	    EXPECT_EQ(50, properties2.ParticleOutputCycle);
     }
 
 	TEST(UniverseProperties, Printable) {

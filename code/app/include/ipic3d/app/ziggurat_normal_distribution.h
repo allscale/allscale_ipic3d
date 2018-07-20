@@ -40,7 +40,7 @@ namespace ipic3d {
 
 	public:
 
-		ziggurat_normal_distribution(unsigned long seed = 0) {
+		explicit ziggurat_normal_distribution(unsigned long seed = 0) {
 			zigset(seed);
 		}
 
