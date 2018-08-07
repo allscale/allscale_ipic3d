@@ -90,7 +90,11 @@ int main(int argc, char** argv) {
 
 	// -- run the simulation --
 
-	simulateSteps(params.ncycles, universe);
+	auto duration = simulateSteps(params.ncycles, universe);
+	
+	std::cout << "Simulation measurements: " << numParticles;
+	std::cout << " initial particles, first step " << duration.firstStep << " seconds, " << (numParticles / duration.firstStep);
+	std::cout << " pps, remaining steps " << duration.remainingSteps << " seconds, " << (numParticles*(params.ncycles-1))/duration.remainingSteps << " pps\n";
 
 	// ----- finish ------
 

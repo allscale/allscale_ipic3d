@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include "allscale/api/core/io.h"
 
 #include "ipic3d/app/cell.h"
@@ -32,13 +34,17 @@ namespace ipic3d {
 		struct default_particle_mover;
 	}
 
+	struct DurationMeasurement {
+		double firstStep;
+		double remainingSteps;
+	};
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::default_particle_mover
 	>
-	void simulateSteps(std::uint64_t numSteps, Universe& universe);
+	DurationMeasurement simulateSteps(std::uint64_t numSteps, Universe& universe);
 
 
 	template<
@@ -108,12 +114,22 @@ namespace ipic3d {
 		}
 	}
 
+	namespace {
+
+		// temporarily moved to function due to a bug in AllScale compiler
+		template <typename T>
+		double getTimeCount(T duration) {
+			return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 1000.0f;
+		}
+
+	}
+
 	template<
 		typename ParticleToFieldProjector,
 		typename FieldSolver,
 		typename ParticleMover
 	>
-	void simulateSteps(std::uint64_t numSteps, Universe& universe) {
+	DurationMeasurement simulateSteps(std::uint64_t numSteps, Universe& universe) {
 
 		// instantiate operators
 		//auto particleToFieldProjector = ParticleToFieldProjector();
@@ -157,6 +173,9 @@ namespace ipic3d {
 #endif
 
 		// -- run the simulation --
+		
+		auto start = std::chrono::high_resolution_clock::now();
+		auto endFirst = start;
 
 		// run time loop for the simulation
 		for(std::uint64_t i = 0; i < numSteps; ++i) {
@@ -204,14 +223,22 @@ namespace ipic3d {
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
+			
+			if(i == 0) {
+				endFirst = std::chrono::high_resolution_clock::now();
+			}
 
 		}
+
+		auto endAll = std::chrono::high_resolution_clock::now();
+		auto durationFirst = endFirst - start;
+		auto durationRemaining = endAll - endFirst;
 
 #ifdef ENABLE_DEBUG_OUTPUT
 		// close the IO manager 
 		manager.close(outtxt);
 #endif
-
+		return { getTimeCount(durationFirst), getTimeCount(durationRemaining) };
 	}
 
 	namespace detail {
