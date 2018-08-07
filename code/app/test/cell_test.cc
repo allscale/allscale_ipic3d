@@ -268,10 +268,10 @@ namespace ipic3d {
 		});
 
 		// verify computed results
-		auto Js = universe.currentDensity[utils::Coordinate<3>({1,1,1})].J;
-		EXPECT_NEAR( Js.x, 1.0952, 1e-4);	
-		EXPECT_NEAR( Js.y, 1.0952, 1e-4);	
-		EXPECT_NEAR( Js.z, 1.0952, 1e-4);	
+		auto Js = universe.currentDensity[utils::Coordinate<3>({ 1,1,1 })].J;
+		EXPECT_NEAR(Js.x, 1.0952, 1e-4);
+		EXPECT_NEAR(Js.y, 1.0952, 1e-4);
+		EXPECT_NEAR(Js.z, 1.0952, 1e-4);
 	}
 		
 	
@@ -353,6 +353,10 @@ namespace ipic3d {
 			EXPECT_EQ(particleCount, universe.cells[index].particles.size());
 		}
 
+	}
+
+	TEST(Cell, DISABLED_DensityContributions) {
+		// TODO: implement test for density contribution computation
 	}
 
 }

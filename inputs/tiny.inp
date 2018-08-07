@@ -157,7 +157,7 @@ w0 = 0.0	0.0
    FieldOutputTag   = B+E+Je+Ji
    MomentsOutputTag = rho+PXX+PXY+PXZ+PYY+PYZ+PZZ
 # Output for particles if 0 it doesnt save particles data
-   ParticlesOutputCycle = 15
+   ParticlesOutputCycle = 10
    ParticlesOutputTag = position+velocity+q 
 # restart cycle
    RestartOutputCycle = 0

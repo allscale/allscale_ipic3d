@@ -121,23 +121,23 @@ namespace ipic3d {
 		 * Creates a transfere buffer for a grid of the given size.
 		 */
 		TransferBuffers(const grid_size_t& size)
-			: buffers(d3{
-				d2{
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)},
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)},
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)}
-				},
-				d2{
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)},
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)},
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)}
-				},
-				d2{
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)},
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)},
-					d1{buffer_grid(size),buffer_grid(size),buffer_grid(size)}
-				}
-			}) {}
+			: buffers(d3{ {
+				d2{{
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}},
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}},
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}}
+				}},
+				d2{{
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}},
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}},
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}}
+				}},
+				d2{{
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}},
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}},
+					d1{{buffer_grid(size),buffer_grid(size),buffer_grid(size)}}
+				}}
+			}}) {}
 
 		/**
 		 * Obtains a transfer buffer for a source cell at the given position targeting

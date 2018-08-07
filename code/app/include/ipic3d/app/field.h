@@ -26,9 +26,9 @@ namespace ipic3d {
 		Vector3<double> J;				// current density
 	};
 
-	struct DensityCell {
-		Vector3<double> rho;			// charge density
-	};
+	//struct DensityCell {
+	//	Vector3<double> rho;			// charge density
+	//};
 
 
 	using Field = allscale::api::user::data::Grid<FieldNode,3>;	// a 3D grid of field nodes
@@ -39,6 +39,43 @@ namespace ipic3d {
 
 	// declaration
 	void interpN2C(const utils::Coordinate<3>& pos, const Field& fields, BcField& bcfields);
+
+	FieldNode getDipoleFieldAt(const Vector3<double>& location, const InitProperties& initProperties, const UniverseProperties& universeProperties) {
+
+		auto driftVel = initProperties.driftVelocity;
+		assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
+		auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticField);
+
+		FieldNode res;
+
+		// initialize electrical field
+		res.E = ebc;
+
+		// -- add earth model --
+
+		// radius of the planet
+		double a = universeProperties.planetRadius;
+
+		auto diff = location - universeProperties.objectCenter;
+
+		double r2 = allscale::utils::sumOfSquares(diff);
+
+		// Compute dipolar field B_ext
+		if (r2 > a*a) {
+			auto fac1 =  -universeProperties.externalMagneticField.z * pow(a, 3) / pow(r2, 2.5);
+			res.Bext.x = 3.0 * diff.x * diff.z * fac1;
+			res.Bext.y = 3.0 * diff.y * diff.z * fac1;
+			res.Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
+		} else { // no field inside the planet
+			res.Bext = { 0.0, 0.0, 0.0 };
+		}
+
+		// initialize magnetic field
+		res.B = initProperties.magneticField + res.Bext;
+
+		// done
+		return res;
+	}
 
 	// definition
 	Field initFields(const InitProperties& initProperties, const UniverseProperties& universeProperties) {
@@ -59,7 +96,7 @@ namespace ipic3d {
 
 				auto driftVel = initProperties.driftVelocity;
 				assert_false(driftVel.empty()) << "Expected a drift velocity vector of at least length 1";
-				auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticFieldAmplitude);
+				auto ebc = -1.0 * crossProduct(driftVel[0], initProperties.magneticField);
 
 				// radius of the planet
 				double a = universeProperties.planetRadius;
@@ -69,35 +106,12 @@ namespace ipic3d {
 
 				MPI_Context::forEachLocalFieldEntry([&](const utils::Coordinate<3>& cur) {
 
-					// TODO: required to work around an allscalecc frontend bug
-					// should be removed once the issue in the compiler is resolved
-					fields[cur].Bext = { 0.0, 0.0, 0.0 };
-
-					// initialize electrical field
-					fields[cur].E = ebc;
-
-					// initialize magnetic field
-					fields[cur].B = initProperties.magneticFieldAmplitude;
-
-					// -- add earth model --
-
 					// Node coordinates
 					// pos-start due to the fact that we have a ghost field
 					auto location = getLocationForFields(cur-start, universeProperties);
 
-					auto diff = location - objectCenter;
-
-					double r2 = allscale::utils::sumOfSquares(diff);
-
-					// Compute dipolar field B_ext
-					if (r2 > a*a) {
-						auto fac1 =  -universeProperties.magneticField.z * pow(a, 3) / pow(r2, 2.5);
-						fields[cur].Bext.x = 3.0 * diff.x * diff.z * fac1;
-						fields[cur].Bext.y = 3.0 * diff.y * diff.z * fac1;
-						fields[cur].Bext.z = (2.0 * diff.z * diff.z - diff.x * diff.x - diff.y * diff.y) * fac1;
-					} else { // no field inside the planet
-						fields[cur].Bext = { 0.0, 0.0, 0.0 };
-					}
+					// init current field cell
+					fields[cur] = getDipoleFieldAt(location, initProperties, universeProperties);
 
 				}, 2);
 
@@ -402,34 +416,35 @@ namespace ipic3d {
  	*/
 	void updateFieldsOnBoundaries(Field& field, BcField& bcfield) {
 
-		auto update = [](const auto& index, const auto& size, auto& field) {
+		auto update = [](const auto& index, const auto& end, auto& field) {
+
 			// update on the x = 0 face
-			field[{ 0, index.x, index.y }] = field[{ size - 2, index.x, index.y }];
-			field[{ size - 1, index.x, index.y }] = field[{ 1, index.x, index.y }];
+			field[{ 0, index.x, index.y }] = field[{ end - 1, index.x, index.y }];
+			field[{ end, index.x, index.y }] = field[{ 1, index.x, index.y }];
 
 			// update on the y = 0 face
-			field[{ index.x, 0, index.y }] = field[{ index.x, size - 2, index.y }];
-			field[{ index.x, size - 1, index.y }] = field[{ index.x, 1, index.y }];
+			field[{ index.x, 0, index.y }] = field[{ index.x, end - 1, index.y }];
+			field[{ index.x, end, index.y }] = field[{ index.x, 1, index.y }];
 
 			// update on the z = 0 face
-			field[{ index.x, index.y, 0 }] = field[{ index.x, index.y, size - 2 }];
-			field[{ index.x, index.y, size - 1 }] = field[{ index.x, index.y, 1 }];
+			field[{ index.x, index.y, 0 }] = field[{ index.x, index.y, end - 1 }];
+			field[{ index.x, index.y, end }] = field[{ index.x, index.y, 1 }];
 		};
 
 		// Note: Assumes that the field sizes are equal in each dimension
-		int fieldSize = (int)field.size().x;
-		int bcfieldSize = (int)bcfield.size().x;
-		allscale::utils::Vector<int, 2> fullField(fieldSize - 1);
-		allscale::utils::Vector<int, 2> fullBcField(bcfieldSize - 1);
-		allscale::utils::Vector<int, 2> zero(0);
+		int fieldEnd = (int)field.size().x - 1;
+		int bcfieldEnd = (int)bcfield.size().x - 1;
+		allscale::utils::Vector<int, 2> fullField(fieldEnd);
+		allscale::utils::Vector<int, 2> fullBcField(bcfieldEnd);
+		allscale::utils::Vector<int, 2> start(1);
 
 		// TODO: parallel version pending
-		allscale::api::user::algorithm::detail::forEach(zero, fullField, [&](const auto& index) {
-			update(index, fieldSize, field);
+		allscale::api::user::algorithm::detail::forEach(start, fullField, [&](const auto& index) {
+			update(index, fieldEnd, field);
 		});
 
-		allscale::api::user::algorithm::detail::forEach(zero, fullBcField, [&](const auto& index) {
-			update(index, bcfieldSize, bcfield);
+		allscale::api::user::algorithm::detail::forEach(start, fullBcField, [&](const auto& index) {
+			update(index, bcfieldEnd, bcfield);
 		});
 
 	}
@@ -474,7 +489,7 @@ namespace ipic3d {
 			for(std::int64_t i = 0; i < field.size().x; ++i) {
 				for(std::int64_t j = 0; j < field.size().y; ++j) {
 					for(std::int64_t k = 0; k < field.size().z; ++k) {
-						coordinate_type p{i,j,k};
+						coordinate_type p{ i,j,k };
 						// write index
 						out << p.x << "," << p.y << "," << p.z << ":";
 						// write data
@@ -507,7 +522,7 @@ namespace ipic3d {
 			for(std::int64_t i = 0; i < bcField.size().x; ++i) {
 				for(std::int64_t j = 0; j < bcField.size().y; ++j) {
 					for(std::int64_t k = 0; k < bcField.size().z; ++k) {
-						coordinate_type p{i,j,k};
+						coordinate_type p{ i,j,k };
 						// write index
 						out << p.x << "," << p.y << "," << p.z << ":";
 						// write data

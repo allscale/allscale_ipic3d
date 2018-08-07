@@ -57,17 +57,25 @@ namespace ipic3d {
 	}
 
 	/**
-	 * Tests whether a given particle is within the particle universe.
+	 * Computes the coordinates of a cell the given particle should be located in.
+	 */
+	utils::Coordinate<3> getCellCoordinates(const UniverseProperties& universeProperties, const Particle& p) {
+		auto cordf = elementwiseDivision((p.position - universeProperties.origin),universeProperties.cellWidth);
+		return { std::int64_t(cordf.x), std::int64_t(cordf.y), std::int64_t(cordf.z) };
+	}
+
+	/**
+	 * Tests whether a given particle is within the universe.
 	 * @param universeProperties the properties of this universe
 	 * @param p the particle to be tested
 	 * @return true if the particle is inside, false otherwise
 	 */
 	bool isInsideUniverse(const UniverseProperties& universeProperties, const Particle& p) {
-		Vector3<double> zero = 0;
+		Vector3<double> zero = universeProperties.origin;
 		Vector3<double> size {
-			universeProperties.size.x * universeProperties.cellWidth.x,
-			universeProperties.size.y * universeProperties.cellWidth.y,
-			universeProperties.size.z * universeProperties.cellWidth.z
+			universeProperties.origin.x + universeProperties.size.x * universeProperties.cellWidth.x,
+			universeProperties.origin.y + universeProperties.size.y * universeProperties.cellWidth.y,
+			universeProperties.origin.z + universeProperties.size.z * universeProperties.cellWidth.z
 		};
 		return zero.dominatedBy(p.position) && p.position.strictlyDominatedBy(size);
 	}
@@ -135,7 +143,39 @@ namespace ipic3d {
 					: x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
 
 				Vector3<double> operator()() {
-					return { x(randGen), y(randGen), z(randGen) };
+					return {
+						x(randGen), y(randGen), z(randGen)
+					};
+				}
+
+			};
+
+			// a generator for uniformly distributed vector3 instances
+			class uniform_r {
+				Vector3<double> R1;
+				Vector3<double> R2;
+
+				std::uniform_real_distribution<> rho1;
+				std::uniform_real_distribution<> rho2;
+				std::uniform_real_distribution<> rho3;
+
+				std::minstd_rand randGen;
+
+			public:
+
+				uniform_r(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed)
+					: R1(min), R2(max), rho1(0.0,1.0), rho2(0.0,1.0), rho3(0.0,1.0), randGen(seed) {}
+
+				Vector3<double> operator()() {
+					double rh1 = rho1(randGen);
+					double rh2 = rho2(randGen);
+					double rh3 = rho3(randGen);
+					double nu = (1.0 - 2.0 * rh2);
+					return {
+						pow(pow(R1.x,3)+(pow(R2.x,3)-pow(R1.x,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * cos(2.0*M_PI*rh3),
+						pow(pow(R1.y,3)+(pow(R2.y,3)-pow(R1.y,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * sin(2.0*M_PI*rh3),
+						pow(pow(R1.z,3)+(pow(R2.z,3)-pow(R1.z,3))*rh1,1.0/3.0) * nu
+					};
 				}
 
 			};
@@ -236,6 +276,54 @@ namespace ipic3d {
 
 		};
 
+		template<typename SpeciesGen = species::electron>
+		struct uniform_pos_normal_speed : public generic_particle_generator<vector::uniform,vector::normal,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::uniform,vector::normal,SpeciesGen>;
+
+			uniform_pos_normal_speed(
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+
+			uniform_pos_normal_speed(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+
+		};
+
+		template<typename SpeciesGen = species::electron>
+		struct uniform_pos_normal_speed_r : public generic_particle_generator<vector::uniform_r,vector::normal,SpeciesGen> {
+
+			using super = generic_particle_generator<vector::uniform_r,vector::normal,SpeciesGen>;
+
+			uniform_pos_normal_speed_r(
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+
+			uniform_pos_normal_speed_r(
+					const SpeciesGen& speciesGen,
+					const Vector3<double>& minVel,
+					const Vector3<double>& maxVel,
+					const Vector3<double>& center,
+					const Vector3<double>& stddev,
+					std::uint32_t seed = 0
+			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+
+		};
+
 		template<typename Distribution>
 		class spherical {
 
@@ -282,6 +370,9 @@ namespace ipic3d {
 		// get a private copy of the distribution generator
 		auto next = dist;
 
+		double e = 1.602176565e-19; // Elementary charge (Coulomb)
+ 		double m = 1.672621777e-27; // Proton mass (kg)
+
 		// just some info about the progress
 		std::cout << "Sorting in particles ...\n";
 
@@ -295,6 +386,8 @@ namespace ipic3d {
 			for(std::uint64_t i=0; i<current_patch; ++i) {
 				auto cur = next();
 				while(!isInsideUniverse(properties,cur)) cur = next();
+				cur.q = e;
+				cur.qom = e / m;
 				particles[i] = cur;
 			}
 
@@ -307,9 +400,8 @@ namespace ipic3d {
 				auto& cell = cells[pos];
 
 				// get cell corners
-				auto& width = properties.cellWidth;
-				Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
-				Vector3<double> hig = low + width;
+				auto low = getOriginOfCell(pos, properties);
+				auto hig = low + properties.cellWidth;
 
 				// filter out local particles
 				for(const auto& cur : particles) {
@@ -355,7 +447,7 @@ namespace ipic3d {
 			Vector3<double> hig = low + width;
 
 			// create a uniform distribution
-			auto seed = ((pos.x * 1023) + pos.y) * 1023 + pos.z;
+			auto seed = (uint32_t)(((pos.x * 1023) + pos.y) * 1023 + pos.z);
 
 			// TODO: speeds are hard-coded, actual passed distribution is ignored
 			distribution::uniform<> next(
@@ -406,7 +498,7 @@ namespace ipic3d {
 		q_factor = q_factor * params.rhoInit[0] / fourPI;
 
 		auto particlesPerCell = initProperties.particlesPerCell[0];
-	
+
 		// TODO: return this as a treeture
 		MPI_Context::pforEachLocalCell([&](const utils::Coordinate<3>& pos) {
 
@@ -427,9 +519,9 @@ namespace ipic3d {
 						Particle p;
 
 						// initialize particle's position
-						p.position.x = (i + 0.5) * (properties.cellWidth.x / particlesPerCell.x) + cellOrigin.x; 
-						p.position.y = (j + 0.5) * (properties.cellWidth.y / particlesPerCell.y) + cellOrigin.y; 
-						p.position.z = (k + 0.5) * (properties.cellWidth.z / particlesPerCell.z) + cellOrigin.z; 
+						p.position.x = (i + 0.5) * (properties.cellWidth.x / particlesPerCell.x) + cellOrigin.x;
+						p.position.y = (j + 0.5) * (properties.cellWidth.y / particlesPerCell.y) + cellOrigin.y;
+						p.position.z = (k + 0.5) * (properties.cellWidth.z / particlesPerCell.z) + cellOrigin.z;
 
 						// initialize particle's velocity
 						double prob0, prob1;
@@ -448,27 +540,14 @@ namespace ipic3d {
 						p.velocity.x = params.u0[0] + params.uth[0] * ( prob0 * cos(theta0) );
 						p.velocity.y = params.v0[0] + params.vth[0] * ( prob0 * sin(theta0) );
 						p.velocity.z = params.w0[0] + params.wth[0] * ( prob1 * cos(theta1) );
-						
+
 						p.qom = params.qom[0];
-						p.q = q_factor;  
+						p.q = q_factor;
 
 						cell.particles.push_back(p);
 					}
 				}
 			}
-	
-//			// print particles position and velocity
-//			if (0) {
-//				for(const auto& p : cell.particles) {
-//					std::cout << p.position.x << " ";
-//					std::cout << p.position.y << " ";
-//					std::cout << p.position.z << " ";
-//					std::cout << p.velocity.x << " ";
-//					std::cout << p.velocity.y << " ";
-//					std::cout << p.velocity.z << "\n";
-//				}
-//
-//			}
 
 		});
 
@@ -500,7 +579,7 @@ namespace ipic3d {
 					auto adjustPosition = [&](const int i) {
 						return cur[i] = ( (cur[i] < 0) ? size[i] - 1 : ((cur[i] >= size[i]) ? 0 : cur[i]) );
 					};
-				
+
 					cur[0] = adjustPosition(0);
 					cur[1] = adjustPosition(1);
 					cur[2] = adjustPosition(2);
@@ -512,7 +591,7 @@ namespace ipic3d {
 
 						// computation of J also includes weights from the particles as for E
 						// despite the fact that we are working right now with multiple cells, so the position of J would be different
-						// 	the formula still works well as it captures position of J in each of those cells. 
+						// 	the formula still works well as it captures position of J in each of those cells.
 						auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
 						Js += p.q * p.velocity * fac;
 					}
@@ -524,12 +603,42 @@ namespace ipic3d {
 		density[pos].J = (Js / vol) / 8.0;
 	}
 
+
+	/**
+	* This function aggregates the density contributions into the current density on the nodes
+	*
+	* @param universeProperties the properties of this universe
+	* @param densityContributions the density contributions
+	* @param pos the coordinates of this current density on the grid
+	* @param density the current density output
+	*/
+	void aggregateDensityContributions(const UniverseProperties& universeProperties, const CurrentDensity& densityContributions, const utils::Coordinate<3>& pos, DensityNode& density) {
+
+		auto size = densityContributions.size();
+		auto curDensityContributionPos = pos * 2;
+
+		for(int i = 0; i < 2; ++i) {
+			for(int j = 0; j < 2; ++j) {
+				for(int k = 0; k < 2; ++k) {
+					utils::Coordinate<3> cur = curDensityContributionPos + utils::Coordinate<3>{i - 1, j - 1, k - 1};
+					if(cur[0] < 0 || cur[0] >= size[0]) continue;
+					if(cur[1] < 0 || cur[1] >= size[1]) continue;
+					if(cur[2] < 0 || cur[2] >= size[2]) continue;
+
+					density.J += densityContributions[cur].J;
+				}
+			}
+		}
+
+		const double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		density.J = density.J / vol / 8.0; // divide by 8 to average the value contributed by 8 neighboring cells
+	}
+
 	/**
 	* This function computes a trilinear interpolation for a given target position within a rectangular box spanned by 8 corner points
 	*   This is interpolation of fields to particles
 	* Math: http://paulbourke.net/miscellaneous/interpolation/
 	* TODO: Move this to some math utilities header?
-			etd::cout << v_plus << '\n';
 	*
 	* @param corners the 8 surrounding points to interpolate from
 	* @param pos the target position for which to interpolate
@@ -538,6 +647,10 @@ namespace ipic3d {
 	template<typename T>
 	T trilinearInterpolationF2P(const T corners[2][2][2], const Vector3<double>& pos, const double vol) {
 		T res = T(0);
+
+		assert_le(0,pos.x); assert_le(pos.x,1);
+		assert_le(0,pos.y); assert_le(pos.y,1);
+		assert_le(0,pos.z); assert_le(pos.z,1);
 
 		for(int i = 0; i < 2; ++i) {
 			for(int j = 0; j < 2; ++j) {
@@ -555,71 +668,90 @@ namespace ipic3d {
 	 * This function updates the position of all particles within a cell for a single
 	 * time step, considering the given field as a driving force.
 	 *
-	 * @param universeProperties the properties of this universe
+	 * @param properties the properties of this universe
 	 * @param cell the cell whose particles are moved
 	 * @param pos the coordinates of this cell in the grid
 	 * @param field the most recently computed state of the surrounding force fields
 	 */
-	void moveParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field) {
+	void moveParticles(const UniverseProperties& properties, Cell& cell, const utils::Coordinate<3>& pos, const Field& /*field*/) {
 
-		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
+		assert_true(pos.dominatedBy(properties.size)) << "Position " << pos << " is outside universe of size " << properties.size;
 
 		// quick-check
 		if (cell.particles.empty()) return;
 
 		// -- move the particles in space --
 
-		// extract forces
-		// TODO: move this to some C++ structure
-		Vector3<double> Es[2][2][2];
-		Vector3<double> Bs[2][2][2];
-		for(int i=0; i<2; i++) {
-			for(int j=0; j<2; j++) {
-				for(int k=0; k<2; k++) {
-					utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
-					Es[i][j][k] = field[cur].E;
-					Bs[i][j][k] = field[cur].B;
-				}
-			}
-		}
+//		// extract forces
+//		// TODO: move this to some C++ structure
+//		Vector3<double> Es[2][2][2];
+//		Vector3<double> Bs[2][2][2];
+//		for(int i=0; i<2; i++) {
+//			for(int j=0; j<2; j++) {
+//				for(int k=0; k<2; k++) {
+//					utils::Coordinate<3> cur({pos[0]+i+1,pos[1]+j+1,pos[2]+k+1});
+//					Es[i][j][k] = field[cur].E;
+//					Bs[i][j][k] = field[cur].B;
+//				}
+//			}
+//		}
 
-		const auto cellOrigin = getOriginOfCell(pos, universeProperties);
+		//const auto cellOrigin = getOriginOfCell(pos, properties);
 
-		double vol = universeProperties.cellWidth.x * universeProperties.cellWidth.y * universeProperties.cellWidth.z;
+		//double vol = properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z;
+
+		double magneticFieldTemp = -properties.externalMagneticField.z * pow(properties.planetRadius, 3);
 
 		// update particles
 //		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
-		for(std::size_t i=0; i<cell.particles.size(); ++i) {
+		for(std::size_t i = 0; i < cell.particles.size(); ++i) {
 			Particle& p = cell.particles[i];
 			// Docu: https://www.particleincell.com/2011/vxb-rotation/
 			// Code: https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
-			// get the fractional distance of the particle from the cell origin
-			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (universeProperties.cellWidth));
+//			// get the fractional distance of the particle from the cell origin
+//			const auto relPos = allscale::utils::elementwiseDivision((p.position - cellOrigin), (properties.cellWidth));
+//
+//			// interpolate
+//			auto E = trilinearInterpolationF2P(Es, relPos, vol);
+//			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
-			// interpolate
-			auto E = trilinearInterpolationF2P(Es, relPos, vol);
-			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
+			// calculate 3 Cartesian components of the magnetic field
+			double fac1 =  magneticFieldTemp / pow(allscale::utils::sumOfSquares(p.position), 2.5);
+			Vector3<double> E, B;
+			E = {0.0, 0.0, 0.0};
+			B.x = 3.0 * p.position.x * p.position.z * fac1;
+			B.y = 3.0 * p.position.y * p.position.z * fac1;
+			B.z = (2.0 * pow(p.position.z, 2) - pow(p.position.x, 2) - pow(p.position.y, 2)) * fac1;
 
-			// update velocity
-			p.updateVelocity(E, B, universeProperties.dt);
+			// adaptive sub-cycling for computing velocity
+			double B_mag = allscale::utils::sumOfSquares(B);
+			double dt_sub = M_PI * properties.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
+			int sub_cycles = int(properties.dt / dt_sub) + 1;
+			sub_cycles = std::min(sub_cycles, 100);
+			dt_sub = properties.dt / double(sub_cycles);
 
-			// update position
-			p.updatePosition(universeProperties.dt);
+			for (int cyc_cnt = 0; cyc_cnt < sub_cycles; cyc_cnt++) {
+				// update velocity
+				p.updateVelocity(E, B, dt_sub);
+
+				// update position
+				p.updatePosition(dt_sub);
+			}
 		}
 //		});
 
 	}
 
 	/**
-	 * This function extracts all particles which are no longer in the domain of the
-	 * given cell and inserts them into the provided transfer buffers.
-	 *
-	 * @param universeProperties the properties of this universe
-	 * @param cell the cell whose particles are moved
-	 * @param pos the coordinates of this cell in the grid
-	 * @param transfers a grid of buffers to send particles to
-	 */
+	* This function extracts all particles which are no longer in the domain of the
+	* given cell and inserts them into the provided transfer buffers.
+	*
+	* @param universeProperties the properties of this universe
+	* @param cell the cell whose particles are moved
+	* @param pos the coordinates of this cell in the grid
+	* @param transfers a grid of buffers to send particles to
+	*/
 	void exportParticles(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, TransferBuffers& transfers) {
 
 		assert_true(pos.dominatedBy(universeProperties.size)) << "Position " << pos << " is outside universe of size " << universeProperties.size;
@@ -638,62 +770,62 @@ namespace ipic3d {
 
 			// NOTE: due to an unimplemented feature in the analysis, this loop needs to be unrolled (work in progress)
 
-//			for(int i = 0; i<3; i++) {
-//				for(int j = 0; j<3; j++) {
-//					for(int k = 0; k<3; k++) {
-//
-//						// get neighbor cell in this direction (including wrap-around)
-//						auto neighbor = (pos + utils::Coordinate<3>{ i-1, j-1, k-1 } + size) % size;
-//
-//						// index this buffer to the neighboring cell
-//						auto& buffer = transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
-//						neighbors[i][j][k] = &buffer;
-//
-//						// clear buffer from particles moved in the last iteration
-//						buffer.clear();
-//					}
-//				}
-//			}
+			//			for(int i = 0; i<3; i++) {
+			//				for(int j = 0; j<3; j++) {
+			//					for(int k = 0; k<3; k++) {
+			//
+			//						// get neighbor cell in this direction (including wrap-around)
+			//						auto neighbor = (pos + utils::Coordinate<3>{ i-1, j-1, k-1 } + size) % size;
+			//
+			//						// index this buffer to the neighboring cell
+			//						auto& buffer = transfers.getBuffer(neighbor,TransferDirection{ 2-i, 2-j, 2-k });
+			//						neighbors[i][j][k] = &buffer;
+			//
+			//						// clear buffer from particles moved in the last iteration
+			//						buffer.clear();
+			//					}
+			//				}
+			//			}
 
 			// -- unroll begin --
 
-			neighbors[0][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, -1 } + size) % size,TransferDirection{ 2, 2, 2 });
-			neighbors[0][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1,  0 } + size) % size,TransferDirection{ 2, 2, 1 });
-			neighbors[0][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1,  1 } + size) % size,TransferDirection{ 2, 2, 0 });
+			neighbors[0][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, -1 } +size) % size, TransferDirection{ 2, 2, 2 });
+			neighbors[0][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, 0 } +size) % size, TransferDirection{ 2, 2, 1 });
+			neighbors[0][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, -1, 1 } +size) % size, TransferDirection{ 2, 2, 0 });
 
-			neighbors[0][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  0, -1 } + size) % size,TransferDirection{ 2, 1, 2 });
-			neighbors[0][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  0,  0 } + size) % size,TransferDirection{ 2, 1, 1 });
-			neighbors[0][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  0,  1 } + size) % size,TransferDirection{ 2, 1, 0 });
+			neighbors[0][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 0, -1 } +size) % size, TransferDirection{ 2, 1, 2 });
+			neighbors[0][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 0, 0 } +size) % size, TransferDirection{ 2, 1, 1 });
+			neighbors[0][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 0, 1 } +size) % size, TransferDirection{ 2, 1, 0 });
 
-			neighbors[0][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  1, -1 } + size) % size,TransferDirection{ 2, 0, 2 });
-			neighbors[0][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  1,  0 } + size) % size,TransferDirection{ 2, 0, 1 });
-			neighbors[0][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1,  1,  1 } + size) % size,TransferDirection{ 2, 0, 0 });
-
-
-			neighbors[1][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, -1 } + size) % size,TransferDirection{ 1, 2, 2 });
-			neighbors[1][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1,  0 } + size) % size,TransferDirection{ 1, 2, 1 });
-			neighbors[1][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1,  1 } + size) % size,TransferDirection{ 1, 2, 0 });
-
-			neighbors[1][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  0, -1 } + size) % size,TransferDirection{ 1, 1, 2 });
-			neighbors[1][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  0,  0 } + size) % size,TransferDirection{ 1, 1, 1 });
-			neighbors[1][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  0,  1 } + size) % size,TransferDirection{ 1, 1, 0 });
-
-			neighbors[1][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  1, -1 } + size) % size,TransferDirection{ 1, 0, 2 });
-			neighbors[1][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  1,  0 } + size) % size,TransferDirection{ 1, 0, 1 });
-			neighbors[1][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0,  1,  1 } + size) % size,TransferDirection{ 1, 0, 0 });
+			neighbors[0][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 1, -1 } +size) % size, TransferDirection{ 2, 0, 2 });
+			neighbors[0][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 1, 0 } +size) % size, TransferDirection{ 2, 0, 1 });
+			neighbors[0][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{ -1, 1, 1 } +size) % size, TransferDirection{ 2, 0, 0 });
 
 
-			neighbors[2][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, -1 } + size) % size,TransferDirection{ 0, 2, 2 });
-			neighbors[2][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1,  0 } + size) % size,TransferDirection{ 0, 2, 1 });
-			neighbors[2][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1,  1 } + size) % size,TransferDirection{ 0, 2, 0 });
+			neighbors[1][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, -1 } +size) % size, TransferDirection{ 1, 2, 2 });
+			neighbors[1][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, 0 } +size) % size, TransferDirection{ 1, 2, 1 });
+			neighbors[1][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, -1, 1 } +size) % size, TransferDirection{ 1, 2, 0 });
 
-			neighbors[2][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  0, -1 } + size) % size,TransferDirection{ 0, 1, 2 });
-			neighbors[2][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  0,  0 } + size) % size,TransferDirection{ 0, 1, 1 });
-			neighbors[2][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  0,  1 } + size) % size,TransferDirection{ 0, 1, 0 });
+			neighbors[1][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 0, -1 } +size) % size, TransferDirection{ 1, 1, 2 });
+			neighbors[1][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 0, 0 } +size) % size, TransferDirection{ 1, 1, 1 });
+			neighbors[1][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 0, 1 } +size) % size, TransferDirection{ 1, 1, 0 });
 
-			neighbors[2][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1, -1 } + size) % size,TransferDirection{ 0, 0, 2 });
-			neighbors[2][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1,  0 } + size) % size,TransferDirection{ 0, 0, 1 });
-			neighbors[2][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1,  1,  1 } + size) % size,TransferDirection{ 0, 0, 0 });
+			neighbors[1][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 1, -1 } +size) % size, TransferDirection{ 1, 0, 2 });
+			neighbors[1][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 1, 0 } +size) % size, TransferDirection{ 1, 0, 1 });
+			neighbors[1][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  0, 1, 1 } +size) % size, TransferDirection{ 1, 0, 0 });
+
+
+			neighbors[2][0][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, -1 } +size) % size, TransferDirection{ 0, 2, 2 });
+			neighbors[2][0][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, 0 } +size) % size, TransferDirection{ 0, 2, 1 });
+			neighbors[2][0][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, -1, 1 } +size) % size, TransferDirection{ 0, 2, 0 });
+
+			neighbors[2][1][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 0, -1 } +size) % size, TransferDirection{ 0, 1, 2 });
+			neighbors[2][1][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 0, 0 } +size) % size, TransferDirection{ 0, 1, 1 });
+			neighbors[2][1][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 0, 1 } +size) % size, TransferDirection{ 0, 1, 0 });
+
+			neighbors[2][2][0] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 1, -1 } +size) % size, TransferDirection{ 0, 0, 2 });
+			neighbors[2][2][1] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 1, 0 } +size) % size, TransferDirection{ 0, 0, 1 });
+			neighbors[2][2][2] = &transfers.getBuffer((pos + utils::Coordinate<3>{  1, 1, 1 } +size) % size, TransferDirection{ 0, 0, 0 });
 
 			neighbors[0][0][0]->clear();
 			neighbors[0][0][1]->clear();
@@ -737,8 +869,8 @@ namespace ipic3d {
 
 			// sort out particles
 			std::vector<std::vector<Particle>*> targets(cell.particles.size());
-//			allscale::api::user::algorithm::pfor(0ul,cell.particles.size(),[&](std::size_t index){
-			for(std::size_t index=0; index<cell.particles.size(); ++index) {
+			//			allscale::api::user::algorithm::pfor(std::size_t(0),cell.particles.size(),[&](std::size_t index){
+			for(std::size_t index = 0; index<cell.particles.size(); ++index) {
 
 				// get the current particle
 				auto& p = cell.particles[index];
@@ -768,6 +900,13 @@ namespace ipic3d {
 					p.velocity *= (-1);
 				}
 
+				// remove particles from inside the sphere
+				auto diff = p.position - universeProperties.objectCenter;
+				double r2 = allscale::utils::sumOfSquares(diff);
+				if(r2 <= universeProperties.planetRadius * universeProperties.planetRadius) {
+					continue;
+				}
+
 				// recompute potentially new relative position
 				relPos = p.position - getCenterOfCell(pos, universeProperties);
 
@@ -783,12 +922,14 @@ namespace ipic3d {
 					// keep particle
 					targets[index] = &remaining;
 				}
-//			});
+				//			});
 			}
 
 			// actually transfer particles
 			for(std::size_t i = 0; i<cell.particles.size(); ++i) {
-				targets[i]->push_back(cell.particles[i]);
+				if(targets[i]) {
+					targets[i]->push_back(cell.particles[i]);
+				}
 			}
 
 		}
@@ -812,7 +953,7 @@ namespace ipic3d {
 				++incorrectlyPlacedParticles;
 			}
 		}
-		
+
 		if (incorrectlyPlacedParticles) {
 			std::cerr << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
 			incorrectlyPlacedParticles = 0;
@@ -820,7 +961,7 @@ namespace ipic3d {
 		}
 
 		return true;
-	}  
+	}
 
 	/**
 	* This function imports all particles that are directed towards the specified cell
@@ -864,50 +1005,91 @@ namespace ipic3d {
 			std::memcpy(&cur[oldSize],&in[0],sizeof(Particle) * in.size());
 		};
 
-		// along all 26 directions (center is not relevant)
-		import(transfers.getBuffer(pos,TransferDirection(0,0,0)));
-		import(transfers.getBuffer(pos,TransferDirection(0,0,1)));
-		import(transfers.getBuffer(pos,TransferDirection(0,0,2)));
+        std::array<std::vector<Particle>*, 26> buffers;
 
-		import(transfers.getBuffer(pos,TransferDirection(0,1,0)));
-		import(transfers.getBuffer(pos,TransferDirection(0,1,1)));
-		import(transfers.getBuffer(pos,TransferDirection(0,1,2)));
+        buffers[ 0] = &transfers.getBuffer(pos,TransferDirection(0,0,0));
+        buffers[ 1] = &transfers.getBuffer(pos,TransferDirection(0,0,1));
+        buffers[ 2] = &transfers.getBuffer(pos,TransferDirection(0,0,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(0,2,0)));
-		import(transfers.getBuffer(pos,TransferDirection(0,2,1)));
-		import(transfers.getBuffer(pos,TransferDirection(0,2,2)));
+        buffers[ 3] = &transfers.getBuffer(pos,TransferDirection(0,1,0));
+        buffers[ 4] = &transfers.getBuffer(pos,TransferDirection(0,1,1));
+        buffers[ 5] = &transfers.getBuffer(pos,TransferDirection(0,1,2));
 
+        buffers[ 6] = &transfers.getBuffer(pos,TransferDirection(0,2,0));
+        buffers[ 7] = &transfers.getBuffer(pos,TransferDirection(0,2,1));
+        buffers[ 8] = &transfers.getBuffer(pos,TransferDirection(0,2,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(1,0,0)));
-		import(transfers.getBuffer(pos,TransferDirection(1,0,1)));
-		import(transfers.getBuffer(pos,TransferDirection(1,0,2)));
+        buffers[ 9] = &transfers.getBuffer(pos,TransferDirection(1,0,0));
+        buffers[10] = &transfers.getBuffer(pos,TransferDirection(1,0,1));
+        buffers[11] = &transfers.getBuffer(pos,TransferDirection(1,0,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(1,1,0)));
+        buffers[12] = &transfers.getBuffer(pos,TransferDirection(1,1,0));
 		// skipped: import(transfers.getBuffer(pos,TransferDirection(1,1,1)));
-		import(transfers.getBuffer(pos,TransferDirection(1,1,2)));
+        buffers[13] = &transfers.getBuffer(pos,TransferDirection(1,1,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(1,2,0)));
-		import(transfers.getBuffer(pos,TransferDirection(1,2,1)));
-		import(transfers.getBuffer(pos,TransferDirection(1,2,2)));
+        buffers[14] = &transfers.getBuffer(pos,TransferDirection(1,2,0));
+        buffers[15] = &transfers.getBuffer(pos,TransferDirection(1,2,1));
+        buffers[16] = &transfers.getBuffer(pos,TransferDirection(1,2,2));
 
+        buffers[17] = &transfers.getBuffer(pos,TransferDirection(2,0,0));
+        buffers[18] = &transfers.getBuffer(pos,TransferDirection(2,0,1));
+        buffers[19] = &transfers.getBuffer(pos,TransferDirection(2,0,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(2,0,0)));
-		import(transfers.getBuffer(pos,TransferDirection(2,0,1)));
-		import(transfers.getBuffer(pos,TransferDirection(2,0,2)));
+        buffers[20] = &transfers.getBuffer(pos,TransferDirection(2,1,0));
+        buffers[21] = &transfers.getBuffer(pos,TransferDirection(2,1,1));
+        buffers[22] = &transfers.getBuffer(pos,TransferDirection(2,1,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(2,1,0)));
-		import(transfers.getBuffer(pos,TransferDirection(2,1,1)));
-		import(transfers.getBuffer(pos,TransferDirection(2,1,2)));
+        buffers[23] = &transfers.getBuffer(pos,TransferDirection(2,2,0));
+        buffers[24] = &transfers.getBuffer(pos,TransferDirection(2,2,1));
+        buffers[25] = &transfers.getBuffer(pos,TransferDirection(2,2,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(2,2,0)));
-		import(transfers.getBuffer(pos,TransferDirection(2,2,1)));
-		import(transfers.getBuffer(pos,TransferDirection(2,2,2)));
+        std::size_t newSize = 0;
+        for (auto buffer: buffers)
+            newSize += buffer->size();
+        cell.particles.reserve(cell.particles.size() + newSize);
+
+		// along all 26 directions (center is not relevant)
+		import(*buffers[ 0]);
+		import(*buffers[ 1]);
+		import(*buffers[ 2]);
+
+		import(*buffers[ 3]);
+		import(*buffers[ 4]);
+		import(*buffers[ 5]);
+
+		import(*buffers[ 6]);
+		import(*buffers[ 7]);
+		import(*buffers[ 8]);
+
+		import(*buffers[ 9]);
+		import(*buffers[10]);
+		import(*buffers[11]);
+
+		import(*buffers[12]);
+		// skipped: import(transfers.getBuffer(pos,TransferDirection(1,1,1)));
+		import(*buffers[13]);
+
+		import(*buffers[14]);
+		import(*buffers[15]);
+		import(*buffers[16]);
+
+		import(*buffers[17]);
+		import(*buffers[18]);
+		import(*buffers[19]);
+
+		import(*buffers[20]);
+		import(*buffers[21]);
+		import(*buffers[22]);
+
+		import(*buffers[23]);
+		import(*buffers[24]);
+		import(*buffers[25]);
 
 		// verify correct placement of the particles
 		assert_true(verifyCorrectParticlesPositionInCell(universeProperties, cell, pos));
 	}
 
-	/** 
+	/**
  	 * This function computes particles total kinetic energy in a cell
  	 */
 	double getParticlesKineticEnergy(const Cell& cell) {
@@ -923,12 +1105,12 @@ namespace ipic3d {
 //		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
 	} 
 
-	/** 
+	/**
  	 * This function computes particles total momentum in a cell
  	 */
 	double getParticlesMomentum(const Cell& cell) {
 		auto map = [](const Particle& p, double& res) {
-			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity)); 
+			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity));
 		};
 
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
@@ -1004,7 +1186,7 @@ namespace ipic3d {
 		}
 
 		//allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
-		//	streamObject.atomic([&](auto& out) { 
+		//	streamObject.atomic([&](auto& out) {
 		//		out << index.x << "," << index.y << "," << index.z << ":";
 		//		out << cells[index].particles.size() << "\n"; });
 		//});
@@ -1019,7 +1201,7 @@ namespace ipic3d {
 		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
 		const auto& size = cells.size();
-		
+
 		for(int i=0; i<size.x; i++) {
 			for(int j=0; j<size.y; j++) {
 				for(int k=0; k<size.z; k++) {

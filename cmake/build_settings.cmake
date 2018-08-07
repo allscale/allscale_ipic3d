@@ -6,6 +6,7 @@ option(USE_ASSERT "Enable assertions" ON)
 option(USE_VALGRIND "Allow Valgrind for unit tests" OFF)
 option(USE_ALLSCALECC "Use allscalecc as compiler" OFF)
 option(ENABLE_PROFILING "Enable AllScale profiling support" OFF)
+option(ALLSCALE_CHECK_BOUNDS "Enable bounds checks for AllScale data items and utility structures" OFF)
 option(ENABLE_DEBUG_OUTPUT "Enable debug output" OFF)
 
 # ALLSCALE_CHECK_BOUNDS ... Enable bounds checks for AllScale data items and utility structures

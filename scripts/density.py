@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import plotly.plotly as py
+#import plotly.plotly as py
 
 from pylab import genfromtxt;  
 

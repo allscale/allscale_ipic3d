@@ -29,7 +29,7 @@ namespace ipic3d {
 		double dt;
 
 		// number of time cycles
-		int ncycles;
+		std::uint64_t ncycles;
 
 		// simulation box length per direction
 		Vector3<double> L;
@@ -168,7 +168,7 @@ namespace ipic3d {
 				}
 
 				if ( str.find("ncycles") != std::string::npos ) {
-					ncycles = std::stoi( split(str).back() );
+					ncycles = std::stoull( split(str).back() );
 					continue;
 				}
 

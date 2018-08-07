@@ -14,7 +14,7 @@ namespace ipic3d {
 	struct InitProperties {
 
 		// the number of time steps
-		unsigned numSteps;
+		std::uint64_t numSteps;
 
 		// the number of particles per cell per dimension, one entry per species
 		std::vector<Vector3<unsigned>> particlesPerCell;
@@ -22,15 +22,15 @@ namespace ipic3d {
 		// drift velocity
 		std::vector<Vector3<double>> driftVelocity;
 
-		// magnetic field amplitude
-		Vector3<double> magneticFieldAmplitude;
+		// initial magnetic field
+		Vector3<double> magneticField;
 
 		// charge density defined on nodes
 		double rhoInit;
 
 		InitProperties(const unsigned numSteps = 1, const std::vector<Vector3<unsigned>>& particlesPerCell = {},
-			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticFieldAmplitude = { 0,0,0 }, const double rhoInit = 1.0)
-			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticFieldAmplitude(magneticFieldAmplitude), rhoInit(rhoInit) {}
+			const std::vector<Vector3<double>>& driftVelocity = {}, const Vector3<double>& magneticField = { 0,0,0 }, const double rhoInit = 1.0)
+			: numSteps(numSteps), particlesPerCell(particlesPerCell), driftVelocity(driftVelocity), magneticField(magneticField), rhoInit(rhoInit) {}
 
 		InitProperties(const Parameters& params) {
 
@@ -44,7 +44,7 @@ namespace ipic3d {
 				particlesPerCell.push_back({ (unsigned)params.npcelx[i], (unsigned)params.npcely[i], (unsigned)params.npcelz[i] });
 			}
 
-			magneticFieldAmplitude = { params.B0.x, params.B0.y, params.B0.z };
+			magneticField = { params.B0.x, params.B0.y, params.B0.z };
 
 			rhoInit = params.rhoInit[0];
 		}
@@ -54,7 +54,7 @@ namespace ipic3d {
 			out << "\tNumber of time steps: " << props.numSteps << std::endl;
 			out << "\tNumber of particles per cell: " << props.particlesPerCell << std::endl;
 			out << "\tDrift velocity: " << props.driftVelocity << std::endl;
-			out << "\tMagnetic field amplitude: " << props.magneticFieldAmplitude << std::endl;
+			out << "\tMagnetic fielde: " << props.magneticField << std::endl;
 			out << "\tCharge density: " << props.rhoInit << std::endl;
 			return out;
 		}

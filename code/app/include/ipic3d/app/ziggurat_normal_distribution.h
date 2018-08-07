@@ -7,13 +7,13 @@ namespace ipic3d {
 	 */
 	class ziggurat_normal_distribution {
 
-		unsigned long jz, jsr = 123456789;
+		uint64_t jz, jsr = 123456789;
 
-		long hz;
-		unsigned long iz, kn[128], ke[256];
-		float wn[128], fn[128], we[256], fe[256];
+		int64_t hz;
+		uint64_t iz, kn[128]/*, ke[256]*/;
+		float wn[128], fn[128]/*, we[256], fe[256]*/;
 
-		unsigned long shr3() {
+		uint64_t shr3() {
 			jz=jsr;
 			jsr^=(jsr<<13);
 			jsr^=(jsr>>17);
@@ -22,18 +22,18 @@ namespace ipic3d {
 		}
 
 		float uni() {
-			return .5 + (signed) shr3()*.2328306e-9;
+			return (float)(.5 + (signed) shr3()*.2328306e-9);
 		}
 
 		float rnor() {
-			hz = shr3();
+			hz = (int64_t)shr3();
 			iz = hz & 127;
 			return (fabs(hz) < kn[iz]) ? hz * wn[iz] : nfix();
 		}
 
 	public:
 
-		explicit ziggurat_normal_distribution(unsigned long seed = 0) {
+		explicit ziggurat_normal_distribution(uint64_t seed = 0) {
 			zigset(seed);
 		}
 
@@ -46,7 +46,7 @@ namespace ipic3d {
 		float nfix() {
 			int hz;
 			uint32_t iz;
-			const float r = 3.442620;
+			const float r = 3.442620f;
 			float value;
 			float x;
 			float y;
@@ -60,7 +60,7 @@ namespace ipic3d {
 				for (;;) {
 					if (iz == 0) {
 						for (;;) {
-							x = -0.2904764 * log(uni());
+							x = (float)(-0.2904764 * log(uni()));
 							y = -log(uni());
 							if (x * x <= y + y) {
 								break;
@@ -98,7 +98,7 @@ namespace ipic3d {
 
 		/*--------This procedure sets the seed and creates the tables------*/
 
-		void zigset(unsigned long jsrseed) {
+		void zigset(uint64_t jsrseed) {
 			const double m1 = 2147483648.0;
 			double dn = 3.442619855899, tn = dn, vn = 9.91256303526217e-3, q;
 			int i;
@@ -106,25 +106,24 @@ namespace ipic3d {
 
 			/* Set up tables for RNOR */
 			q = vn / exp(-.5 * dn * dn);
-			kn[0] = (dn / q) * m1;
+			kn[0] = (uint64_t)((dn / q) * m1);
 			kn[1] = 0;
 
-			wn[0] = q / m1;
-			wn[127] = dn / m1;
+			wn[0] = (float)(q / m1);
+			wn[127] = (float)(dn / m1);
 
 			fn[0] = 1.;
-			fn[127] = exp(-.5 * dn * dn);
+			fn[127] = (float)(exp(-.5 * dn * dn));
 
 			for (i = 126; i >= 1; i--) {
 				dn = sqrt(-2. * log(vn / dn + exp(-.5 * dn * dn)));
-				kn[i + 1] = (dn / tn) * m1;
+				kn[i + 1] = (uint64_t)((dn / tn) * m1);
 				tn = dn;
-				fn[i] = exp(-.5 * dn * dn);
-				wn[i] = dn / m1;
+				fn[i] = (float)(exp(-.5 * dn * dn));
+				wn[i] = (float)(dn / m1);
 			}
 		}
 
 	};
 
 } // end namespace ipic3d
-

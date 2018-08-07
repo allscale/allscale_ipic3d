@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include "allscale/api/core/io.h"
 
 #include "ipic3d/app/cell.h"
@@ -25,16 +27,24 @@ namespace ipic3d {
 
 		struct default_field_solver;
 
+		struct forward_field_solver;
+
+		struct leapfrog_field_solver;
+
 		struct default_particle_mover;
 	}
 
+	struct DurationMeasurement {
+		double firstStep;
+		double remainingSteps;
+	};
 
 	template<
 		typename ParticleToFieldProjector 	= detail::default_particle_to_field_projector,
 		typename FieldSolver 				= detail::default_field_solver,
 		typename ParticleMover 				= detail::default_particle_mover
 	>
-	void simulateSteps(unsigned numSteps, Universe& universe);
+	DurationMeasurement simulateSteps(std::uint64_t numSteps, Universe& universe);
 
 
 	template<
@@ -61,7 +71,7 @@ namespace ipic3d {
 	
 	// write output depending on the set frequency
 	template<typename StreamObject>
-	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject) {
+	void writeOutputData(const int cycle, const int numSteps, Universe& universe, StreamObject& streamObject, char* fileName) {
 		if ( universe.properties.FieldOutputCycle > 0 && ((cycle % universe.properties.FieldOutputCycle == 0) || (cycle+1 == numSteps)) ) {
 			auto getE = [](const auto& field, const auto& index) { return field[index].E; };
 			auto getB = [](const auto& field, const auto& index) { return (field[index].B + field[index].Bext); };
@@ -80,6 +90,38 @@ namespace ipic3d {
 				<< totalParticlesKineticEnergy 
 				<< "\n";
 		}
+
+		if ( universe.properties.ParticleOutputCycle > 0 && ( (cycle == 0) || ((cycle+1) % universe.properties.ParticleOutputCycle == 0) ) ) {
+			int t = (cycle+1) / universe.properties.ParticleOutputCycle;
+			std::cout << cycle << ' ' << t << '\n';
+			char fileNamet[50];
+			std::sprintf(fileNamet, "%s%06d", fileName, t);
+
+			// open file and dump results
+			auto out = std::fstream(fileNamet, std::ios_base::out);
+			out << "t,x,y,z,density\n";
+			for(int x = 0; x < universe.properties.size.x; x++) {
+				for(int y = 0; y < universe.properties.size.y; y++) {
+					for(int z = 0; z < universe.properties.size.z; z++) {
+						double dx = x * universe.properties.cellWidth.x;
+						double dy = y * universe.properties.cellWidth.y;
+						double dz = z * universe.properties.cellWidth.z;
+						
+						out << t << "," << dx << "," << dy << "," << dz << "," << universe.cells[coordinate_type{x,y,z}].particles.size() << "\n";
+					}
+				}
+			}
+		}
+	}
+
+	namespace {
+
+		// temporarily moved to function due to a bug in AllScale compiler
+		template <typename T>
+		double getTimeCount(T duration) {
+			return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() / 1000.0f;
+		}
+
 	}
 
 	template<
@@ -87,7 +129,7 @@ namespace ipic3d {
 		typename FieldSolver,
 		typename ParticleMover
 	>
-	void simulateSteps(unsigned numSteps, Universe& universe) {
+	DurationMeasurement simulateSteps(std::uint64_t numSteps, Universe& universe) {
 
 		// instantiate operators
 		//auto particleToFieldProjector = ParticleToFieldProjector();
@@ -110,6 +152,9 @@ namespace ipic3d {
 		// create a buffer for particle transfers
 		TransferBuffers particleTransfers(size);
 
+		// create a grid of buffers for density projection from particles to grid nodes
+		Grid<DensityNode> densityContributions(size * 2);
+		
 #ifdef ENABLE_DEBUG_OUTPUT
 		// create the output file
 		auto& manager = allscale::api::core::FileIOManager::getInstance();
@@ -120,27 +165,38 @@ namespace ipic3d {
 		auto outtxt = manager.openOutputStream(logFile);
 
 		writeOutputHeader(outtxt);
+
+		// use the current time to create a unique file name
+		auto timeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+		char fileName[50];
+		std::sprintf(fileName,"result_%ld.csv.", timeStamp);
 #endif
 
 		// -- run the simulation --
+		
+		auto start = std::chrono::high_resolution_clock::now();
+		auto endFirst = start;
 
 		// run time loop for the simulation
-		for(unsigned i = 0; i < numSteps; ++i) {
+		for(std::uint64_t i = 0; i < numSteps; ++i) {
 
 			using namespace allscale::api::user::algorithm;
 
 #ifdef ENABLE_DEBUG_OUTPUT
 			// write output to a file: total energy, momentum, E and B total energy
-			writeOutputData(i, numSteps, universe, outtxt);
+			writeOutputData(i, numSteps, universe, outtxt, fileName);
 #endif
-
-			// STEP 1: collect particle contributions
-			// project particles to current density
-			// use size, not densitySize, because all Js in the cell will be updated
-			//pfor(zero, densitySize, [&](const utils::Coordinate<3>& pos) {
+			// STEP 1a: collect particle density contributions and store in buffers
+			//pfor(zero, size, [&](const utils::Coordinate<3>& pos) {
 			//	// TODO: this can be improved by adding rho
 			//	// 	J is defined on nodes
-			//	particleToFieldProjector(universe.properties, universe.cells, pos, universe.currentDensity);
+			//	particleToFieldProjector(universe.properties, universe.cells[pos], pos, densityContributions);
+			//});
+
+			//// STEP 1b: aggregate densities in buffers to density nodes
+			//pfor(zero, universe.currentDensity.size(), [&](const utils::Coordinate<3>& pos) {
+			//	// 	J is defined on nodes
+			//	aggregateDensityContributions(universe.properties, densityContributions, pos, universe.currentDensity[pos]);
 			//});
 
 			// STEP 2: solve field equations
@@ -168,21 +224,29 @@ namespace ipic3d {
 			});
 
 			// -- implicit global sync - TODO: can this be eliminated? --
+			
+			if(i == 0) {
+				endFirst = std::chrono::high_resolution_clock::now();
+			}
 
 		}
+
+		auto endAll = std::chrono::high_resolution_clock::now();
+		auto durationFirst = endFirst - start;
+		auto durationRemaining = endAll - endFirst;
 
 #ifdef ENABLE_DEBUG_OUTPUT
 		// close the IO manager 
 		manager.close(outtxt);
 #endif
-
+		return { getTimeCount(durationFirst), getTimeCount(durationRemaining) };
 	}
 
 	namespace detail {
 
 		struct default_particle_to_field_projector {
-			void operator()(const UniverseProperties& universeProperties, const Cells& cells, const utils::Coordinate<3>& pos, CurrentDensity& density) const {
-				projectToDensityField(universeProperties,cells,pos,density);
+			void operator()(const UniverseProperties& universeProperties, const Cells& cells, const utils::Coordinate<3>& pos, CurrentDensity& densityContributions) const {
+				projectToDensityField(universeProperties, cells, pos, densityContributions);
 			}
 		};
 
@@ -205,9 +269,9 @@ namespace ipic3d {
 		};
 
 		struct default_particle_mover {
-			void operator()(const UniverseProperties& universeProperties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, TransferBuffers& particleTransfers) const {
-				moveParticles(universeProperties,cell,pos,field);
-				exportParticles(universeProperties,cell,pos,particleTransfers);
+			void operator()(const UniverseProperties& properties, Cell& cell, const utils::Coordinate<3>& pos, const Field& field, TransferBuffers& particleTransfers) const {
+				moveParticles(properties, cell, pos, field);
+				exportParticles(properties, cell, pos, particleTransfers);
 			}
 		};
 	}

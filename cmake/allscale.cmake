@@ -22,7 +22,7 @@ if(NOT TARGET allscale)
 		ExternalProject_Add(
 			allscale
 			GIT_REPOSITORY https://github.com/allscale/allscale_compiler
-			GIT_TAG 320f12eb5f0208e309c142b51a267de0930cca70
+			GIT_TAG 0298fffc3b7853a1178a219e6d6a67742b0dbe85
 			CMAKE_ARGS
 				${CMAKE_EXTERNALPROJECT_FORWARDS}
 				-DINSIEME_C_BACKEND_COMPILER=${CMAKE_C_COMPILER}
@@ -42,7 +42,7 @@ if(NOT TARGET allscale)
 		ExternalProject_Add(
 			allscale
 			GIT_REPOSITORY https://github.com/allscale/allscale_api
-			GIT_TAG 8bcf4a814902ce04b96a9e183dd2c030fc0c221c
+			GIT_TAG fd12c6e5e9865d3ea2e71b864a6404ebf2decd9a
 			CONFIGURE_COMMAND ""
 			BUILD_COMMAND ""
 			INSTALL_COMMAND ""

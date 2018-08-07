@@ -16,7 +16,7 @@ namespace ipic3d {
 
 		for(int i=0; i<5000; i++) {
 
-			int p = dist() * N/8 + N/2;
+			int p = (int)(dist() * N/8 + N/2);
 			if (0 <= p && p < N) {
 				hist[p]++;
 			}
@@ -50,7 +50,7 @@ namespace ipic3d {
 		std::normal_distribution<> norm;
 
 		ziggurat_normal_distribution dist;
-		float sum = 0;
+		double sum = 0;
 		for(int i=0; i<N; i++) {
 			sum += norm(rd);
 		}
