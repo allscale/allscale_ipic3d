@@ -704,6 +704,8 @@ namespace ipic3d {
 
 		//double vol = properties.cellWidth.x * properties.cellWidth.y * properties.cellWidth.z;
 
+		double magneticFieldTemp = -properties.externalMagneticField.z * pow(properties.planetRadius, 3);
+
 		// update particles
 //		allscale::api::user::algorithm::pfor(cell.particles, [&](Particle& p){
 		for(std::size_t i = 0; i < cell.particles.size(); ++i) {
@@ -719,7 +721,7 @@ namespace ipic3d {
 //			auto B = trilinearInterpolationF2P(Bs, relPos, vol);
 
 			// calculate 3 Cartesian components of the magnetic field
-			double fac1 =  -properties.externalMagneticField.z * pow(properties.planetRadius, 3) / pow(allscale::utils::sumOfSquares(p.position), 2.5);
+			double fac1 =  magneticFieldTemp / pow(allscale::utils::sumOfSquares(p.position), 2.5);
 			Vector3<double> E, B;
 			E = {0.0, 0.0, 0.0};
 			B.x = 3.0 * p.position.x * p.position.z * fac1;
