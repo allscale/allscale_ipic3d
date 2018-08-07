@@ -145,8 +145,8 @@ namespace ipic3d {
 					: x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
 
 				Vector3<double> operator()() {
-					return { 
-						x(randGen), y(randGen), z(randGen) 
+					return {
+						x(randGen), y(randGen), z(randGen)
 					};
 				}
 
@@ -173,7 +173,7 @@ namespace ipic3d {
 					double rh2 = rho2(randGen);
 					double rh3 = rho3(randGen);
 					double nu = (1.0 - 2.0 * rh2);
-					return { 
+					return {
 						pow(pow(R1.x,3)+(pow(R2.x,3)-pow(R1.x,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * cos(2.0*M_PI*rh3),
 						pow(pow(R1.y,3)+(pow(R2.y,3)-pow(R1.y,3))*rh1,1.0/3.0) * pow(1-nu*nu, 1.0/2.0) * sin(2.0*M_PI*rh3),
 						pow(pow(R1.z,3)+(pow(R2.z,3)-pow(R1.z,3))*rh1,1.0/3.0) * nu
@@ -371,9 +371,9 @@ namespace ipic3d {
 
 		// get a private copy of the distribution generator
 		auto next = dist;
-		
-		double e = 1.602176565e-19; // Elementary charge (Coulomb)  
- 		double m = 1.672621777e-27; // Proton mass (kg) 
+
+		double e = 1.602176565e-19; // Elementary charge (Coulomb)
+ 		double m = 1.672621777e-27; // Proton mass (kg)
 
 		// just some info about the progress
 		std::cout << "Sorting in particles ...\n";
@@ -502,7 +502,7 @@ namespace ipic3d {
 		q_factor = q_factor * params.rhoInit[0] / fourPI;
 
 		auto particlesPerCell = initProperties.particlesPerCell[0];
-	
+
 		// TODO: return this as a treeture
 		allscale::api::user::algorithm::pfor(zero, properties.size, [=,&cells](const utils::Coordinate<3>& pos) {
 
@@ -523,9 +523,9 @@ namespace ipic3d {
 						Particle p;
 
 						// initialize particle's position
-						p.position.x = (i + 0.5) * (properties.cellWidth.x / particlesPerCell.x) + cellOrigin.x; 
-						p.position.y = (j + 0.5) * (properties.cellWidth.y / particlesPerCell.y) + cellOrigin.y; 
-						p.position.z = (k + 0.5) * (properties.cellWidth.z / particlesPerCell.z) + cellOrigin.z; 
+						p.position.x = (i + 0.5) * (properties.cellWidth.x / particlesPerCell.x) + cellOrigin.x;
+						p.position.y = (j + 0.5) * (properties.cellWidth.y / particlesPerCell.y) + cellOrigin.y;
+						p.position.z = (k + 0.5) * (properties.cellWidth.z / particlesPerCell.z) + cellOrigin.z;
 
 						// initialize particle's velocity
 						double prob0, prob1;
@@ -544,9 +544,9 @@ namespace ipic3d {
 						p.velocity.x = params.u0[0] + params.uth[0] * ( prob0 * cos(theta0) );
 						p.velocity.y = params.v0[0] + params.vth[0] * ( prob0 * sin(theta0) );
 						p.velocity.z = params.w0[0] + params.wth[0] * ( prob1 * cos(theta1) );
-						
+
 						p.qom = params.qom[0];
-						p.q = q_factor;  
+						p.q = q_factor;
 
 						cell.particles.push_back(p);
 					}
@@ -583,7 +583,7 @@ namespace ipic3d {
 					auto adjustPosition = [&](const int i) {
 						return cur[i] = ( (cur[i] < 0) ? size[i] - 1 : ((cur[i] >= size[i]) ? 0 : cur[i]) );
 					};
-				
+
 					cur[0] = adjustPosition(0);
 					cur[1] = adjustPosition(1);
 					cur[2] = adjustPosition(2);
@@ -595,7 +595,7 @@ namespace ipic3d {
 
 						// computation of J also includes weights from the particles as for E
 						// despite the fact that we are working right now with multiple cells, so the position of J would be different
-						// 	the formula still works well as it captures position of J in each of those cells. 
+						// 	the formula still works well as it captures position of J in each of those cells.
 						auto fac = (i == 0 ? (1 - relPos.x) : relPos.x) * (j == 0 ? (1 - relPos.y) : relPos.y) * (k == 0 ? (1 - relPos.z) : relPos.z);
 						Js += p.q * p.velocity * fac;
 					}
@@ -725,7 +725,7 @@ namespace ipic3d {
 			B.x = 3.0 * p.position.x * p.position.z * fac1;
 			B.y = 3.0 * p.position.y * p.position.z * fac1;
 			B.z = (2.0 * pow(p.position.z, 2) - pow(p.position.x, 2) - pow(p.position.y, 2)) * fac1;
-				
+
 			// adaptive sub-cycling for computing velocity
 			double B_mag = allscale::utils::sumOfSquares(B);
 			double dt_sub = M_PI * properties.speedOfLight / (4.0 * fabs(p.qom) * B_mag);
@@ -955,7 +955,7 @@ namespace ipic3d {
 				++incorrectlyPlacedParticles;
 			}
 		}
-		
+
 		if (incorrectlyPlacedParticles) {
 			std::cerr << "There are " << incorrectlyPlacedParticles << " incorrectly placed particles in a cell at the position " << pos << "\n";
 			incorrectlyPlacedParticles = 0;
@@ -963,7 +963,7 @@ namespace ipic3d {
 		}
 
 		return true;
-	}  
+	}
 
 	/**
 	* This function imports all particles that are directed towards the specified cell
@@ -1007,50 +1007,91 @@ namespace ipic3d {
 			std::memcpy(&cur[oldSize],&in[0],sizeof(Particle) * in.size());
 		};
 
-		// along all 26 directions (center is not relevant)
-		import(transfers.getBuffer(pos,TransferDirection(0,0,0)));
-		import(transfers.getBuffer(pos,TransferDirection(0,0,1)));
-		import(transfers.getBuffer(pos,TransferDirection(0,0,2)));
+        std::array<std::vector<Particle>*, 26> buffers;
 
-		import(transfers.getBuffer(pos,TransferDirection(0,1,0)));
-		import(transfers.getBuffer(pos,TransferDirection(0,1,1)));
-		import(transfers.getBuffer(pos,TransferDirection(0,1,2)));
+        buffers[ 0] = &transfers.getBuffer(pos,TransferDirection(0,0,0));
+        buffers[ 1] = &transfers.getBuffer(pos,TransferDirection(0,0,1));
+        buffers[ 2] = &transfers.getBuffer(pos,TransferDirection(0,0,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(0,2,0)));
-		import(transfers.getBuffer(pos,TransferDirection(0,2,1)));
-		import(transfers.getBuffer(pos,TransferDirection(0,2,2)));
+        buffers[ 3] = &transfers.getBuffer(pos,TransferDirection(0,1,0));
+        buffers[ 4] = &transfers.getBuffer(pos,TransferDirection(0,1,1));
+        buffers[ 5] = &transfers.getBuffer(pos,TransferDirection(0,1,2));
 
+        buffers[ 6] = &transfers.getBuffer(pos,TransferDirection(0,2,0));
+        buffers[ 7] = &transfers.getBuffer(pos,TransferDirection(0,2,1));
+        buffers[ 8] = &transfers.getBuffer(pos,TransferDirection(0,2,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(1,0,0)));
-		import(transfers.getBuffer(pos,TransferDirection(1,0,1)));
-		import(transfers.getBuffer(pos,TransferDirection(1,0,2)));
+        buffers[ 9] = &transfers.getBuffer(pos,TransferDirection(1,0,0));
+        buffers[10] = &transfers.getBuffer(pos,TransferDirection(1,0,1));
+        buffers[11] = &transfers.getBuffer(pos,TransferDirection(1,0,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(1,1,0)));
+        buffers[12] = &transfers.getBuffer(pos,TransferDirection(1,1,0));
 		// skipped: import(transfers.getBuffer(pos,TransferDirection(1,1,1)));
-		import(transfers.getBuffer(pos,TransferDirection(1,1,2)));
+        buffers[13] = &transfers.getBuffer(pos,TransferDirection(1,1,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(1,2,0)));
-		import(transfers.getBuffer(pos,TransferDirection(1,2,1)));
-		import(transfers.getBuffer(pos,TransferDirection(1,2,2)));
+        buffers[14] = &transfers.getBuffer(pos,TransferDirection(1,2,0));
+        buffers[15] = &transfers.getBuffer(pos,TransferDirection(1,2,1));
+        buffers[16] = &transfers.getBuffer(pos,TransferDirection(1,2,2));
 
+        buffers[17] = &transfers.getBuffer(pos,TransferDirection(2,0,0));
+        buffers[18] = &transfers.getBuffer(pos,TransferDirection(2,0,1));
+        buffers[19] = &transfers.getBuffer(pos,TransferDirection(2,0,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(2,0,0)));
-		import(transfers.getBuffer(pos,TransferDirection(2,0,1)));
-		import(transfers.getBuffer(pos,TransferDirection(2,0,2)));
+        buffers[20] = &transfers.getBuffer(pos,TransferDirection(2,1,0));
+        buffers[21] = &transfers.getBuffer(pos,TransferDirection(2,1,1));
+        buffers[22] = &transfers.getBuffer(pos,TransferDirection(2,1,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(2,1,0)));
-		import(transfers.getBuffer(pos,TransferDirection(2,1,1)));
-		import(transfers.getBuffer(pos,TransferDirection(2,1,2)));
+        buffers[23] = &transfers.getBuffer(pos,TransferDirection(2,2,0));
+        buffers[24] = &transfers.getBuffer(pos,TransferDirection(2,2,1));
+        buffers[25] = &transfers.getBuffer(pos,TransferDirection(2,2,2));
 
-		import(transfers.getBuffer(pos,TransferDirection(2,2,0)));
-		import(transfers.getBuffer(pos,TransferDirection(2,2,1)));
-		import(transfers.getBuffer(pos,TransferDirection(2,2,2)));
+        std::size_t newSize = 0;
+        for (auto buffer: buffers)
+            newSize += buffer->size();
+        cell.particles.reserve(cell.particles.size() + newSize);
+
+		// along all 26 directions (center is not relevant)
+		import(*buffers[ 0]);
+		import(*buffers[ 1]);
+		import(*buffers[ 2]);
+
+		import(*buffers[ 3]);
+		import(*buffers[ 4]);
+		import(*buffers[ 5]);
+
+		import(*buffers[ 6]);
+		import(*buffers[ 7]);
+		import(*buffers[ 8]);
+
+		import(*buffers[ 9]);
+		import(*buffers[10]);
+		import(*buffers[11]);
+
+		import(*buffers[12]);
+		// skipped: import(transfers.getBuffer(pos,TransferDirection(1,1,1)));
+		import(*buffers[13]);
+
+		import(*buffers[14]);
+		import(*buffers[15]);
+		import(*buffers[16]);
+
+		import(*buffers[17]);
+		import(*buffers[18]);
+		import(*buffers[19]);
+
+		import(*buffers[20]);
+		import(*buffers[21]);
+		import(*buffers[22]);
+
+		import(*buffers[23]);
+		import(*buffers[24]);
+		import(*buffers[25]);
 
 		// verify correct placement of the particles
 		assert_true(verifyCorrectParticlesPositionInCell(universeProperties, cell, pos));
 	}
 
-	/** 
+	/**
  	 * This function computes particles total kinetic energy in a cell
  	 */
 	double getParticlesKineticEnergy(const Cell& cell) {
@@ -1062,14 +1103,14 @@ namespace ipic3d {
 		auto init = []() { return 0.0; };
 
 		return allscale::api::user::algorithm::preduce(cell.particles, map, reduce, init).get();
-	} 
+	}
 
-	/** 
+	/**
  	 * This function computes particles total momentum in a cell
  	 */
 	double getParticlesMomentum(const Cell& cell) {
 		auto map = [](const Particle& p, double& res) {
-			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity)); 
+			res += (p.q / p.qom) * sqrt(allscale::utils::sumOfSquares(p.velocity));
 		};
 
 		auto reduce = [&](const double& a, const double& b) { return a + b; };
@@ -1093,7 +1134,7 @@ namespace ipic3d {
 		auto init = []() { return 0.0; };
 
 		return allscale::api::user::algorithm::preduce(coordinate_type(0), cells.size(), map, reduce, init).get();
-	} 
+	}
 
 	/**
 	* This function outputs the number of particles per cell
@@ -1129,7 +1170,7 @@ namespace ipic3d {
 		}).wait();
 
 		//allscale::api::user::algorithm::pfor(cells.size(), [&](const auto& index) {
-		//	streamObject.atomic([&](auto& out) { 
+		//	streamObject.atomic([&](auto& out) {
 		//		out << index.x << "," << index.y << "," << index.z << ":";
 		//		out << cells[index].particles.size() << "\n"; });
 		//});
@@ -1144,7 +1185,7 @@ namespace ipic3d {
 		assert_le(cells.size(), (coordinate_type{ 32,32,32 })) << "Unable to dump data for such a large cell grid at this time";
 
 		const auto& size = cells.size();
-		
+
 		for(int i=0; i<size.x; i++) {
 			for(int j=0; j<size.y; j++) {
 				for(int k=0; k<size.z; k++) {
