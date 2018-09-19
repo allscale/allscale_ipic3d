@@ -81,11 +81,11 @@ rhoINIT =  1.0	1.0
 # Injection density (make sure you are neutral)
 rhoINJECT =  1.0   1.0 
 # npcelx = number of particles per cell - Direction X 
-npcelx =    5	 5
+npcelx =    8	 8
 # npcely = number of particles per cell - Direction Y 
-npcely =    5	 5	
+npcely =    8	 8	
 # npcelz = number of particles per cell - Direction Z 
-npcelz =    5 	 5
+npcelz =    8 	 8
 
 
 # qom = charge to mass ratio for different species 

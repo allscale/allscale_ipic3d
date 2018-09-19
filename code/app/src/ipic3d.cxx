@@ -67,7 +67,8 @@ int main(int argc, char** argv) {
 	std::cout << universeProperties;
 
 	// initialize universe
-	int numParticles = 262144; 
+	int numParticles = universeProperties.size.x * universeProperties.size.y * universeProperties.size.z;
+	numParticles = numParticles * initProperties.particlesPerCell[0].x * initProperties.particlesPerCell[0].y * initProperties.particlesPerCell[0].z; 
 	double e = 1.602176565e-19; // Elementary charge (Coulomb)  
 	double K = 1e7 * e; // kinetic energy in Joule
  	double m = 1.672621777e-27; // Proton mass (kg) 
