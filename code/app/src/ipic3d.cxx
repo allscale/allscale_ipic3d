@@ -96,6 +96,7 @@ int main(int argc, char** argv) {
 	std::cout << "Simulation measurements: " << numParticles;
 	std::cout << " initial particles, first step " << duration.firstStep << " seconds, " << (numParticles / duration.firstStep);
 	std::cout << " pps, remaining steps " << duration.remainingSteps << " seconds, " << (numParticles*(params.ncycles-1))/duration.remainingSteps << " pps\n";
+	std::cout << "Throughput: " << (params.ncycles * double(numParticles)) / duration.remainingSteps << " particles/s \n";
 
 	// ----- finish ------
 
