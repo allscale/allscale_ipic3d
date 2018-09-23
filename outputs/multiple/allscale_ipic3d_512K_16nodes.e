@@ -78,3 +78,19 @@ Monitor component with rank 0 created!
 Monitor component with rank 0 created!
 Monitor component with rank 0 created!
 Monitor component with rank 0 created!
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
+Stopping monitor with rank 0
