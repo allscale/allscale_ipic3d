@@ -15,7 +15,7 @@
 # Number of MPI processes.
 #SBATCH -n 1
 # Number of MPI processes per node (the following is actually the default)
-#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-node=1
 # Architecture
 #SBATCH -C Haswell
 
@@ -53,7 +53,7 @@ do
 			do
             	echo "Running on $i cores, with $PARTICLES particles for $OPTION distribution"
 				PARTICLES=$((PARTICLES * SLURM_NNODES))
-				aprun -n 1 -N 1 $APP --hpx:threads=$i :C:$PARTICLES -Ihpx.stacks.use_guard_pages=0
+				aprun -n 1 -N 1 $APP --hpx:threads=$i :C:$PARTICLES 
 			done
 		done
 

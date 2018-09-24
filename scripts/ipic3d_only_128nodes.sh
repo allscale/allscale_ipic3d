@@ -13,7 +13,7 @@
 # Number of nodes
 #SBATCH --nodes 128
 # Number of MPI processes per node (the following is actually the default)
-#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-node=1
 # Architecture
 #SBATCH -C Haswell
 
@@ -35,7 +35,7 @@ do
 
         echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
 
-		aprun -n 128 -N 1 $APP --hpx:threads=32 -Ihpx.stacks.use_guard_pages=0 $HOME/inputs/128nodes.inp
+		aprun -n 128 -N 1 $APP --hpx:threads=32  $HOME/inputs/128nodes.inp
 
 	done
 done

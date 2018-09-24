@@ -13,7 +13,7 @@
 # Number of nodes
 #SBATCH --nodes 2
 # Number of MPI processes per node (the following is actually the default)
-#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-node=1
 # Architecture
 #SBATCH -C Haswell
 
@@ -49,7 +49,7 @@ do
 		for PARTICLES in 1000000 2000000 4000000 8000000 16000000 32000000
 		do
 			PARTICLES=$((PARTICLES * SLURM_NNODES))
-			aprun -n 2 -N 1 $APP :E:$PARTICLES --hpx:threads=32 -Ihpx.stacks.use_guard_pages=0
+			aprun -n 2 -N 1 $APP :E:$PARTICLES --hpx:threads=32 
 		done
 
 	done

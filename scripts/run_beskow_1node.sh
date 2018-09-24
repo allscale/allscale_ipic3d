@@ -16,7 +16,7 @@
 # Number of MPI processes.
 #SBATCH -n 1
 # Number of MPI processes per node (the following is actually the default)
-#SBATCH --ntasks-per-node=32
+#SBATCH --ntasks-per-node=1
 # Architecture
 #SBATCH -C Haswell
 
