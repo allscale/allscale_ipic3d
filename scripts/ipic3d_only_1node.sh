@@ -8,7 +8,7 @@
 #SBATCH -J Allscale.ipic3d.only.shared
 
 # Only 1 hour wall-clock time will be given to this job
-#SBATCH -t 08:00:00
+#SBATCH -t 04:00:00
 
 # Number of nodes
 #SBATCH --nodes 1
@@ -17,8 +17,8 @@
 # Architecture
 #SBATCH -C Haswell
 
-#SBATCH -e allscale_ipic3d_512K_1node.e
-#SBATCH -o allscale_ipic3d_512K_1node.o
+#SBATCH -e 180924_allscale_ipic3d_512K_1node.e
+#SBATCH -o 180924_allscale_ipic3d_512K_1node.o
 
 APP=/cfs/klemming/nobackup/r/riakymch/workspace/allscale_ipic3d/build/ipic3d_allscalecc
 HOME=/cfs/klemming/nobackup/r/riakymch/workspace/allscale_ipic3d
@@ -33,7 +33,7 @@ do
 		export ALLSCALE_MONITOR=$MON
 		export ALLSCALE_RESILIENCE=$RES
 
-        echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
+        	echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
 
 		aprun -n 1 -N 1 $APP --hpx:threads=32 -Ihpx.stacks.use_guard_pages=0 $HOME/inputs/shared_4c.inp
 

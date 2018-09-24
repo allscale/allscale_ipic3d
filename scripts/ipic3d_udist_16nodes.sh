@@ -8,17 +8,17 @@
 #SBATCH -J Allscale.ipic3d.only.shared
 
 # Only 1 hour wall-clock time will be given to this job
-#SBATCH -t 03:00:00
+#SBATCH -t 04:00:00
 
 # Number of nodes
-#SBATCH --nodes 2
+#SBATCH --nodes 16
 # Number of MPI processes per node (the following is actually the default)
 #SBATCH --ntasks-per-node=32
 # Architecture
 #SBATCH -C Haswell
 
-#SBATCH -e 180924_allscale_ipic3d_udist_2nodes.e
-#SBATCH -o 180924_allscale_ipic3d_udist_2nodes.o
+#SBATCH -e 180924_allscale_ipic3d_udist_16nodes.e
+#SBATCH -o 180924_allscale_ipic3d_udist_16nodes.o
 
 APP=/cfs/klemming/nobackup/r/riakymch/workspace/allscale_ipic3d/build/ipic3d_allscalecc
 HOME=/cfs/klemming/nobackup/r/riakymch/workspace/allscale_ipic3d
@@ -49,7 +49,7 @@ do
 		for PARTICLES in 8000000 16000000 32000000 48000000
 		do
 			PARTICLES=$((PARTICLES * SLURM_NNODES))
-			aprun -n 2 -N 1 -d 2 $APP :U:$PARTICLES --hpx:threads=32 -Ihpx.stacks.use_guard_pages=0
+			aprun -n 16 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32 -Ihpx.stacks.use_guard_pages=0
 		done
 
 	done
