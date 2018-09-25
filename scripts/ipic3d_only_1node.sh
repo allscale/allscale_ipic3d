@@ -8,7 +8,7 @@
 #SBATCH -J Allscale.ipic3d.only.shared
 
 # Only 1 hour wall-clock time will be given to this job
-#SBATCH -t 04:00:00
+#SBATCH -t 01:00:00
 
 # Number of nodes
 #SBATCH --nodes 1

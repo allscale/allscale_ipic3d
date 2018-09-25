@@ -8,7 +8,7 @@
 #SBATCH -J Allscale.ipic3d.only.shared
 
 # Only 1 hour wall-clock time will be given to this job
-#SBATCH -t 03:00:00
+#SBATCH -t 00:30:00
 
 # Number of nodes
 #SBATCH --nodes 1
@@ -37,20 +37,53 @@ export CRAY_ROOTFS=DSL
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/cfs/klemming/nobackup/r/riakymch/allscale_compiler/build/allscale_runtime-prefix/src/allscale_runtime-build/src:/cfs/klemming/nobackup/r/riakymch/allscale_compiler/build/third_party/boost/lib:/cfs/klemming/nobackup/r/riakymch/allscale_compiler/build/hpx-prefix/src/hpx-build/lib
 
 
-for RES in 0 1
-do
-	for MON in 0 1
-	do
-		export ALLSCALE_MONITOR=$MON
-		export ALLSCALE_RESILIENCE=$RES
+export ALLSCALE_MONITOR=0
+export ALLSCALE_RESILIENCE=0
+echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
+PARTICLES=$((8000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((16000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((32000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((48000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
 
-        	echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
 
-		for PARTICLES in 8000000 16000000 32000000 48000000
-		do
-			PARTICLES=$((PARTICLES * SLURM_NNODES))
-			aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
-		done
+export ALLSCALE_MONITOR=1
+export ALLSCALE_RESILIENCE=0
+echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
+PARTICLES=$((8000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((16000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((32000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((48000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
 
-	done
-done
+
+export ALLSCALE_MONITOR=0
+export ALLSCALE_RESILIENCE=1
+echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
+PARTICLES=$((8000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((16000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((32000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((48000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+
+
+export ALLSCALE_MONITOR=1
+export ALLSCALE_RESILIENCE=1
+echo "Running on ipic3d with MONITORING=$ALLSCALE_MONITOR and RESILIENCE=$ALLSCALE_RESILIENCE"
+PARTICLES=$((8000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((16000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((32000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
+PARTICLES=$((48000000 * SLURM_NNODES))
+aprun -n 1 -N 1 -d 32 $APP :U:$PARTICLES --hpx:threads=32
