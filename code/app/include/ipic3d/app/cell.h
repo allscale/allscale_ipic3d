@@ -375,46 +375,108 @@ namespace ipic3d {
 		double e = 1.602176565e-19; // Elementary charge (Coulomb)
  		double m = 1.672621777e-27; // Proton mass (kg)
 
+ 		// Phase 1: approximate particle distribution
+
+ 		auto start = std::chrono::high_resolution_clock::now();
+
 		// just some info about the progress
-		std::cout << "Sorting in particles ...\n";
+		std::cout << "Approximating particle distribution ...\n";
 
-		// insert particles in patches (of 4MB each)
-		const std::uint64_t patch_size = (1<<22)/sizeof(Particle);
-		for(std::uint64_t p=0; p<numParticles; p+=patch_size) {
+ 		// create data item with distribution approximation
+ 		allscale::api::user::data::Grid<float,3> distribution(properties.size);
+ 		allscale::api::user::data::Grid<std::uint64_t,3> particleCount(properties.size);
 
-			// generate list of particles
-			auto current_patch = std::min(patch_size,numParticles-p);
-			std::vector<Particle> particles(current_patch);
-			for(std::uint64_t i=0; i<current_patch; ++i) {
-				auto cur = next();
-				while(!isInsideUniverse(properties,cur)) cur = next();
-				cur.q = e;
-				cur.qom = e / m;
-				particles[i] = cur;
-			}
+		// compute particles per cell
+		auto numCells = properties.size.x * properties.size.y * properties.size.z;
+ 		auto numPseudoParticles = numCells * 100;
+		float particlesPerPseudoParticle = numParticles / float(numPseudoParticles);
 
-			std::cout << "Submitting particles " << p << " - " << (p+current_patch) << " ... \n";
 
-			// distribute particles randomly
-			pfor(properties.size, [=,&cells](const auto& pos) {
+ 		// distribute pseudo particles
+ 		allscale::api::user::algorithm::async([&,numPseudoParticles](){
 
-				// get targeted cell
-				auto& cell = cells[pos];
+ 			// compute the particle distribution approximation
+ 			for(int i=0; i<numPseudoParticles; i++) {
+ 				auto p = next();
+ 				while (!isInsideUniverse(properties,p)) p = next();
+ 				distribution[getCellCoordinates(properties,p)] += particlesPerPseudoParticle;
+ 			}
 
-				// get cell corners
-				auto low = getOriginOfCell(pos, properties);
-				auto hig = low + properties.cellWidth;
+ 			// sum up the currently distributed number of particles
+ 			std::uint64_t sum = 0;
+ 			for(int i=0; i<properties.size.x; ++i) {
+ 				for(int j=0; j<properties.size.y; ++j) {
+ 					for(int k=0; k<properties.size.z; ++k) {
+ 						particleCount[{i,j,k}] = distribution[{i,j,k}];
+ 						sum += particleCount[{i,j,k}];
+ 					}
+ 				}
+ 			}
 
-				// filter out local particles
-				for(const auto& cur : particles) {
-					if (low.dominatedBy(cur.position) && cur.position.strictlyDominatedBy(hig)) {
-						cell.particles.push_back(cur);
+ 			// correct for rounding errors
+ 			std::int64_t missing = numParticles - sum;
+ 			assert_lt(abs(missing),numCells);
+
+ 			// no error, nothing to fix
+ 			if (missing == 0) return;
+
+ 			// apply corrections
+ 			int correct = (missing < 0) ? -1 : 1;
+ 			std::uint64_t error = abs(missing);
+ 			for(int i=0; i<properties.size.x; ++i) {
+				for(int j=0; j<properties.size.y; ++j) {
+					for(int k=0; k<properties.size.z; ++k) {
+						// correct for remaining particles (to be evenly balance)
+						std::uint64_t linPos = (i * properties.size.y + j) * properties.size.z + k;
+						if (linPos < error) {
+							particleCount[{i,j,k}] += correct;
+							sum += correct;
+						}
 					}
 				}
+			}
 
-			});
+ 		}).wait();
 
-		}
+
+ 		// Phase 2: realize approximated particle distribution
+
+		std::cout << "Populating cells ...\n";
+
+ 		// initialize each cell in parallel
+		pfor(properties.size, [=,&particleCount,&cells](const auto& pos) {
+
+			// get targeted cell
+			auto& cell = cells[pos];
+
+			// get cell corners
+			auto& width = properties.cellWidth;
+			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
+			Vector3<double> hig = low + width;
+
+			// create a uniform distribution
+			auto myNext = next;
+			auto seed = (uint32_t)(((pos.x * 1023) + pos.y) * 1023 + pos.z);
+
+			// TODO: speeds are hard-coded, actual passed distribution is ignored
+			distribution::vector::uniform next_position(low,hig,seed);
+
+			// get number of particles to be generated in this cell
+			auto localParticles = particleCount[pos];
+
+			// generate particles
+			for(std::uint64_t i=0; i<localParticles; i++) {
+				auto p = myNext();
+				p.position = next_position();
+				p.q = e;
+				p.qom = e / m;
+				cell.particles.push_back(p);
+			}
+
+		});
+
+		auto end = std::chrono::high_resolution_clock::now();
+		std::cout << "Initialization time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\n";
 
 		// done
 		return cells;
