@@ -367,7 +367,8 @@ namespace ipic3d {
 		using allscale::api::user::algorithm::pfor;
 
 		// the 3-D grid of cells
-		Cells cells(properties.size);
+		auto gridSize = properties.size;
+		Cells cells(gridSize);
 
 		// get a private copy of the distribution generator
 		auto next = dist;
@@ -383,23 +384,28 @@ namespace ipic3d {
 		std::cout << "Approximating particle distribution ...\n";
 
  		// create data item with distribution approximation
- 		allscale::api::user::data::Grid<float,3> distribution(properties.size);
- 		allscale::api::user::data::Grid<std::uint64_t,3> particleCount(properties.size);
+		auto numCells = properties.size.x * properties.size.y * properties.size.z;
+		std::vector<float> distribution(numCells);
+		std::vector<std::uint64_t> particleCount(numCells);
 
 		// compute particles per cell
-		auto numCells = properties.size.x * properties.size.y * properties.size.z;
  		auto numPseudoParticles = numCells * 100;
 		float particlesPerPseudoParticle = numParticles / float(numPseudoParticles);
 
 
+		auto flatten = [=](const coordinate_type& pos) {
+			return (pos.x * gridSize.y + pos.y) * gridSize.z + pos.z;
+		};
+
+
  		// distribute pseudo particles
- 		allscale::api::user::algorithm::async([&,numPseudoParticles](){
+ 		{
 
  			// compute the particle distribution approximation
  			for(int i=0; i<numPseudoParticles; i++) {
  				auto p = next();
  				while (!isInsideUniverse(properties,p)) p = next();
- 				distribution[getCellCoordinates(properties,p)] += particlesPerPseudoParticle;
+ 				distribution[flatten(getCellCoordinates(properties,p))] += particlesPerPseudoParticle;
  			}
 
  			// sum up the currently distributed number of particles
@@ -407,36 +413,38 @@ namespace ipic3d {
  			for(int i=0; i<properties.size.x; ++i) {
  				for(int j=0; j<properties.size.y; ++j) {
  					for(int k=0; k<properties.size.z; ++k) {
- 						particleCount[{i,j,k}] = distribution[{i,j,k}];
- 						sum += particleCount[{i,j,k}];
+ 						particleCount[flatten({i,j,k})] = distribution[flatten({i,j,k})];
+ 						sum += particleCount[flatten({i,j,k})];
  					}
  				}
  			}
 
  			// correct for rounding errors
  			std::int64_t missing = numParticles - sum;
- 			assert_lt(abs(missing),numCells);
 
  			// no error, nothing to fix
- 			if (missing == 0) return;
+ 			if (missing != 0) {
 
- 			// apply corrections
- 			int correct = (missing < 0) ? -1 : 1;
- 			std::uint64_t error = abs(missing);
- 			for(int i=0; i<properties.size.x; ++i) {
-				for(int j=0; j<properties.size.y; ++j) {
-					for(int k=0; k<properties.size.z; ++k) {
-						// correct for remaining particles (to be evenly balance)
-						std::uint64_t linPos = (i * properties.size.y + j) * properties.size.z + k;
-						if (linPos < error) {
-							particleCount[{i,j,k}] += correct;
-							sum += correct;
+				// apply corrections
+				int correct = (missing < 0) ? -((-missing / numCells) + 1) : (missing / numCells + 1);
+				std::uint64_t error = abs(missing);
+				for(int i=0; i<properties.size.x; ++i) {
+					for(int j=0; j<properties.size.y; ++j) {
+						for(int k=0; k<properties.size.z; ++k) {
+							// correct for remaining particles (to be evenly balance)
+							std::uint64_t linPos = flatten({i,j,k});
+							if (linPos < error) {
+								particleCount[flatten({i,j,k})] += correct;
+								sum += correct;
+							}
 						}
 					}
 				}
-			}
+ 			}
 
- 		}).wait();
+ 			// test that total sum of particles is correct
+ 			assert_eq(sum,numParticles);
+ 		}
 
 
  		// Phase 2: realize approximated particle distribution
@@ -444,7 +452,7 @@ namespace ipic3d {
 		std::cout << "Populating cells ...\n";
 
  		// initialize each cell in parallel
-		pfor(properties.size, [=,&particleCount,&cells](const auto& pos) {
+		pfor(properties.size, [=,&cells](const auto& pos) {
 
 			// get targeted cell
 			auto& cell = cells[pos];
@@ -462,7 +470,7 @@ namespace ipic3d {
 			distribution::vector::uniform next_position(low,hig,seed);
 
 			// get number of particles to be generated in this cell
-			auto localParticles = particleCount[pos];
+			auto localParticles = particleCount[flatten(pos)];
 
 			// generate particles
 			for(std::uint64_t i=0; i<localParticles; i++) {
