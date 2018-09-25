@@ -2,26 +2,21 @@
 import math
 import sys
 import subprocess
+import glob
 
-command = "grep 'Throughput:' " + sys.argv[1] + " | awk -F':' '{print $2}' | awk -F' ' '{print $1}'"
+files = glob.glob(sys.argv[1] + "/*.o")
 
-(res,err) = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).communicate()
-res = res.split()
+for f in files:
+    splitResult = f.split( "_" )
+    nodeInfo = splitResult[len(splitResult) - 1]
+    command = "grep 'Throughput:' " + f + " | awk -F':' '{print $2}' | awk -F' ' '{print $1}'"
 
-count = 0
-sum = 0
-cores = int(sys.argv[2])
-output = ""
-for var in res:
-	sum = sum + float(var)
-	count += 1
-	if count % cores == 0:
-		#print sum / cores
-		#'{:.2e}'.format(sum / cores)
-		output += '{0:2.5e}'.format(sum / cores) + "  " 
-		count = 0
-		sum = 0
+    (res,err) = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).communicate()
+    res = res.split()
 
-print output
+    output = nodeInfo[0:len(nodeInfo)-7] + " "
+    for var in res:
+        output = output + var + " "
+    print output
 
 
