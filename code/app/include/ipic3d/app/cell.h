@@ -8,6 +8,7 @@
 #include "allscale/api/user/algorithm/pfor.h"
 #include "allscale/api/user/algorithm/async.h"
 #include "allscale/api/user/algorithm/preduce.h"
+#include "allscale/utils/serializer.h"
 #include "allscale/utils/static_grid.h"
 
 #include "ipic3d/app/field.h"
@@ -103,7 +104,7 @@ namespace ipic3d {
 		namespace species {
 
 			// a generator for electrons
-			struct electron {
+			struct electron : public allscale::utils::trivially_serializable {
 
 				Particle operator()() const {
 					Particle p;
@@ -112,10 +113,12 @@ namespace ipic3d {
 					return p;
 				}
 
+				void seed(std::uint32_t) {}
+
 			};
 
 			// a generator for protons
-			struct proton {
+			struct proton : public allscale::utils::trivially_serializable {
 
 				Particle operator()() const {
 					Particle p;
@@ -124,6 +127,7 @@ namespace ipic3d {
 					return p;
 				}
 
+				void seed(std::uint32_t) {}
 			};
 
 		}
@@ -133,6 +137,9 @@ namespace ipic3d {
 			// a generator for uniformly distributed vector3 instances
 			class uniform {
 
+				Vector3<double> min;
+				Vector3<double> max;
+
 				std::uniform_real_distribution<> x;
 				std::uniform_real_distribution<> y;
 				std::uniform_real_distribution<> z;
@@ -141,8 +148,8 @@ namespace ipic3d {
 
 			public:
 
-				uniform(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed)
-					: x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
+				uniform(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed = 0)
+					: min(min), max(max), x(min.x,max.x), y(min.y,max.y), z(min.z,max.z), randGen(seed) {}
 
 				Vector3<double> operator()() {
 					return {
@@ -150,6 +157,20 @@ namespace ipic3d {
 					};
 				}
 
+				void seed(std::uint32_t seed) {
+					randGen.seed(seed);
+				}
+
+				void store(allscale::utils::ArchiveWriter& out) const {
+					out.write(min);
+					out.write(max);
+				}
+
+				static uniform load(allscale::utils::ArchiveReader& in) {
+					auto min = in.read<Vector3<double>>();
+					auto max = in.read<Vector3<double>>();
+					return { min, max };
+				}
 			};
 
 			// a generator for uniformly distributed vector3 instances
@@ -165,7 +186,7 @@ namespace ipic3d {
 
 			public:
 
-				uniform_r(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed)
+				uniform_r(const Vector3<double>& min, const Vector3<double>& max, std::uint32_t seed = 0)
 					: R1(min), R2(max), rho1(0.0,1.0), rho2(0.0,1.0), rho3(0.0,1.0), randGen(seed) {}
 
 				Vector3<double> operator()() {
@@ -180,6 +201,21 @@ namespace ipic3d {
 					};
 				}
 
+				void seed(std::uint32_t seed) {
+					randGen.seed(seed);
+				}
+
+				void store(allscale::utils::ArchiveWriter& out) const {
+					out.write(R1);
+					out.write(R2);
+				}
+
+				static uniform_r load(allscale::utils::ArchiveReader& in) {
+					auto min = in.read<Vector3<double>>();
+					auto max = in.read<Vector3<double>>();
+					return { min, max };
+				}
+
 			};
 
 			// a generator for normal distributed vector3 instances
@@ -192,7 +228,7 @@ namespace ipic3d {
 
 			public:
 
-				normal(const Vector3<double>& mean, const Vector3<double>& stddev, std::uint32_t seed)
+				normal(const Vector3<double>& mean, const Vector3<double>& stddev, std::uint32_t seed = 0)
 					: mean(mean), stddev(stddev), rand(seed) {}
 
 				Vector3<double> operator()() {
@@ -201,6 +237,21 @@ namespace ipic3d {
 						mean.y + stddev.y * rand(),
 						mean.z + stddev.z * rand()
 					};
+				}
+
+				void seed(std::uint32_t seed) {
+					rand = ziggurat_normal_distribution(seed);
+				}
+
+				void store(allscale::utils::ArchiveWriter& out) const {
+					out.write(mean);
+					out.write(stddev);
+				}
+
+				static normal load(allscale::utils::ArchiveReader& in) {
+					auto mean   = in.read<Vector3<double>>();
+					auto stddev = in.read<Vector3<double>>();
+					return { mean, stddev };
 				}
 
 			};
@@ -225,6 +276,27 @@ namespace ipic3d {
 				p.position = posGen();
 				p.velocity = velGen();
 				return p;
+			}
+
+			void seed(std::uint32_t seed) {
+				speciesGen.seed(seed);
+				seed = (1023 * seed) & seed;
+				posGen.seed(seed);
+				seed = (1023 * seed) & seed;
+				velGen.seed(seed);
+			}
+
+			void store(allscale::utils::ArchiveWriter& out) const {
+				out.write(speciesGen);
+				out.write(posGen);
+				out.write(velGen);
+			}
+
+			static generic_particle_generator load(allscale::utils::ArchiveReader& in) {
+				auto a = in.read<SpeciesDist>();
+				auto b = in.read<PositionDist>();
+				auto c = in.read<VelocityDist>();
+				return { b, c, a };
 			}
 
 		};
@@ -252,6 +324,15 @@ namespace ipic3d {
 					std::uint32_t seed = 0
 			) : super({minPos,maxPos,seed+1},{minVel,maxVel,seed+2},speciesGen) {}
 
+			uniform(super&& base) : super(std::move(base)) {}
+
+			void store(allscale::utils::ArchiveWriter& out) const {
+				super::store(out);
+			}
+
+			static uniform load(allscale::utils::ArchiveReader& in) {
+				return super::load(in);
+			}
 		};
 
 		template<typename SpeciesGen = species::electron>
@@ -276,6 +357,15 @@ namespace ipic3d {
 					std::uint32_t seed = 0
 			) : super({center,stddev,seed+1},{minVel,maxVel,seed+2},speciesGen) {}
 
+			normal(super&& base) : super(std::move(base)) {}
+
+			void store(allscale::utils::ArchiveWriter& out) const {
+				super::store(out);
+			}
+
+			static normal load(allscale::utils::ArchiveReader& in) {
+				return super::load(in);
+			}
 		};
 
 		template<typename SpeciesGen = species::electron>
@@ -300,6 +390,16 @@ namespace ipic3d {
 					std::uint32_t seed = 0
 			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
 
+			uniform_pos_normal_speed(super&& base) : super(std::move(base)) {}
+
+			void store(allscale::utils::ArchiveWriter& out) const {
+				super::store(out);
+			}
+
+			static uniform_pos_normal_speed load(allscale::utils::ArchiveReader& in) {
+				return super::load(in);
+			}
+
 		};
 
 		template<typename SpeciesGen = species::electron>
@@ -323,6 +423,16 @@ namespace ipic3d {
 					const Vector3<double>& stddev,
 					std::uint32_t seed = 0
 			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+
+			uniform_pos_normal_speed_r(super&& base) : super(std::move(base)) {}
+
+			void store(allscale::utils::ArchiveWriter& out) const {
+				super::store(out);
+			}
+
+			static uniform_pos_normal_speed_r load(allscale::utils::ArchiveReader& in) {
+				return super::load(in);
+			}
 
 		};
 
@@ -352,6 +462,23 @@ namespace ipic3d {
 				return {};
 			}
 
+			void seed(std::uint32_t seed) {
+				dist.seed(seed);
+			}
+
+			void store(allscale::utils::ArchiveWriter& out) const {
+				out.write(dist);
+				out.write(center);
+				out.write(radius);
+			}
+
+			static spherical load(allscale::utils::ArchiveReader& in) {
+				auto dist = in.read<Distribution>();
+				auto center = in.read<Vector3<double>>();
+				auto radius = in.read<double>();
+				return { dist, center, radius };
+			}
+
 		};
 
 		template<typename Distribution>
@@ -378,7 +505,7 @@ namespace ipic3d {
 
  		// Phase 1: approximate particle distribution
 
- 		auto start = std::chrono::high_resolution_clock::now();
+// 		auto start = std::chrono::high_resolution_clock::now();
 
 		// just some info about the progress
 		std::cout << "Approximating particle distribution ...\n";
@@ -410,11 +537,15 @@ namespace ipic3d {
 
  			// sum up the currently distributed number of particles
  			std::uint64_t sum = 0;
+ 			std::uint64_t max = 0;
+ 			std::uint64_t min = std::numeric_limits<std::uint64_t>::max();
  			for(int i=0; i<properties.size.x; ++i) {
  				for(int j=0; j<properties.size.y; ++j) {
  					for(int k=0; k<properties.size.z; ++k) {
  						particleCount[flatten({i,j,k})] = distribution[flatten({i,j,k})];
  						sum += particleCount[flatten({i,j,k})];
+ 						max = std::max(max,particleCount[flatten({i,j,k})]);
+ 						min = std::min(min,particleCount[flatten({i,j,k})]);
  					}
  				}
  			}
@@ -427,7 +558,7 @@ namespace ipic3d {
 
 				// apply corrections
 				int correct = (missing < 0) ? -((-missing / numCells) + 1) : (missing / numCells + 1);
-				std::uint64_t error = abs(missing);
+				std::uint64_t error = std::abs(missing);
 				for(int i=0; i<properties.size.x; ++i) {
 					for(int j=0; j<properties.size.y; ++j) {
 						for(int k=0; k<properties.size.z; ++k) {
@@ -436,6 +567,8 @@ namespace ipic3d {
 							if (linPos < error) {
 								particleCount[flatten({i,j,k})] += correct;
 								sum += correct;
+								max = std::max(max,particleCount[flatten({i,j,k})]);
+								min = std::min(min,particleCount[flatten({i,j,k})]);
 							}
 						}
 					}
@@ -444,6 +577,9 @@ namespace ipic3d {
 
  			// test that total sum of particles is correct
  			assert_eq(sum,numParticles);
+
+ 			// print seed summary
+ 			std::cout << "Number of particles in cells (min/avg/max): " << min << "/" << (sum/numCells) << "/" << max << "\n";
  		}
 
 
@@ -462,11 +598,14 @@ namespace ipic3d {
 			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
 			Vector3<double> hig = low + width;
 
-			// create a uniform distribution
-			auto myNext = next;
+			// compute seed for this cell
 			auto seed = (uint32_t)(((pos.x * 1023) + pos.y) * 1023 + pos.z);
 
-			// TODO: speeds are hard-coded, actual passed distribution is ignored
+			// create a copy of the particle distribution and re-seed it
+			auto myNext = next;
+			myNext.seed(seed);
+
+			// create a uniform position distribution for this domain
 			distribution::vector::uniform next_position(low,hig,seed);
 
 			// get number of particles to be generated in this cell
@@ -483,8 +622,9 @@ namespace ipic3d {
 
 		});
 
-		auto end = std::chrono::high_resolution_clock::now();
-		std::cout << "Initialization time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "\n";
+//		auto end = std::chrono::high_resolution_clock::now();
+//		double s = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0;
+//		std::cout << "Initialization time: " << s << "s\n";
 
 		// done
 		return cells;
