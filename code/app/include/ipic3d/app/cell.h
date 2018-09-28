@@ -374,21 +374,21 @@ namespace ipic3d {
 			using super = generic_particle_generator<vector::uniform,vector::normal,SpeciesGen>;
 
 			uniform_pos_normal_speed(
-					const Vector3<double>& minVel,
-					const Vector3<double>& maxVel,
+					const Vector3<double>& minPos,
+					const Vector3<double>& maxPos,
 					const Vector3<double>& center,
 					const Vector3<double>& stddev,
 					std::uint32_t seed = 0
-			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+			) : super({minPos,maxPos,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
 
 			uniform_pos_normal_speed(
 					const SpeciesGen& speciesGen,
-					const Vector3<double>& minVel,
-					const Vector3<double>& maxVel,
+					const Vector3<double>& minPos,
+					const Vector3<double>& maxPos,
 					const Vector3<double>& center,
 					const Vector3<double>& stddev,
 					std::uint32_t seed = 0
-			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},speciesGen) {}
+			) : super({minPos,maxPos,seed+1},{center,stddev,seed+2},speciesGen) {}
 
 			uniform_pos_normal_speed(super&& base) : super(std::move(base)) {}
 
@@ -408,12 +408,12 @@ namespace ipic3d {
 			using super = generic_particle_generator<vector::uniform_r,vector::normal,SpeciesGen>;
 
 			uniform_pos_normal_speed_r(
-					const Vector3<double>& minVel,
-					const Vector3<double>& maxVel,
+					const Vector3<double>& minPos,
+					const Vector3<double>& maxPos,
 					const Vector3<double>& center,
 					const Vector3<double>& stddev,
 					std::uint32_t seed = 0
-			) : super({minVel,maxVel,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
+			) : super({minPos,maxPos,seed+1},{center,stddev,seed+2},SpeciesGen()) {}
 
 			uniform_pos_normal_speed_r(
 					const SpeciesGen& speciesGen,
@@ -505,8 +505,6 @@ namespace ipic3d {
 
  		// Phase 1: approximate particle distribution
 
-// 		auto start = std::chrono::high_resolution_clock::now();
-
 		// just some info about the progress
 		std::cout << "Approximating particle distribution ...\n";
 
@@ -596,6 +594,7 @@ namespace ipic3d {
 			// get cell corners
 			auto& width = properties.cellWidth;
 			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
+			low += properties.origin;
 			Vector3<double> hig = low + width;
 
 			// compute seed for this cell
@@ -620,11 +619,10 @@ namespace ipic3d {
 				cell.particles.push_back(p);
 			}
 
-		});
+			// make sure all those particles have been valid
+			assert_true(verifyCorrectParticlesPositionInCell(properties,cell,pos));
 
-//		auto end = std::chrono::high_resolution_clock::now();
-//		double s = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0;
-//		std::cout << "Initialization time: " << s << "s\n";
+		});
 
 		// done
 		return cells;
@@ -656,6 +654,7 @@ namespace ipic3d {
 			// get cell corners
 			auto& width = properties.cellWidth;
 			Vector3<double> low { width.x * pos.x, width.y * pos.y, width.z * pos.z };
+			low += properties.origin;
 			Vector3<double> hig = low + width;
 
 			// create a uniform distribution
