@@ -1,0 +1,212 @@
+Running on ipic3d with MONITORING=0 and RESILIENCE=0
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:64000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 244 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 97.818s
+Throughput: 6.54276e+07 particles/s 
+Application 16296324 resources: utime ~24120s, stime ~459s, Rss ~977660, inblocks ~8555172, outblocks ~604575
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:128000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 488 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 148.947s
+Throughput: 8.59366e+07 particles/s 
+Application 16296363 resources: utime ~34628s, stime ~455s, Rss ~2237040, inblocks ~8670926, outblocks ~604407
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:256000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 976 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 237.822s
+Throughput: 1.07644e+08 particles/s 
+Application 16296427 resources: utime ~53241s, stime ~395s, Rss ~4744304, inblocks ~7428565, outblocks ~603847
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:384000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 1464 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 333.967s
+Throughput: 1.14981e+08 particles/s 
+Application 16296524 resources: utime ~71034s, stime ~484s, Rss ~6747360, inblocks ~6994350, outblocks ~603403
+Running on ipic3d with MONITORING=1 and RESILIENCE=0
+Processing benchmark :U:64000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 244 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 97.466s
+Throughput: 6.56639e+07 particles/s 
+Application 16296650 resources: utime ~23939s, stime ~532s, Rss ~1064236, inblocks ~8742329, outblocks ~604684
+Processing benchmark :U:128000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 488 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 147.279s
+Throughput: 8.69099e+07 particles/s 
+Application 16296725 resources: utime ~34935s, stime ~476s, Rss ~2176684, inblocks ~8898067, outblocks ~604542
+Processing benchmark :U:256000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 976 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 243.785s
+Throughput: 1.05011e+08 particles/s 
+Application 16296758 resources: utime ~54426s, stime ~457s, Rss ~4692440, inblocks ~8102924, outblocks ~603966
+Processing benchmark :U:384000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 1464 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 333.565s
+Throughput: 1.1512e+08 particles/s 
+Application 16296848 resources: utime ~70833s, stime ~485s, Rss ~6669872, inblocks ~7107964, outblocks ~603514
+Running on ipic3d with MONITORING=0 and RESILIENCE=1
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:64000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 244 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 98.15s
+Throughput: 6.52063e+07 particles/s 
+Application 16297000 resources: utime ~24204s, stime ~488s, Rss ~1006064, inblocks ~8795651, outblocks ~604585
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:128000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 488 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 147.429s
+Throughput: 8.68215e+07 particles/s 
+Application 16297080 resources: utime ~34841s, stime ~488s, Rss ~2141536, inblocks ~8729441, outblocks ~604461
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:256000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 976 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 240.858s
+Throughput: 1.06287e+08 particles/s 
+Application 16297138 resources: utime ~54650s, stime ~452s, Rss ~4718736, inblocks ~7648793, outblocks ~603826
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Monitor component disabled!
+Processing benchmark :U:384000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 1464 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 334.325s
+Throughput: 1.14858e+08 particles/s 
+Application 16297247 resources: utime ~71746s, stime ~435s, Rss ~6555884, inblocks ~6881992, outblocks ~603368
+Running on ipic3d with MONITORING=1 and RESILIENCE=1
+Processing benchmark :U:64000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 244 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 96.611s
+Throughput: 6.6245e+07 particles/s 
+Application 16297407 resources: utime ~24009s, stime ~483s, Rss ~980432, inblocks ~8635094, outblocks ~604619
+Processing benchmark :U:128000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 488 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 148.979s
+Throughput: 8.59181e+07 particles/s 
+Application 16297413 resources: utime ~35121s, stime ~514s, Rss ~2313432, inblocks ~8904500, outblocks ~604541
+Processing benchmark :U:256000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 976 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 241.879s
+Throughput: 1.05838e+08 particles/s 
+Application 16297452 resources: utime ~54561s, stime ~465s, Rss ~4678500, inblocks ~7969447, outblocks ~603978
+Processing benchmark :U:384000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 1464 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 336.303s
+Throughput: 1.14183e+08 particles/s 
+Application 16297495 resources: utime ~73196s, stime ~450s, Rss ~6403088, inblocks ~7138227, outblocks ~603475

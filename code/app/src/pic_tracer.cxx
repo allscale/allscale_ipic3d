@@ -154,9 +154,10 @@ int main(int argc, char** argv) {
 
 	// parameters
 	int N = 16*1000*1000;		// < number of particles
-	int T = 150;		// < number of time steps
-	int S = 10;		// < number of time steps between frames
-	int R = 64;			// resolution of the result grid
+	int T = 150;				// < number of time steps
+	int S = 10;					// < number of time steps between frames
+	int R = 64;					// < resolution of the result grid
+	int M = 1;					// < the number of repetitions
 
 	// take command line parameters
 	if (argc > 1) {
@@ -175,13 +176,22 @@ int main(int argc, char** argv) {
 		R = atoi(argv[4]);
 	}
 
+	if (argc > 5) {
+		M = atoi(argv[5]);
+	}
+
 	// some derived parameters
 	int num_frames = T / S + 1;
 
 	// print some introduction and summary information
 
 	std::cout << "----- particle-in-cell tracer -----\n";
-	std::cout << "Tracing " << N << " particles for " << T << " time steps in a " << R << "^3 grid recording a snapshot every " << S << " time steps ...\n";
+	std::cout << "Tracing " << N << " particles for " << T << " time steps in a " << R << "^3 grid recording a snapshot every " << S << " time steps";
+	if (M == 1) {
+		std::cout << " ...\n";
+	} else {
+		std::cout << M << " time(s) ...\n";
+	}
 
 	// set up relevant universe properties
 	UniverseProperties config;
@@ -201,9 +211,6 @@ int main(int argc, char** argv) {
 	config.externalMagneticField = {0.0, 0.0, 3.07e-5};
 
 	config.useCase = UseCase::Dipole;
-
-	// run simulation
-	auto start = std::chrono::high_resolution_clock::now();
 
 	// the block size to be used
 	int B = std::max(1000, N/1000);		// the blocking factor (for performance reasons)
@@ -251,15 +258,28 @@ int main(int argc, char** argv) {
 		return std::move(a);
 	};
 
-	auto res = preduce(0,N/B+1,map,reduce).get();
+	// run simulation M times
+	ParticleCount res(num_frames,config.size);
+	for(int i=0; i<M; i++) {
 
-	auto end = std::chrono::high_resolution_clock::now();
-	std::cout << "Simulation Finished" << std::endl;
+		if (M > 1) {
+			std::cout << "Processing batch " << (i+1) << "/" << M << " ..\n";
+		}
 
-	// print performance summary
-	double s = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / (1e9);
-	std::cout << "Simulation took " << s << "s\n";
-	std::cout << "Throughput: " << ((T+1) * double(N)) / s << " particles/s \n";
+		// run simulation
+		auto start = std::chrono::high_resolution_clock::now();
+
+		res += preduce(0,N/B+1,map,reduce).get();
+
+		auto end = std::chrono::high_resolution_clock::now();
+		std::cout << "Simulation Finished" << std::endl;
+
+		// print performance summary
+		double s = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / (1e9);
+		std::cout << "Simulation took " << s << "s\n";
+		std::cout << "Throughput: " << ((T+1) * double(N)) / s << " particles/s \n";
+
+	}
 
 	// save result
 	{

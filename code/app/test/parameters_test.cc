@@ -40,11 +40,11 @@ namespace ipic3d {
 
 		EXPECT_EQ(params.ns, 2);
 		for (auto it = params.npcelx.cbegin(); it != params.npcelx.cend(); ++it) 
-			EXPECT_EQ(*it, 5);
+			EXPECT_EQ(*it, 8);
 		for (auto it = params.npcely.cbegin(); it != params.npcely.cend(); ++it) 
-			EXPECT_EQ(*it, 5);
+			EXPECT_EQ(*it, 8);
 		for (auto it = params.npcelz.cbegin(); it != params.npcelz.cend(); ++it) 
-			EXPECT_EQ(*it, 5);
+			EXPECT_EQ(*it, 8);
 
 		EXPECT_NEAR(params.qom[0], -25.0, 1e-15);
 		EXPECT_NEAR(params.qom[1], 1.0, 1e-15);

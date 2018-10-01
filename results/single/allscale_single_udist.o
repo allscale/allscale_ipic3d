@@ -1,0 +1,1516 @@
+Running on ipic3d with MONITORING=0 and RESILIENCE=0
+Running on 1 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 81.883s
+Throughput: 1.22125e+06 particles/s 
+Application 16259469 resources: utime ~82s, stime ~1s, Rss ~322708, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 104.162s
+Throughput: 1.92009e+06 particles/s 
+Application 16259484 resources: utime ~105s, stime ~1s, Rss ~412604, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 140.8s
+Throughput: 2.84091e+06 particles/s 
+Application 16259527 resources: utime ~142s, stime ~1s, Rss ~577276, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 213.224s
+Throughput: 3.75192e+06 particles/s 
+Application 16259599 resources: utime ~214s, stime ~1s, Rss ~858336, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 362.758s
+Throughput: 4.41065e+06 particles/s 
+Application 16259725 resources: utime ~364s, stime ~1s, Rss ~1400972, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 655.507s
+Throughput: 4.88172e+06 particles/s 
+Application 16259907 resources: utime ~657s, stime ~2s, Rss ~2655212, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 44.191s
+Throughput: 2.2629e+06 particles/s 
+Application 16260075 resources: utime ~88s, stime ~1s, Rss ~331328, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 55.867s
+Throughput: 3.57993e+06 particles/s 
+Application 16260097 resources: utime ~112s, stime ~1s, Rss ~439876, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 78.674s
+Throughput: 5.08427e+06 particles/s 
+Application 16260122 resources: utime ~157s, stime ~1s, Rss ~658168, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 117.501s
+Throughput: 6.80845e+06 particles/s 
+Application 16260126 resources: utime ~235s, stime ~1s, Rss ~1025648, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 196.793s
+Throughput: 8.13037e+06 particles/s 
+Application 16260151 resources: utime ~394s, stime ~2s, Rss ~2093764, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 348.722s
+Throughput: 9.17636e+06 particles/s 
+Application 16260204 resources: utime ~698s, stime ~3s, Rss ~3594788, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 24.213s
+Throughput: 4.13001e+06 particles/s 
+Application 16260311 resources: utime ~95s, stime ~2s, Rss ~323272, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 30.034s
+Throughput: 6.65912e+06 particles/s 
+Application 16260319 resources: utime ~119s, stime ~2s, Rss ~434448, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 41.301s
+Throughput: 9.685e+06 particles/s 
+Application 16260323 resources: utime ~164s, stime ~2s, Rss ~607628, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 61.344s
+Throughput: 1.30412e+07 particles/s 
+Application 16260343 resources: utime ~245s, stime ~3s, Rss ~926700, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 102.261s
+Throughput: 1.56462e+07 particles/s 
+Application 16260348 resources: utime ~409s, stime ~4s, Rss ~1775968, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 178.85s
+Throughput: 1.78921e+07 particles/s 
+Application 16260371 resources: utime ~715s, stime ~5s, Rss ~3240648, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 13.489s
+Throughput: 7.41345e+06 particles/s 
+Application 16260396 resources: utime ~105s, stime ~4s, Rss ~327280, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.4s
+Throughput: 1.21951e+07 particles/s 
+Application 16260398 resources: utime ~128s, stime ~4s, Rss ~419136, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 22.426s
+Throughput: 1.78364e+07 particles/s 
+Application 16260399 resources: utime ~177s, stime ~4s, Rss ~597500, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 32.939s
+Throughput: 2.42873e+07 particles/s 
+Application 16260404 resources: utime ~262s, stime ~4s, Rss ~942476, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 53.784s
+Throughput: 2.97486e+07 particles/s 
+Application 16260418 resources: utime ~429s, stime ~5s, Rss ~1586176, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 95.414s
+Throughput: 3.35381e+07 particles/s 
+Application 16260445 resources: utime ~761s, stime ~7s, Rss ~2975264, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.289s
+Throughput: 1.37193e+07 particles/s 
+Application 16260455 resources: utime ~114s, stime ~4s, Rss ~336464, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 8.929s
+Throughput: 2.23989e+07 particles/s 
+Application 16260462 resources: utime ~139s, stime ~5s, Rss ~419440, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 12.063s
+Throughput: 3.31592e+07 particles/s 
+Application 16260473 resources: utime ~190s, stime ~5s, Rss ~592900, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 17.498s
+Throughput: 4.57195e+07 particles/s 
+Application 16260484 resources: utime ~278s, stime ~5s, Rss ~903628, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.325s
+Throughput: 5.64872e+07 particles/s 
+Application 16260495 resources: utime ~450s, stime ~7s, Rss ~1537260, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 50.006s
+Throughput: 6.39923e+07 particles/s 
+Application 16260507 resources: utime ~797s, stime ~8s, Rss ~2803620, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 5.193s
+Throughput: 1.92567e+07 particles/s 
+Application 16260510 resources: utime ~157s, stime ~10s, Rss ~336500, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 5.974s
+Throughput: 3.34784e+07 particles/s 
+Application 16260512 resources: utime ~182s, stime ~9s, Rss ~438120, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.823s
+Throughput: 5.11313e+07 particles/s 
+Application 16260514 resources: utime ~243s, stime ~10s, Rss ~603428, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 10.829s
+Throughput: 7.38757e+07 particles/s 
+Application 16260516 resources: utime ~340s, stime ~10s, Rss ~924528, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.795s
+Throughput: 9.52664e+07 particles/s 
+Application 16260517 resources: utime ~525s, stime ~13s, Rss ~1549128, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.594s
+Throughput: 1.11912e+08 particles/s 
+Application 16260519 resources: utime ~899s, stime ~18s, Rss ~2795740, inblocks ~3024, outblocks ~12721
+Running on ipic3d with MONITORING=1 and RESILIENCE=0
+Running on 1 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 83.179s
+Throughput: 1.20223e+06 particles/s 
+Application 16260524 resources: utime ~87s, stime ~1s, Rss ~323156, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 103.658s
+Throughput: 1.92942e+06 particles/s 
+Application 16260545 resources: utime ~106s, stime ~1s, Rss ~413040, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 141.143s
+Throughput: 2.83401e+06 particles/s 
+Application 16260550 resources: utime ~144s, stime ~1s, Rss ~578084, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 213.404s
+Throughput: 3.74876e+06 particles/s 
+Application 16260579 resources: utime ~216s, stime ~1s, Rss ~858940, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 362.311s
+Throughput: 4.4161e+06 particles/s 
+Application 16260624 resources: utime ~364s, stime ~1s, Rss ~1402028, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 654.379s
+Throughput: 4.89013e+06 particles/s 
+Application 16260731 resources: utime ~660s, stime ~2s, Rss ~2655800, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 44.383s
+Throughput: 2.25311e+06 particles/s 
+Application 16260786 resources: utime ~89s, stime ~1s, Rss ~329184, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 56.087s
+Throughput: 3.56589e+06 particles/s 
+Application 16260788 resources: utime ~117s, stime ~1s, Rss ~457048, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 79.049s
+Throughput: 5.06015e+06 particles/s 
+Application 16260790 resources: utime ~161s, stime ~1s, Rss ~659428, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 118.167s
+Throughput: 6.77008e+06 particles/s 
+Application 16260796 resources: utime ~242s, stime ~2s, Rss ~1119096, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 196.386s
+Throughput: 8.14722e+06 particles/s 
+Application 16260805 resources: utime ~397s, stime ~2s, Rss ~2007324, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 361.727s
+Throughput: 8.84645e+06 particles/s 
+Application 16260814 resources: utime ~729s, stime ~4s, Rss ~4519576, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 24.576s
+Throughput: 4.06901e+06 particles/s 
+Application 16260830 resources: utime ~112s, stime ~2s, Rss ~332352, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 30.194s
+Throughput: 6.62383e+06 particles/s 
+Application 16260833 resources: utime ~130s, stime ~2s, Rss ~433676, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 41.274s
+Throughput: 9.69133e+06 particles/s 
+Application 16260835 resources: utime ~178s, stime ~3s, Rss ~654444, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 61.567s
+Throughput: 1.2994e+07 particles/s 
+Application 16260839 resources: utime ~254s, stime ~3s, Rss ~983744, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 100.887s
+Throughput: 1.58593e+07 particles/s 
+Application 16260842 resources: utime ~415s, stime ~4s, Rss ~1671164, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 180.259s
+Throughput: 1.77522e+07 particles/s 
+Application 16260851 resources: utime ~721s, stime ~5s, Rss ~3232380, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 13.427s
+Throughput: 7.44768e+06 particles/s 
+Application 16260862 resources: utime ~125s, stime ~4s, Rss ~331776, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.577s
+Throughput: 1.20649e+07 particles/s 
+Application 16260865 resources: utime ~157s, stime ~4s, Rss ~420772, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 22.341s
+Throughput: 1.79043e+07 particles/s 
+Application 16260867 resources: utime ~189s, stime ~4s, Rss ~608360, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 33.04s
+Throughput: 2.42131e+07 particles/s 
+Application 16260871 resources: utime ~294s, stime ~4s, Rss ~933208, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 53.979s
+Throughput: 2.96412e+07 particles/s 
+Application 16260874 resources: utime ~432s, stime ~6s, Rss ~1668176, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 95.249s
+Throughput: 3.35962e+07 particles/s 
+Application 16260880 resources: utime ~768s, stime ~7s, Rss ~2931136, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.291s
+Throughput: 1.37155e+07 particles/s 
+Application 16260884 resources: utime ~123s, stime ~5s, Rss ~333376, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 8.954s
+Throughput: 2.23364e+07 particles/s 
+Application 16260885 resources: utime ~185s, stime ~5s, Rss ~428108, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 12.043s
+Throughput: 3.32143e+07 particles/s 
+Application 16260888 resources: utime ~247s, stime ~5s, Rss ~598748, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 17.459s
+Throughput: 4.58216e+07 particles/s 
+Application 16260890 resources: utime ~308s, stime ~5s, Rss ~915360, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.285s
+Throughput: 5.65671e+07 particles/s 
+Application 16260893 resources: utime ~495s, stime ~7s, Rss ~1507668, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 49.973s
+Throughput: 6.40346e+07 particles/s 
+Application 16260895 resources: utime ~828s, stime ~9s, Rss ~2784100, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 5.117s
+Throughput: 1.95427e+07 particles/s 
+Application 16260900 resources: utime ~203s, stime ~10s, Rss ~345848, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 5.999s
+Throughput: 3.33389e+07 particles/s 
+Application 16260901 resources: utime ~214s, stime ~9s, Rss ~438672, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.909s
+Throughput: 5.05753e+07 particles/s 
+Application 16260902 resources: utime ~311s, stime ~10s, Rss ~619028, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 10.842s
+Throughput: 7.37871e+07 particles/s 
+Application 16260905 resources: utime ~344s, stime ~10s, Rss ~933616, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.805s
+Throughput: 9.52098e+07 particles/s 
+Application 16260906 resources: utime ~546s, stime ~12s, Rss ~1552360, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.483s
+Throughput: 1.12348e+08 particles/s 
+Application 16260908 resources: utime ~929s, stime ~18s, Rss ~2782472, inblocks ~3024, outblocks ~12721
+Running on ipic3d with MONITORING=0 and RESILIENCE=1
+Running on 1 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 82.692s
+Throughput: 1.20931e+06 particles/s 
+Application 16260909 resources: utime ~83s, stime ~0s, Rss ~322720, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 101.556s
+Throughput: 1.96936e+06 particles/s 
+Application 16260917 resources: utime ~102s, stime ~1s, Rss ~412604, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 140.784s
+Throughput: 2.84123e+06 particles/s 
+Application 16260924 resources: utime ~142s, stime ~1s, Rss ~577272, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 214.077s
+Throughput: 3.73697e+06 particles/s 
+Application 16260932 resources: utime ~215s, stime ~1s, Rss ~858336, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 362.869s
+Throughput: 4.4093e+06 particles/s 
+Application 16260967 resources: utime ~364s, stime ~1s, Rss ~1400728, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 653.771s
+Throughput: 4.89468e+06 particles/s 
+Application 16261027 resources: utime ~656s, stime ~2s, Rss ~2655368, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 44.069s
+Throughput: 2.26917e+06 particles/s 
+Application 16261331 resources: utime ~88s, stime ~1s, Rss ~331604, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 56.08s
+Throughput: 3.56633e+06 particles/s 
+Application 16261337 resources: utime ~112s, stime ~1s, Rss ~454192, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 78.343s
+Throughput: 5.10575e+06 particles/s 
+Application 16261381 resources: utime ~157s, stime ~1s, Rss ~631276, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 117.496s
+Throughput: 6.80874e+06 particles/s 
+Application 16261415 resources: utime ~235s, stime ~2s, Rss ~1047020, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 197.266s
+Throughput: 8.11088e+06 particles/s 
+Application 16261428 resources: utime ~395s, stime ~2s, Rss ~1831872, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 349.412s
+Throughput: 9.15824e+06 particles/s 
+Application 16261472 resources: utime ~699s, stime ~4s, Rss ~3431724, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 24.76s
+Throughput: 4.03877e+06 particles/s 
+Application 16261558 resources: utime ~97s, stime ~2s, Rss ~323216, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 31.5s
+Throughput: 6.34921e+06 particles/s 
+Application 16261562 resources: utime ~124s, stime ~2s, Rss ~420660, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 40.668s
+Throughput: 9.83574e+06 particles/s 
+Application 16261588 resources: utime ~162s, stime ~2s, Rss ~649712, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 61.584s
+Throughput: 1.29904e+07 particles/s 
+Application 16261600 resources: utime ~246s, stime ~3s, Rss ~969548, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 100.918s
+Throughput: 1.58545e+07 particles/s 
+Application 16261627 resources: utime ~403s, stime ~4s, Rss ~1743356, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 178.851s
+Throughput: 1.7892e+07 particles/s 
+Application 16261694 resources: utime ~715s, stime ~5s, Rss ~3222896, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 13.44s
+Throughput: 7.44048e+06 particles/s 
+Application 16261722 resources: utime ~105s, stime ~4s, Rss ~325396, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.368s
+Throughput: 1.2219e+07 particles/s 
+Application 16261726 resources: utime ~128s, stime ~4s, Rss ~417812, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 22.332s
+Throughput: 1.79115e+07 particles/s 
+Application 16261731 resources: utime ~177s, stime ~4s, Rss ~597688, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 32.958s
+Throughput: 2.42733e+07 particles/s 
+Application 16261735 resources: utime ~263s, stime ~4s, Rss ~923712, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 53.874s
+Throughput: 2.96989e+07 particles/s 
+Application 16261742 resources: utime ~429s, stime ~6s, Rss ~1624132, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 95.204s
+Throughput: 3.3612e+07 particles/s 
+Application 16261747 resources: utime ~760s, stime ~7s, Rss ~2996684, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.37s
+Throughput: 1.35685e+07 particles/s 
+Application 16261765 resources: utime ~114s, stime ~5s, Rss ~328256, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 8.886s
+Throughput: 2.25073e+07 particles/s 
+Application 16261768 resources: utime ~138s, stime ~5s, Rss ~420256, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 11.996s
+Throughput: 3.33444e+07 particles/s 
+Application 16261770 resources: utime ~189s, stime ~5s, Rss ~594200, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 17.454s
+Throughput: 4.58348e+07 particles/s 
+Application 16261772 resources: utime ~277s, stime ~5s, Rss ~900352, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.251s
+Throughput: 5.66352e+07 particles/s 
+Application 16261792 resources: utime ~449s, stime ~7s, Rss ~1536724, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 50.238s
+Throughput: 6.36968e+07 particles/s 
+Application 16261814 resources: utime ~800s, stime ~8s, Rss ~2772804, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 1000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 5.103s
+Throughput: 1.95963e+07 particles/s 
+Application 16261821 resources: utime ~154s, stime ~9s, Rss ~345216, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 2000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 6.1s
+Throughput: 3.27869e+07 particles/s 
+Application 16261823 resources: utime ~186s, stime ~10s, Rss ~432608, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 4000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.923s
+Throughput: 5.04859e+07 particles/s 
+Application 16261824 resources: utime ~243s, stime ~10s, Rss ~607788, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 8000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 10.855s
+Throughput: 7.36988e+07 particles/s 
+Application 16261826 resources: utime ~338s, stime ~11s, Rss ~927260, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 16000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.827s
+Throughput: 9.50853e+07 particles/s 
+Application 16261828 resources: utime ~526s, stime ~12s, Rss ~1552520, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 32000000 particles for  distribution
+Monitor component disabled!
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.423s
+Throughput: 1.12585e+08 particles/s 
+Application 16261841 resources: utime ~895s, stime ~19s, Rss ~2751564, inblocks ~3024, outblocks ~12721
+Running on ipic3d with MONITORING=1 and RESILIENCE=1
+Running on 1 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 81.953s
+Throughput: 1.22021e+06 particles/s 
+Application 16261848 resources: utime ~85s, stime ~1s, Rss ~323156, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 101.643s
+Throughput: 1.96767e+06 particles/s 
+Application 16261896 resources: utime ~106s, stime ~1s, Rss ~413076, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 140.614s
+Throughput: 2.84467e+06 particles/s 
+Application 16261903 resources: utime ~144s, stime ~1s, Rss ~577836, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 213.804s
+Throughput: 3.74174e+06 particles/s 
+Application 16261928 resources: utime ~217s, stime ~1s, Rss ~858836, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 362.885s
+Throughput: 4.40911e+06 particles/s 
+Application 16261957 resources: utime ~364s, stime ~1s, Rss ~1402116, inblocks ~3024, outblocks ~12721
+Running on 1 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 654.784s
+Throughput: 4.88711e+06 particles/s 
+Application 16262073 resources: utime ~660s, stime ~2s, Rss ~2655676, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 44.409s
+Throughput: 2.2518e+06 particles/s 
+Application 16262298 resources: utime ~96s, stime ~1s, Rss ~354428, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 55.807s
+Throughput: 3.58378e+06 particles/s 
+Application 16262307 resources: utime ~118s, stime ~1s, Rss ~459908, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 78.452s
+Throughput: 5.09866e+06 particles/s 
+Application 16262338 resources: utime ~165s, stime ~1s, Rss ~674496, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 117.469s
+Throughput: 6.81031e+06 particles/s 
+Application 16262347 resources: utime ~240s, stime ~2s, Rss ~1073288, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 197.014s
+Throughput: 8.12125e+06 particles/s 
+Application 16262390 resources: utime ~397s, stime ~3s, Rss ~2397924, inblocks ~3024, outblocks ~12721
+Running on 2 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 361.743s
+Throughput: 8.84606e+06 particles/s 
+Application 16262444 resources: utime ~722s, stime ~4s, Rss ~4533932, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 25.525s
+Throughput: 3.91773e+06 particles/s 
+Application 16262523 resources: utime ~112s, stime ~3s, Rss ~324640, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 31.041s
+Throughput: 6.44309e+06 particles/s 
+Application 16262528 resources: utime ~127s, stime ~3s, Rss ~415236, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 41.391s
+Throughput: 9.66394e+06 particles/s 
+Application 16262532 resources: utime ~179s, stime ~3s, Rss ~602208, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 62.211s
+Throughput: 1.28595e+07 particles/s 
+Application 16262569 resources: utime ~257s, stime ~3s, Rss ~932392, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 101.559s
+Throughput: 1.57544e+07 particles/s 
+Application 16262575 resources: utime ~417s, stime ~4s, Rss ~1863224, inblocks ~3024, outblocks ~12721
+Running on 4 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 181.405s
+Throughput: 1.76401e+07 particles/s 
+Application 16262677 resources: utime ~726s, stime ~5s, Rss ~3161848, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 13.522s
+Throughput: 7.39536e+06 particles/s 
+Application 16262808 resources: utime ~124s, stime ~4s, Rss ~329024, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.426s
+Throughput: 1.21758e+07 particles/s 
+Application 16262845 resources: utime ~158s, stime ~4s, Rss ~422884, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 22.281s
+Throughput: 1.79525e+07 particles/s 
+Application 16262850 resources: utime ~190s, stime ~4s, Rss ~606096, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 33.203s
+Throughput: 2.40942e+07 particles/s 
+Application 16262858 resources: utime ~291s, stime ~5s, Rss ~919400, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 54.36s
+Throughput: 2.94334e+07 particles/s 
+Application 16262864 resources: utime ~464s, stime ~6s, Rss ~1661428, inblocks ~3024, outblocks ~12721
+Running on 8 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 95.1s
+Throughput: 3.36488e+07 particles/s 
+Application 16262883 resources: utime ~768s, stime ~7s, Rss ~3046112, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.376s
+Throughput: 1.35575e+07 particles/s 
+Application 16262975 resources: utime ~122s, stime ~5s, Rss ~333776, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 9.162s
+Throughput: 2.18293e+07 particles/s 
+Application 16262978 resources: utime ~185s, stime ~5s, Rss ~431864, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 12.043s
+Throughput: 3.32143e+07 particles/s 
+Application 16262988 resources: utime ~247s, stime ~5s, Rss ~594920, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 17.465s
+Throughput: 4.58059e+07 particles/s 
+Application 16262992 resources: utime ~308s, stime ~5s, Rss ~904740, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.287s
+Throughput: 5.65631e+07 particles/s 
+Application 16262993 resources: utime ~491s, stime ~7s, Rss ~1528572, inblocks ~3024, outblocks ~12721
+Running on 16 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 49.995s
+Throughput: 6.40064e+07 particles/s 
+Application 16262996 resources: utime ~836s, stime ~8s, Rss ~2783336, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 1000000 particles for  distribution
+Processing benchmark :U:1000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 3 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 5.125s
+Throughput: 1.95122e+07 particles/s 
+Application 16263007 resources: utime ~204s, stime ~10s, Rss ~347944, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 2000000 particles for  distribution
+Processing benchmark :U:2000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 7 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 6.001s
+Throughput: 3.33278e+07 particles/s 
+Application 16263010 resources: utime ~214s, stime ~10s, Rss ~439228, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 4000000 particles for  distribution
+Processing benchmark :U:4000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 15 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 7.954s
+Throughput: 5.02892e+07 particles/s 
+Application 16263021 resources: utime ~307s, stime ~11s, Rss ~617176, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 8000000 particles for  distribution
+Processing benchmark :U:8000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 30 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 10.808s
+Throughput: 7.40192e+07 particles/s 
+Application 16263026 resources: utime ~342s, stime ~10s, Rss ~935960, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 16000000 particles for  distribution
+Processing benchmark :U:16000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 61 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 16.796s
+Throughput: 9.52608e+07 particles/s 
+Application 16263029 resources: utime ~543s, stime ~12s, Rss ~1551080, inblocks ~3024, outblocks ~12721
+Running on 32 cores, with 32000000 particles for  distribution
+Processing benchmark :U:32000000
+Creating Particles ...
+Sorting in uniformly distributed particles ...
+  particles / cell: 122 (+1)
+Running simulation...
+Simulation Finished
+Simulation took 28.597s
+Throughput: 1.119e+08 particles/s 
+Application 16263031 resources: utime ~925s, stime ~20s, Rss ~2811956, inblocks ~3024, outblocks ~12721

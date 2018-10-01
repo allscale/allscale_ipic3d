@@ -79,6 +79,22 @@ namespace ipic3d {
 		EXPECT_EQ(100,countParticlesInDomain(cells));
 	}
 
+	TEST(Cell, DistributionSerialization) {
+		using namespace distribution;
+
+		EXPECT_TRUE(allscale::utils::is_serializable<species::electron>::value);
+		EXPECT_TRUE(allscale::utils::is_serializable<species::proton>::value);
+
+		EXPECT_TRUE(allscale::utils::is_serializable<vector::uniform>::value);
+		EXPECT_TRUE(allscale::utils::is_serializable<vector::uniform_r>::value);
+		EXPECT_TRUE(allscale::utils::is_serializable<vector::normal>::value);
+
+		EXPECT_TRUE(allscale::utils::is_serializable<uniform<>>::value);
+		EXPECT_TRUE(allscale::utils::is_serializable<normal<>>::value);
+		EXPECT_TRUE(allscale::utils::is_serializable<uniform_pos_normal_speed<>>::value);
+		EXPECT_TRUE(allscale::utils::is_serializable<spherical<normal<>>>::value);
+	}
+
 
 	TEST(Cell, initCellsFromConfig) {
 
