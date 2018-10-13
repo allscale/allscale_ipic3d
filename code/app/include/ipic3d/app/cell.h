@@ -503,7 +503,7 @@ namespace ipic3d {
  		// Phase 1: approximate particle distribution
 
 		// just some info about the progress
-		std::cout << "Approximating particle distribution ...\n";
+		if(MPI_Context::isMaster()) std::cout << "Approximating particle distribution ...\n";
 
  		// create data item with distribution approximation
 		auto numCells = properties.size.x * properties.size.y * properties.size.z;
@@ -573,13 +573,13 @@ namespace ipic3d {
  			assert_eq(sum,numParticles);
 
  			// print seed summary
- 			std::cout << "Number of particles in cells (min/avg/max): " << min << "/" << (sum/numCells) << "/" << max << "\n";
+			if(MPI_Context::isMaster()) std::cout << "Number of particles in cells (min/avg/max): " << min << "/" << (sum/numCells) << "/" << max << "\n";
  		}
 
 
  		// Phase 2: realize approximated particle distribution
 
-		std::cout << "Populating cells ...\n";
+		if(MPI_Context::isMaster()) std::cout << "Populating cells ...\n";
 
  		// initialize each cell in parallel
 		MPI_Context::pforEachLocalCell([&](const auto& pos) {
