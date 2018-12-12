@@ -12,6 +12,7 @@ namespace ipic3d {
 
 	using namespace allscale::utils;
 
+	const uint64_t NUM_WARMUP_TIME_STEPS = 2;
 	const uint64_t NUM_TIME_STEPS = 100;
 	const double DELTA_T = 0.15;
 
@@ -25,7 +26,7 @@ namespace ipic3d {
 		GRID_SIZE.z * CELL_WIDTH.z
 	};
 
-	int processUniverse(Universe& universe, std::uint64_t numParticles, std::uint64_t numTimeSteps) {
+	int processUniverse(Universe& universe, std::uint64_t numParticles, std::uint64_t numTimeSteps, std::uint64_t numWarmupTimeSteps = NUM_WARMUP_TIME_STEPS) {
 		const bool dumpParticles = std::getenv("DUMP_PARTICLE_POSITION");
 
 		// --- sample output initial state --
@@ -34,6 +35,11 @@ namespace ipic3d {
 
 		// ----- run the simulation ------
 		if (MPI_Context::isMaster()) std::cout << "Running simulation..." << std::endl;
+
+		std::cout << "Warming up (" << numWarmupTimeSteps << " timesteps)" << std::endl;
+		simulateSteps(numWarmupTimeSteps, universe);
+
+		std::cout << "Starting benchmarking..." << std::endl;
 
 		auto start = std::chrono::high_resolution_clock::now();
 		simulateSteps(numTimeSteps, universe);
