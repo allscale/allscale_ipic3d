@@ -11,10 +11,10 @@ namespace ipic3d {
 	using namespace allscale::utils;
 
 	const uint64_t NUM_WARMUP_TIME_STEPS = 2;
-	const uint64_t NUM_TIME_STEPS = 100;
+	const uint64_t NUM_TIME_STEPS = 5;
 	const double DELTA_T = 0.15;
 
-	const Vector3<int64_t> GRID_SIZE{ 64, 64, 64 };
+	const Vector3<int64_t> GRID_SIZE{ 32, 32, 32 };
 
 	const Vector3<double> CELL_WIDTH{ 10, 10, 10 };
 
@@ -32,21 +32,21 @@ namespace ipic3d {
 
 
 		// ----- run the simulation ------
-		std::cout << "Running simulation..." << std::endl;
+		std::cout << "Running simulation on " << universe.properties.size << " grid ..." << std::endl;
 
-		std::cout << "Warming up (" << numWarmupTimeSteps << " timesteps)" << std::endl;
+		std::cout << "Warming up for " << numWarmupTimeSteps << " timesteps ..." << std::endl;
 		simulateSteps(numWarmupTimeSteps, universe);
 
-		std::cout << "Starting benchmarking..." << std::endl;
+		std::cout << "Starting benchmarking for " << numTimeSteps << " timesteps ..." << std::endl;
 
 		auto start = std::chrono::high_resolution_clock::now();
 		simulateSteps(numTimeSteps, universe);
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Simulation Finished" << std::endl;
+		std::cout << "Benchmark simulation Finished" << std::endl;
 
 		double s = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 1000.0;
-		std::cout << "Simulation took " << s << "s\n";
+		std::cout << "Benchmark took " << s << "s\n";
 		std::cout << "Throughput: " << (numTimeSteps * numParticles) / s << " particles/s \n";
 
 		if(dumpParticles) outputParticlePositions(universe.cells, std::string("t_end.txt"));
