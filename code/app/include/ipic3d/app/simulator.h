@@ -177,6 +177,8 @@ namespace ipic3d {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto endFirst = start;
 
+		allscale::api::user::algorithm::detail::loop_reference<utils::Coordinate<3>> ref;
+
 		// run time loop for the simulation
 		for(std::uint64_t i = 0; i < numSteps; ++i) {
 
@@ -211,16 +213,16 @@ namespace ipic3d {
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 3: project forces to particles and move particles
-			pfor(zero, size, [particleMover,&universe,&particleTransfers](const utils::Coordinate<3>& pos){
+			ref = pfor(zero, size, [particleMover,&universe,&particleTransfers](const utils::Coordinate<3>& pos){
 				particleMover(universe.properties, universe.cells[pos], pos, universe.field, particleTransfers);
-			});
+			}, allscale::api::user::algorithm::full_neighborhood_sync(ref));
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 
 			// STEP 4: import particles into destination cells
-			pfor(zero, size, [&](const utils::Coordinate<3>& pos){
+			ref = pfor(zero, size, [&](const utils::Coordinate<3>& pos){
 				importParticles(universe.properties, universe.cells[pos], pos, particleTransfers);
-			});
+			}, allscale::api::user::algorithm::full_neighborhood_sync(ref));
 
 			// -- implicit global sync - TODO: can this be eliminated? --
 			
@@ -229,6 +231,9 @@ namespace ipic3d {
 			}
 
 		}
+
+		// wait for completion
+		ref.wait();
 
 		auto endAll = std::chrono::high_resolution_clock::now();
 		auto durationFirst = endFirst - start;
