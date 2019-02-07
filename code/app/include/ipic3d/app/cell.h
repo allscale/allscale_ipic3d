@@ -510,12 +510,12 @@ namespace ipic3d {
 
  		// create data item with distribution approximation
 		auto numCells = properties.size.x * properties.size.y * properties.size.z;
-		std::vector<float> distribution(numCells);
+		std::vector<std::uint64_t> distribution(numCells);
 		std::vector<std::uint64_t> particleCount(numCells);
 
 		// compute particles per cell
  		auto numPseudoParticles = numCells * 100;
-		float particlesPerPseudoParticle = numParticles / float(numPseudoParticles);
+		std::uint64_t particlesPerPseudoParticle = numParticles / numPseudoParticles;
 
 
 		auto flatten = [=](const coordinate_type& pos) {
@@ -550,24 +550,31 @@ namespace ipic3d {
 
  			// correct for rounding errors
  			std::int64_t missing = numParticles - sum;
+ 			assert_gt(missing,0);
 
  			// no error, nothing to fix
  			if (missing != 0) {
 
+ 				sum = 0;
+ 				std::uint64_t max = 0;
+				std::uint64_t min = std::numeric_limits<std::uint64_t>::max();
+
 				// apply corrections
-				int correct = (missing < 0) ? -((-missing / numCells) + 1) : (missing / numCells + 1);
-				std::uint64_t error = std::abs(missing);
+ 				int all_correct = missing / numCells;
+ 				int remain_correct = missing % numCells;
 				for(int i=0; i<properties.size.x; ++i) {
 					for(int j=0; j<properties.size.y; ++j) {
 						for(int k=0; k<properties.size.z; ++k) {
 							// correct for remaining particles (to be evenly balance)
-							std::uint64_t linPos = flatten({i,j,k});
-							if (linPos < error) {
-								particleCount[flatten({i,j,k})] += correct;
-								sum += correct;
-								max = std::max(max,particleCount[flatten({i,j,k})]);
-								min = std::min(min,particleCount[flatten({i,j,k})]);
+							std::int64_t linPos = flatten({i,j,k});
+							auto& cur = particleCount[linPos];
+							cur += all_correct;
+							if (linPos < remain_correct) {
+								cur += 1;
 							}
+							sum += cur;
+							max = std::max(max,cur);
+							min = std::min(min,cur);
 						}
 					}
 				}
